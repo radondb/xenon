@@ -27,8 +27,8 @@ Architecture diagram：
 ## Documentation
 
 - [building and run xenon server ](docs/how_to_build_and_run_xenon.md) : How to build and run Xenon.
-- [Xenon Client command refence](docs/xenoncli_commands.md) : Xenon client commands.
-- [Xenon under hood](docs/how_xenon_works.md) : How Xenon works.
+- [Xenon Client command reference](docs/xenoncli_commands.md) : Xenon client commands.
+- [Xenon under hood](docs/how_xenon_works.md) : How Xenon works.
 
 more documents coming soon.
 
