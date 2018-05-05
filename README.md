@@ -6,31 +6,25 @@
 
 ## Overview
 
-`Xenon` is a MySQL HA and replication management tool using Raft protocol.
+`Xenon` is a MySQL HA and Replication Management tool using Raft protocol.
 
-Xenon have many cool features, just like this:
+Xenon has many cool features, such as:
 
 * Fast Failover with no lost transactions
 * Streaming & Speed-Unmatched backup/restore
-* Mysql Operation and Maintenance
+* MySQL Operation and Maintenance
 * No central control and easy-to-deploy
 * As a Cloud App
 
-## architect
-
-xenon need 3 node at least, because used raft protocol.
-
-Architecture diagram：
+## Architecture
 
 ![](docs/images/xenon.png)
 
 ## Documentation
 
-- [building and run xenon server ](docs/how_to_build_and_run_xenon.md) : How to build and run Xenon.
+- [build and run xenon](docs/how_to_build_and_run_xenon.md) : How to build and run xenon.
 - [xenon cli commands](docs/xenoncli_commands.md) : Xenon client commands.
-- [how xenon works](docs/how_xenon_works.md) : How Xenon works.
-
-more documents coming soon.
+- [how xenon works](docs/how_xenon_works.md) : How xenon works.
 
 ## Use case
 
