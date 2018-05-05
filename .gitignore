@@ -1,0 +1,9 @@
+bin/*
+pkg/*
+rdb-*
+testdir
+coverage*
+peers.json
+config.path
+*.outs
+tags

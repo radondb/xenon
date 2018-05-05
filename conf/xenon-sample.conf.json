@@ -1,0 +1,49 @@
+{
+	"server":
+	{
+		"endpoint":"${YOUR-HOST}:8801"
+	},
+
+	"raft":
+	{
+		"meta-datadir":"raft.meta",
+		"leader-start-command":"${YOUR-LEADER-START-COMMAND}",
+		"leader-stop-command":"${YOUR-LEADER-STOP-COMMAND}"
+	},
+
+	"mysql":
+	{
+		"admin":"root",
+		"passwd":"",
+		"host":"localhost",
+		"port":${YOUR-MYSQL-PORT},
+		"basedir":"${YOUR-MYSQL-BIN-DIR}",
+		"defaults-file":"${YOUR-MYSQL-CNF-PATH}"
+	},
+
+	"replication":
+	{
+		"user":"${YOUR-MYSQL-REPL-USER}",
+		"passwd":"${YOUR-MYSQL-REPL-PWD}"
+	},
+
+	"backup":
+	{
+		"ssh-host":"%{YOUR-HOST}",
+		"ssh-user":"${YOUR-SSH-USER}",
+		"ssh-passwd":"${YOUR-SSH-PWD}",
+		"basedir":"${YOUR-MYSQL-BIN-DIR}",
+		"backup-dir":"${YOUR-BACKUP-DIR}",
+		"xtrabackup-bindir":"${YOUR-XTRABACKUP-BIN-DIR}"
+	},
+
+	"rpc":
+	{
+		"request-timeout":500
+	},
+
+	"log":
+	{
+		"level":"INFO"
+	}
+}

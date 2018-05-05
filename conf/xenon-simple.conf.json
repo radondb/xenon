@@ -1,0 +1,57 @@
+{
+	"server":
+	{
+		"endpoint":"192.168.0.1:8801"
+	},
+
+	"raft":
+	{
+		"meta-datadir":"raft.meta",
+		"heartbeat-timeout":1000,
+		"election-timeout":3000,
+		"leader-start-command":"",
+		"leader-stop-command":""
+	},
+
+	"mysql":
+	{
+		"admin":"root",
+		"passwd":"",
+		"host":"127.0.0.1",
+		"port":3306,
+		"basedir":"/home/ubuntu/mysql_20161216",
+		"defaults-file":"/etc/my3306.cnf",
+		"ping-timeout":1000,
+		"master-sysvars":"tokudb_fsync_log_period=default;sync_binlog=default;innodb_flush_log_at_trx_commit=default",
+		"slave-sysvars": "tokudb_fsync_log_period=1000;sync_binlog=1000;innodb_flush_log_at_trx_commit=2"
+	},
+
+	"replication":
+	{
+		"user":"repl",
+		"passwd":"repl"
+	},
+
+	"backup":
+	{
+		"ssh-host":"192.168.0.1",
+		"ssh-user":"ubuntu",
+		"ssh-passwd":"ubuntu",
+		"ssh-port":22,
+		"backup-dir":"/home/ubuntu/data3306",
+		"xtrabackup-bindir":"/home/ubuntu/xtrabackup_20161216",
+		"backup-iops-limits":100000,
+		"backup-use-memory": "2GB",
+		"backup-parallel": 2
+	},
+
+	"rpc":
+	{
+		"request-timeout":500
+	},
+
+	"log":
+	{
+		"level":"INFO"
+	}
+}
