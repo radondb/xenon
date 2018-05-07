@@ -69,5 +69,5 @@ vet:
 coverage:
 	go build -v -o bin/gotestcover \
 	src/vendor/github.com/pierrre/gotestcover/*.go;
-	gotestcover -coverprofile=coverage.out -v $(COVPKGS)
+	bin/gotestcover -coverprofile=coverage.out -v $(COVPKGS)
 	go tool cover -html=coverage.out
