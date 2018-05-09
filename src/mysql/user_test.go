@@ -10,6 +10,7 @@ package mysql
 
 import (
 	"config"
+	"model"
 	"testing"
 	"xbase/xlog"
 
@@ -75,6 +76,34 @@ func TestCreateUserWithPrivileges(t *testing.T) {
 	err = mysql.CreateUserWithPrivileges("xx", "pwd", "test", "*", "%", "ALTER , ALTER ROUTINE")
 	assert.Nil(t, err)
 
+}
+
+func TestGetUser(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.Nil(t, err)
+	defer db.Close()
+
+	// log
+	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
+	conf := config.DefaultMysqlConfig()
+	mysql := NewMysql(conf, log)
+	mysql.db = db
+
+	query := "SELECT User, Host FROM mysql.user"
+	columns := []string{"User", "Host"}
+	want := []model.MysqlUser{
+		{User: "user1",
+			Host: "localhost"},
+		{User: "root",
+			Host: "localhost"},
+	}
+	mockRows := sqlmock.NewRows(columns).AddRow("user1", "localhost").AddRow("root", "localhost")
+	mock.ExpectQuery(query).WillReturnRows(mockRows)
+
+	got, err := mysql.GetUser()
+	assert.Nil(t, err)
+
+	assert.Equal(t, want, got)
 }
 
 func TestDropUser(t *testing.T) {

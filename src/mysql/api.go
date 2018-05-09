@@ -355,6 +355,15 @@ func (m *Mysql) CheckUserExists(user string) (bool, error) {
 	return m.userHandler.CheckUserExists(db, user)
 }
 
+// GetUser used to get the mysql user list.
+func (m *Mysql) GetUser() ([]model.MysqlUser, error) {
+	db, err := m.getDB()
+	if err != nil {
+		return nil, err
+	}
+	return m.userHandler.GetUser(db)
+}
+
 // CreateUser used to create the new user.
 func (m *Mysql) CreateUser(user string, passwd string) error {
 	db, err := m.getDB()

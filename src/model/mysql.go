@@ -16,6 +16,7 @@ const (
 	RPCMysqlCreateSuperUser          = "UserRPC.CreateSuperUser"
 	RPCMysqlChangePassword           = "UserRPC.ChangePasword"
 	RPCMysqlDropUser                 = "UserRPC.DropUser"
+	RPCMysqlGetUser                  = "UserRPC.GetUser"
 	RPCMysqlStartSlave               = "MysqlRPC.StartSlave"
 	RPCMysqlStopSlave                = "MysqlRPC.StopSlave"
 	RPCMysqlResetMaster              = "MysqlRPC.ResetMaster"
@@ -176,7 +177,15 @@ type MysqlUserRPCRequest struct {
 	Privileges string
 }
 
+type MysqlUser struct {
+	User string
+	Host string
+}
+
 type MysqlUserRPCResponse struct {
+	// the mysql user list
+	Users []MysqlUser
+
 	// Return code to rpc client:
 	// OK or other errors
 	RetCode string

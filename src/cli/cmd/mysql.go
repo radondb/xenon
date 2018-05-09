@@ -40,6 +40,7 @@ func NewMysqlCommand() *cobra.Command {
 	cmd.AddCommand(NewMysqlKillCommand())
 	cmd.AddCommand(NewMysqlStatusCommand())
 	cmd.AddCommand(NewMysqlCreateUserWithPrivilegesCommand())
+	cmd.AddCommand(NewMysqlGetUserCommand())
 
 	return cmd
 }
@@ -731,4 +732,35 @@ func mysqlCreateUserWithPrivilegesCommandFn(cmd *cobra.Command, args []string) {
 		RspOK(rsp.RetCode)
 	}
 	log.Warning("create.normaluser[%v].with.privs.done", grantUser)
+}
+
+// NewMysqlGetUserCommand get mysql user list api (format in JSON)
+func NewMysqlGetUserCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "getuser",
+		Short: "get mysql user list",
+		Run:   mysqlGetUserCommandFn,
+	}
+
+	return cmd
+}
+
+func mysqlGetUserCommandFn(cmd *cobra.Command, args []string) {
+	if len(args) != 0 {
+		ErrorOK(fmt.Errorf("too.many.args"))
+	}
+
+	conf, err := GetConfig()
+	ErrorOK(err)
+
+	self := conf.Server.Endpoint
+	{
+		leader, err := callx.GetClusterLeader(self)
+		ErrorOK(err)
+		rsp, err := callx.GetMysqlUserRPC(leader)
+		ErrorOK(err)
+		RspOK(rsp.RetCode)
+		Users, _ := json.Marshal(rsp.Users)
+		fmt.Printf("%s\n", string(Users))
+	}
 }

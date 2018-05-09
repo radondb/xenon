@@ -577,6 +577,16 @@ func (u *MockUserA) CreateUser(db *sql.DB, user string, passwd string) error {
 	return nil
 }
 
+// GetUser mock.
+func (u *MockUserA) GetUser(db *sql.DB) ([]model.MysqlUser, error) {
+	return []model.MysqlUser{
+		{User: "user1",
+			Host: "localhost"},
+		{User: "root",
+			Host: "localhost"},
+	}, nil
+}
+
 // CreateUserWithPrivileges mock.
 func (u *MockUserA) CreateUserWithPrivileges(db *sql.DB, user, passwd, database, table, host, privs string) error {
 	return nil
