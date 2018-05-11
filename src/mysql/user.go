@@ -11,6 +11,7 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
+	"model"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -53,6 +54,23 @@ func (u *User) CheckUserExists(db *sql.DB, user string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+// GetUser used to get the mysql user list
+func (u *User) GetUser(db *sql.DB) ([]model.MysqlUser, error) {
+	query := fmt.Sprintf("SELECT User, Host FROM mysql.user")
+	rows, err := Query(db, query)
+	if err != nil {
+		return nil, err
+	}
+
+	var Users = make([]model.MysqlUser, len(rows))
+
+	for i, v := range rows {
+		Users[i].User = v["User"]
+		Users[i].Host = v["Host"]
+	}
+	return Users, nil
 }
 
 // CreateUser use to create new user.

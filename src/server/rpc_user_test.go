@@ -88,6 +88,32 @@ func TestServerRPCUser(t *testing.T) {
 		assert.Equal(t, want, got)
 	}
 
+	// Get user.
+	{
+		c, cleanup := MockGetClient(t, leader)
+		defer cleanup()
+
+		req := model.NewMysqlUserRPCRequest()
+		rsp := model.NewMysqlUserRPCResponse(model.OK)
+		method := model.RPCMysqlGetUser
+		if err := c.Call(method, req, rsp); err != nil {
+			assert.Nil(t, err)
+		}
+
+		want := model.OK
+		got := rsp.RetCode
+		assert.Equal(t, want, got)
+
+		want1 := []model.MysqlUser{
+			{User: "user1",
+				Host: "localhost"},
+			{User: "root",
+				Host: "localhost"},
+		}
+		got1 := rsp.Users
+		assert.Equal(t, want1, got1)
+	}
+
 	// Drop user.
 	{
 		c, cleanup := MockGetClient(t, leader)

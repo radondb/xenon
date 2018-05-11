@@ -156,3 +156,27 @@ func (u *UserRPC) DropUser(req *model.MysqlUserRPCRequest, rsp *model.MysqlUserR
 	}
 	return nil
 }
+
+// GetUser get mysql user list
+func (u *UserRPC) GetUser(req *model.MysqlUserRPCRequest, rsp *model.MysqlUserRPCResponse) error {
+	var err error
+
+	log := u.server.log
+	rsp.RetCode = model.OK
+
+	log.Warning("server.get.mysql.user...")
+	state := u.server.raft.GetState()
+	if state != raft.LEADER {
+		rsp.RetCode = fmt.Sprintf("nonleader.can.not.get.mysql.user")
+		return nil
+	}
+
+	rsp.Users, err = u.server.mysql.GetUser()
+	if err != nil {
+		rsp.RetCode = err.Error()
+		log.Error("[%v].get.user.error[%v]", state.String(), err)
+		return nil
+	}
+
+	return nil
+}

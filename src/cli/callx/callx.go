@@ -638,6 +638,22 @@ func GetGTIDRPC(node string) (*model.MysqlStatusRPCResponse, error) {
 	return rsp, err
 }
 
+// GetMysqlUserRPC get mysql user
+func GetMysqlUserRPC(node string) (*model.MysqlUserRPCResponse, error) {
+	cli, cleanup, err := GetClient(node)
+	if err != nil {
+		return nil, err
+	}
+	defer cleanup()
+
+	method := model.RPCMysqlGetUser
+	req := model.NewMysqlUserRPCRequest()
+	rsp := model.NewMysqlUserRPCResponse(model.OK)
+	err = cli.Call(method, req, rsp)
+
+	return rsp, err
+}
+
 func CreateNormalUserRPC(node string, user string, passwd string) (*model.MysqlUserRPCResponse, error) {
 	cli, cleanup, err := GetClient(node)
 	if err != nil {

@@ -71,6 +71,13 @@ func TestCLIMysqlCommand(t *testing.T) {
 		assert.Nil(t, err)
 	}
 
+	// get mysql user list
+	{
+		cmd := NewMysqlCommand()
+		_, err := executeCommand(cmd, "getuser")
+		assert.Nil(t, err)
+	}
+
 	// drop
 	{
 		cmd := NewMysqlCommand()

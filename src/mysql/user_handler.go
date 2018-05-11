@@ -10,10 +10,12 @@ package mysql
 
 import (
 	"database/sql"
+	"model"
 )
 
 // UserHandler interface.
 type UserHandler interface {
+	GetUser(*sql.DB) ([]model.MysqlUser, error)
 	CheckUserExists(*sql.DB, string) (bool, error)
 	CreateUser(*sql.DB, string, string) error
 	DropUser(*sql.DB, string) error
