@@ -375,19 +375,19 @@ For more information on start xenon please refer to `Step3` and `Step4`.
 * On Master(192.168.0.11)
 
 ```
-./xenoncli cluster add 192.168.0.2:3306,192.168.0.3:3306
+./xenoncli cluster add 192.168.0.2:8801,192.168.0.3:8801
 ```
 
 * On Slave1(192.168.0.2)
 
 ```
-./xenoncli cluster add 192.168.0.11:3306,192.168.0.3:3306
+./xenoncli cluster add 192.168.0.11:8801,192.168.0.3:8801
 ```
 
 * On slave2 (192.168.0.3)
 
 ```
-./xenoncli cluster add 192.168.0.11:3306,192.168.0.2:3306
+./xenoncli cluster add 192.168.0.11:8801,192.168.0.2:8801
 ```
 
 ### Step6.5 Start Keepalived
