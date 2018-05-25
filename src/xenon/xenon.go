@@ -80,4 +80,6 @@ func main() {
 	log.Info("xenon.start.success...")
 
 	server.Wait()
+
+	log.Info("xenon.shutdown.complete...")
 }
