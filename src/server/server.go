@@ -202,8 +202,7 @@ func (s *Server) Wait() {
 		syscall.SIGINT,
 		syscall.SIGTERM,
 		syscall.SIGHUP)
-
-	<-ossig
+	s.log.Info("server.signal:%+v", <-ossig)
 }
 
 func (s *Server) GetState() raft.State {
