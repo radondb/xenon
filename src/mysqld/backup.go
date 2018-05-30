@@ -99,18 +99,20 @@ func (b *Backup) backupCommands(iskey bool, req *model.BackupRPCRequest) []strin
 	var ssh string
 
 	if b.conf.Passwd == "" {
-		backup = fmt.Sprintf("%s/innobackupex --defaults-file=%s --host=%s --user=%s --throttle=%d --parallel=%d --stream=xbstream ./",
+		backup = fmt.Sprintf("%s/innobackupex --defaults-file=%s --host=%s --port=%d --user=%s --throttle=%d --parallel=%d --stream=xbstream ./",
 			b.conf.XtrabackupBinDir,
 			b.conf.DefaultsFile,
 			b.conf.Host,
+			b.conf.Port,
 			b.conf.Admin,
 			req.IOPSLimits,
 			b.conf.Parallel)
 	} else {
-		backup = fmt.Sprintf("%s/innobackupex --defaults-file=%s --host=%s --user=%s --password=%s --throttle=%d --parallel=%d --stream=xbstream ./",
+		backup = fmt.Sprintf("%s/innobackupex --defaults-file=%s --host=%s --port=%d --user=%s --password=%s --throttle=%d --parallel=%d --stream=xbstream ./",
 			b.conf.XtrabackupBinDir,
 			b.conf.DefaultsFile,
 			b.conf.Host,
+			b.conf.Port,
 			b.conf.Admin,
 			b.conf.Passwd,
 			req.IOPSLimits,
