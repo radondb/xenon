@@ -1,4 +1,19 @@
-[TOC]
+Table of Contents
+=================
+
+   * [command of xenoncli](#command-of-xenoncli)
+      * [overview](#overview)
+      * [1 Cluster Status](#1-cluster-status)
+         * [1.1 Add cluster node](#11-add-cluster-node)
+         * [1.2 Check cluster status](#12-check-cluster-status)
+         * [1.3 Check cluster raft status](#13-check-cluster-raft-status)
+         * [1.4 Check cluster mysql status](#14-check-cluster-mysql-status)
+         * [1.5 Check cluster gtid status](#15-check-cluster-gtid-status)
+      * [2 MySQL Operation](#2-mysql-operation)
+      * [3 MySQL Stack Info](#3-mysql-stack-info)
+      * [4 Raft  Operation](#4-raft-operation)
+      * [Help](#help)
+
 
 # command of xenoncli
 
@@ -164,7 +179,7 @@ Flags:
 
 * By default, the rebuildme operation will automatically find the slave with the same master data backup, so master will not be affected too much. This will not affect the write business.
 
-* If you use `--from=IP:XENON_PORT`, this shows that you specify in the end is from which database to back up. 
+* If you use `--from=IP:XENON_PORT`, this shows that you specify in the end is from which database to back up.
 
 We think most problems can be solved by default, but if you insist on using --from, we can also be allowed.
 

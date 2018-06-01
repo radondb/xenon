@@ -1,13 +1,39 @@
-[TOC]
+Table of Contents
+=================
+
+   * [internal mechanism on xenon](#internal-mechanism-on-xenon)
+      * [overview](#overview)
+      * [1 Xenon Raft ](#1-xenon-raft)
+         * [1.1 Highly Available](#11-highly-available)
+         * [1.2 Raft  Introduction](#12-raft-introduction)
+         * [1.3 How Raft  Works](#13-how-raft-works)
+         * [1.4 Raft  Cluster Monitoring](#14-raft-cluster-monitoring)
+            * [1.4.1 RAFT Status](#141-raft-status)
+            * [1.4.2 MySQL Status](#142-mysql-status)
+            * [1.4.3 MySQLD Status](#143-mysqld-status)
+            * [1.4.4 Backup Status](#144-backup-status)
+            * [1.4.5 Config Status](#145-config-status)
+         * [1.5 Raft  Readonly Status](#15-raft-readonly-status)
+      * [2 High Availability](#2-high-availability)
+         * [2.1 Ways to be HA](#21-ways-to-be-ha)
+         * [2.2 HA via Keepalived](#22-ha-via-keepalived)
+         * [2.3 HA via Raft ](#23-ha-via-raft)
+      * [3 Retake Slave](#3-retake-slave)
+         * [3.1 Analysis Process](#31-analysis-process)
+         * [3.2 Actual Operation](#32-actual-operation)
+      * [4 Faliover](#4-faliover)
+      * [4.1 Select the main conditions](#41-select-the-main-conditions)
+      * [4.2 Select the main process](#42-select-the-main-process)
+
 
 # internal mechanism on xenon
 
 ## overview
-MySQL is a very important RDS(Relational Database Service) in the field of cloud computing and has being widely used, but the operation and maintenance of MySQL are very complicated. In order to provide a better service, we developed Xenon. It helps MySQL Cluster be more availability and makes the strong consistency reach a new height. With highly automation and no human intervention, the O&M(Operation and Maintenance) are now easier and cost less.  
+MySQL is a very important RDS(Relational Database Service) in the field of cloud computing and has being widely used, but the operation and maintenance of MySQL are very complicated. In order to provide a better service, we developed Xenon. It helps MySQL Cluster be more availability and makes the strong consistency reach a new height. With highly automation and no human intervention, the O&M(Operation and Maintenance) are now easier and cost less.
 
 Xenon is a decentralized agent with no intrusive access to MySQL sources. A xenon manages a MySQL instance. It doesn't care about the deployment site as long as the network is reachable.
 
-It uses LVS + Raft + GTID parallel replication for master and data synchronization. More importantly, xenon rescues a number of operation and maintenance personnel. Now their greatest pleasure is in the production of casual master. 
+It uses LVS + Raft + GTID parallel replication for master and data synchronization. More importantly, xenon rescues a number of operation and maintenance personnel. Now their greatest pleasure is in the production of casual master.
 
 `Xenon` is a MySQL replication topology HA, management and visualization tool, allowing for:
 
@@ -176,17 +202,17 @@ type GTID struct {
 type MysqldStats struct {
     // How many times the mysqld have been started by xenon
     MysqldStarts uint64
-    
+
     // How many times the mysqld have been stopped by xenon
     MysqldStops uint64
-    
+
     // How many times the monitor have been started by xenon
     MonitorStarts uint64
 
     // How many times the monitor have been stopped by xenon
     MonitorStops uint64
-}   
-``` 
+}
+```
 
 #### 1.4.4 Backup Status
 
@@ -286,9 +312,9 @@ HA is achieved by choosing either:
 
 ### 2.2 HA via Keepalived
 
-HA is achieved by highly available keepalived. Keepalived is a Web service based on VRRP(Virtual Router Redundancy Protocol) agreement to achieve high availability program. 
+HA is achieved by highly available keepalived. Keepalived is a Web service based on VRRP(Virtual Router Redundancy Protocol) agreement to achieve high availability program.
 
-Keepalived can be used to avoid single points of failure. A WEB service will have at least 2 servers running Keepalived. The one is master server (MASTER), the other is backup server (BACKUP). But the external appearance of a VIP(Virtual IP). The MASTER SERVER sends a specific message to BACKUP SERVER. 
+Keepalived can be used to avoid single points of failure. A WEB service will have at least 2 servers running Keepalived. The one is master server (MASTER), the other is backup server (BACKUP). But the external appearance of a VIP(Virtual IP). The MASTER SERVER sends a specific message to BACKUP SERVER.
 When the BACKUP SERVER does not receive this message means that the MAIN SERVER downtime. The BACKUP SERVER takes over the VIP and continues to provide the service. Thus ensuring high availability.
 
 ### 2.3 HA via Raft+
@@ -298,13 +324,13 @@ Only one xenon node assumes leadership, and is always a part of a consensus. How
 
 It is recommended to run a 3-node setup. If there is only two nodes, the replication between the databases is asynchronous
 
-To access your MySQL service you may only speak to the RVIP/WVIP. 
+To access your MySQL service you may only speak to the RVIP/WVIP.
 
 * Use xenon/bin/xenoncli check for your proxy.
 
 ## 3 Retake Slave
 
-OLTP high concurrency allows us to choose the master-slave replication architecture. However, in many cases of life, we find it is very troublesome to find that a slave library often causes a copy thread to be false for various reasons, or to add a slave node again. For a variety of reasons, xenon provides the rebuild slave function, which requires just a simple command from the library to solve the problem of copying from the library for quick use. 
+OLTP high concurrency allows us to choose the master-slave replication architecture. However, in many cases of life, we find it is very troublesome to find that a slave library often causes a copy thread to be false for various reasons, or to add a slave node again. For a variety of reasons, xenon provides the rebuild slave function, which requires just a simple command from the library to solve the problem of copying from the library for quick use.
 
 ### 3.1 Analysis Process
 
@@ -421,8 +447,8 @@ Suppose we cluster deployment mode 1 main 2 backup (respectively in 3 containers
 
 ```
      Master(A)
-      /    \   
-Slave1(B)  Slave2(C) 
+      /    \
+Slave1(B)  Slave2(C)
 ```
 
 * A-xenon (admin A's xenon) periodically sends heartbeats to other B / C-xenons, reports on the health of A-mysql, and maintains master-slave relationships.

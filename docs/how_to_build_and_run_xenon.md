@@ -1,4 +1,29 @@
-[TOC]
+Table of Contents
+=================
+
+   * [How to build and run xenon](#how-to-build-and-run-xenon)
+      * [Requirements](#requirements)
+      * [Step1. Download src code from github](#step1-download-src-code-from-github)
+      * [Step2. Build](#step2-build)
+         * [Step2.1 make build](#step21-make-build)
+         * [Step2.2 make test](#step22-make-test)
+         * [Step2.3 Coverage Test](#step23-coverage-test)
+      * [Step3. Config](#step3-config)
+         * [Step3.1 Prepare the configuration file](#step31-prepare-the-configuration-file)
+         * [Step3.2 Configuration instructions](#step32-configuration-instructions)
+         * [Step3.3 Account Description](#step33-account-description)
+      * [Step4 Start xenon](#step4-start-xenon)
+      * [Step5 Keepalived configuration and start](#step5-keepalived-configuration-and-start)
+         * [Step5.1 LVS](#step51-lvs)
+         * [Step5.2 Compile Keepalived.conf](#step52-compile-keepalivedconf)
+         * [Step5.3 Start keepalived](#step53-start-keepalived)
+      * [Step6 An easy example : Xenon starts with mysql](#step6-an-easy-example--xenon-starts-with-mysql)
+         * [Step6.1 Machine Condition](#step61-machine-condition)
+         * [Step6.2 Mutual Trust](#step62-mutual-trust)
+         * [Step6.3 Start Mysqld](#step63-start-mysqld)
+         * [Step6.4 Start Xenon](#step64-start-xenon)
+         * [Step6.5 Start Keepalived](#step65-start-keepalived)
+
 
 # How to build and run xenon
 
@@ -194,11 +219,15 @@ This is not the same with the traditional mysql place, not in need of mysql acco
 ```
 # mkdir /data/
 
+# chown ubuntu:ubuntu /data/ -R
+
 # echo "/etc/xenon/xenon.json" > xenon/bin/config.path
 
-# ./xenon -c /etc/xenon/xenon.json > /data/xenon.log 2>&1 &
+# su - ubuntu
 
-# cat /data/xenon.log
+$ ./xenon -c /etc/xenon/xenon.json > /data/xenon.log 2>&1 &
+
+$ cat /data/xenon.log
 ```
 
 **Note**:
@@ -216,7 +245,7 @@ Now xenon has started successfully, the final step is keepalived configuration.
 
 Keepalived is a routing software written in C. The main goal of this project is to provide simple and robust facilities for loadbalancing and high-availability to Linux system and Linux based infrastructures.
 
-In the following steps, keepalive is installed by default. If not, you can refer to [Install](http://www.keepalived.org/doc/installing_keepalived.html) for configuration
+In the following steps, keepalived is installed by default. If not, you can refer to [Install](http://www.keepalived.org/doc/installing_keepalived.html) for configuration
 
 For learning more news, please see its [official website](http://www.keepalived.org/).
 
@@ -247,23 +276,21 @@ $ sudo su -
 # echo 1 > /proc/sys/net/ipv4/conf/all/arp_ignore;
 
 # echo 2 > /proc/sys/net/ipv4/conf/all/arp_announce;
-    
-# /sbin/ifconfig lo:0 ${vip} broadcast ${vip} netmask 255.255.255.255 up; 
+
+# /sbin/ifconfig lo:0 ${vip} broadcast ${vip} netmask 255.255.255.255 up;
 
 # /sbin/route add -host ${vip} dev lo:0;
 
-# MySQL_port=${{YOU-MYSQL-PORT}}
+# MySQL_port=${{YOUR-MYSQL-PORT}}
 
-# M_MAC=${{YOU-MASTER-MAC}}
-
+# M_MAC=${{YOUR-MASTER-MAC}}
 # iptables -t mangle -I PREROUTING -d ${vip} -p tcp -m tcp --dport ${MySQL_port}  -m mac ! --mac-source ${M_MAC} -j MARK --set-mark 0x1;
 
-# S1_MAC=${{YOU-SLAVE1-MAC}}
-# iptables -t mangle -I PREROUTING -d ${vip} -p tcp -m tcp --dport ${MySQL_port}  -m mac ! --mac-source ${S1_MAC} -j MARK --set-mark 0x1;
+# S_MAC=${{YOUR-SLAVE-MAC}}
+# iptables -t mangle -I PREROUTING -d ${vip} -p tcp -m tcp --dport ${MySQL_port}  -m mac ! --mac-source ${S_MAC} -j MARK --set-mark 0x1;
 
-# S2_MAC=${{YOU-SLAVE2-MAC}}
-
-# iptables -t mangle -I PREROUTING -d ${vip} -p tcp -m tcp --dport ${MySQL_port} -m mac ! --mac-source ${S2_MAC} -j MARK --set-mark 0x1;
+# N_MAC=${{YOUR-NORMAL-MAC}}
+# iptables -t mangle -I PREROUTING -d ${vip} -p tcp -m tcp --dport ${MySQL_port} -m mac ! --mac-source ${N_MAC} -j MARK --set-mark 0x1;
 ```
 ### Step5.2 Compile Keepalived.conf
 
@@ -286,11 +313,11 @@ After done these, `ipvsadm -ln` can help us check the configure right or wrong.
 
 First create three machines (the default version is Ubuntu16.04). They all have mysqld service
 
-| HostName           | IP           | Role   |   
-| ------------------ | ------------ | ------ |
-| i-lf9g3f5n(Master) | 192.168.0.11 | Master |
-| i-0dc5giev(Slave1) | 192.168.0.2  | Slave  |
-| i-arb90jhc(Slave2) | 192.168.0.3  | Slave  |
+| HostName           | IP           | LVS-Role   | MAC |
+| ------------------ | ------------ | ------ | ----------------- |
+| i-lf9g3f5n(Master) | 192.168.0.11 | Master | 52:54:39:8c:d1:e3 |
+| i-0dc5giev(Slave) | 192.168.0.2  | Slave  | 52:54:01:67:c2:82 |
+| i-arb90jhc(Normal) | 192.168.0.3  | Normal  | 52:54:4f:f7:26:82 |
 
 ### Step6.2 Mutual Trust
 
@@ -303,9 +330,10 @@ Set up the trust of the three machines configured to reduce the possibility of b
     add these at last:
         192.168.0.2 i-0dc5giev
         192.168.0.3 i-arb90jhc
-# ssh-keygen
-# ssh-copy-id ubuntu@i-0dc5giev
-# ssh-copy-id ubuntu@i-arb90jhc
+# su - ubuntu
+$ ssh-keygen
+$ ssh-copy-id ubuntu@i-0dc5giev
+$ ssh-copy-id ubuntu@i-arb90jhc
 ```
 
 * On i-0dc5giev(S1):
@@ -315,10 +343,10 @@ Set up the trust of the three machines configured to reduce the possibility of b
     add these at last:
         192.168.0.3 i-arb90jhc
         192.168.0.11 i-lf9g3f5n
-
-# ssh-keygen
-# ssh-copy-id ubuntu@i-arb90jhc
-# ssh-copy-id ubuntu@i-lf9g3f5n
+# su - ubuntu
+$ ssh-keygen
+$ ssh-copy-id ubuntu@i-arb90jhc
+$ ssh-copy-id ubuntu@i-lf9g3f5n
 ```
 
 * On i-arb90jhc(S2):
@@ -328,10 +356,10 @@ Set up the trust of the three machines configured to reduce the possibility of b
     add these at last:
         192.168.0.2 i-0dc5giev
         192.168.0.11 i-lf9g3f5n
-
-# ssh-keygen
-# ssh-copy-id ubuntu@i-0dc5giev
-# ssh-copy-id ubuntu@i-lf9g3f5n
+# su - ubuntu
+$ ssh-keygen
+$ ssh-copy-id ubuntu@i-0dc5giev
+$ ssh-copy-id ubuntu@i-lf9g3f5n
 ```
 
 ### Step6.3 Start Mysqld
@@ -341,7 +369,8 @@ Start mysqld on each machine.
 If you want to get my configure, please click [my.cnf](config/MySQL.md)
 
 ```
-# mysqld_safe --defaults-file=/etc/mysql/mysqld.conf.d/mysqld.conf &
+# su - ubuntu
+$ mysqld_safe --defaults-file=/etc/mysql/mysqld.conf.d/mysqld.conf &
 ```
 
 ### Step6.4 Start Xenon
@@ -369,30 +398,34 @@ For more information on start xenon please refer to `Step3` and `Step4`.
 
 # touch /etc/xenon/xenon.json
 
-# ./xenon -c /etc/xenon/xenon.json > /data/log/xenon.log 2>&1 &
+# su - ubuntu
+
+# chown ubuntu:ubuntu /data/ -R
+
+$ ./xenon -c /etc/xenon/xenon.json > /data/log/xenon.log 2>&1 &
 ```
 
 * On Master(192.168.0.11)
 
 ```
-./xenoncli cluster add 192.168.0.2:8801,192.168.0.3:8801
+$ ./xenoncli cluster add 192.168.0.2:8801,192.168.0.3:8801
 ```
 
 * On Slave1(192.168.0.2)
 
 ```
-./xenoncli cluster add 192.168.0.11:8801,192.168.0.3:8801
+$ ./xenoncli cluster add 192.168.0.11:8801,192.168.0.3:8801
 ```
 
-* On slave2 (192.168.0.3)
+* On Slave2 (192.168.0.3)
 
 ```
-./xenoncli cluster add 192.168.0.11:8801,192.168.0.2:8801
+$ ./xenoncli cluster add 192.168.0.11:8801,192.168.0.2:8801
 ```
 
 ### Step6.5 Start Keepalived
 
-**Note :** I just configured the keepalived service on `Master` and `Slave1`. You can follow my configuration to operate, you can also follow your train of thought(for more detail about config and start Keepalived, refer to `Step5`).
+**Note :** I just configured the keepalived service on `Master` and `Slave`. You can follow my configuration to operate, you can also follow your train of thought(for more detail about config and start Keepalived, refer to `Step5`).
 
 If you want to get my configure, please click [192.168.0.11_keepalived](config/192.168.0.11_keepalived.md) and [192.168.0.2_keepalived](config/192.168.0.2_keepalived.md).
 
@@ -421,47 +454,28 @@ For more information on start xenon please refer to [Keepalived-Configuration](k
 * On Master(192.168.0.11)
 
 ```
-# iptables -t mangle -I PREROUTING -d 192.168.0.252 -p tcp -m tcp --dport 3306  -m mac ! --mac-source 52:54:dc:da:f0:cd -j MARK --set-mark 0x1
+# iptables -t mangle -I PREROUTING -d 192.168.0.252 -p tcp -m tcp --dport 3306  -m mac ! --mac-source 52:54:39:8c:d1:e3 -j MARK --set-mark 0x1
 
-# iptables -t mangle -I PREROUTING -d 192.168.0.252 -p tcp -m tcp --dport 3306  -m mac ! --mac-source 52:54:dc:da:f0:cd -j MARK --set-mark 0x1
+# iptables -t mangle -I PREROUTING -d 192.168.0.252 -p tcp -m tcp --dport 3306  -m mac ! --mac-source 52:54:01:67:c2:82 -j MARK --set-mark 0x1
 
-# ipvsadm --set 5 4 120
-
-# /etc/init.d/keepalived start
-```
-
-* On Slave1(192.168.0.2)
-
-```
-# iptables -t mangle -I PREROUTING -d 192.168.0.252 -p tcp -m tcp --dport 3306  -m mac ! --mac-source 52:54:df:87:51:63 -j MARK --set-mark 0x1
-
-# iptables -t mangle -I PREROUTING -d 192.168.0.252 -p tcp -m tcp --dport 3306  -m mac ! --mac-source 52:54:77:db:fc:ee -j MARK --set-mark 0x1
+# iptables -t mangle -I PREROUTING -d 192.168.0.252 -p tcp -m tcp --dport 3306  -m mac ! --mac-source 52:54:4f:f7:26:82 -j MARK --set-mark 0x1
 
 # ipvsadm --set 5 4 120
 
 # /etc/init.d/keepalived start
 ```
 
-* On Master(192.168.0.11)
+* On Slave(192.168.0.2)
 
 ```
-# iptables -t mangle -I PREROUTING -d 192.168.0.252 -p tcp -m tcp --dport 3306  -m mac ! --mac-source 52:54:dc:da:f0:cd -j MARK --set-mark 0x1
+# iptables -t mangle -I PREROUTING -d 192.168.0.252 -p tcp -m tcp --dport 3306  -m mac ! --mac-source 52:54:39:8c:d1:e3 -j MARK --set-mark 0x1
 
-# iptables -t mangle -I PREROUTING -d 192.168.0.252 -p tcp -m tcp --dport 3306  -m mac ! --mac-source 52:54:dc:da:f0:cd -j MARK --set-mark 0x1
+# iptables -t mangle -I PREROUTING -d 192.168.0.252 -p tcp -m tcp --dport 3306  -m mac ! --mac-source 52:54:01:67:c2:82 -j MARK --set-mark 0x1
+
+# iptables -t mangle -I PREROUTING -d 192.168.0.252 -p tcp -m tcp --dport 3306  -m mac ! --mac-source 52:54:4f:f7:26:82 -j MARK --set-mark 0x1
 
 # ipvsadm --set 5 4 120
 
 # /etc/init.d/keepalived start
 ```
 
-* On Slave1(192.168.0.2)
-
-```
-# iptables -t mangle -I PREROUTING -d 192.168.0.252 -p tcp -m tcp --dport 3306  -m mac ! --mac-source 52:54:df:87:51:63 -j MARK --set-mark 0x1
-
-# iptables -t mangle -I PREROUTING -d 192.168.0.252 -p tcp -m tcp --dport 3306  -m mac ! --mac-source 52:54:77:db:fc:ee -j MARK --set-mark 0x1
-
-# ipvsadm --set 5 4 120
-
-# /etc/init.d/keepalived start
-```
