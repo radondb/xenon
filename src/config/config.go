@@ -191,7 +191,7 @@ type BackupConfig struct {
 	BackupDir             string `json:"backupdir"`
 	XtrabackupBinDir      string `json:"xtrabackup-bindir"`
 	BackupIOPSLimits      int    `json:"backup-iops-limits"`
-	UseMemory             string `json:"backup-use-memroy"`
+	UseMemory             string `json:"backup-use-memory"`
 	Parallel              int    `json:"backup-parallel"`
 	MysqldMonitorInterval int    `json:"mysqld-monitor-interval"`
 

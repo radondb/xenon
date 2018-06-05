@@ -55,7 +55,7 @@ func TestParseConfig(t *testing.T) {
 		"backupdir":"/u01/backup",
 		"xtrabackup-bindir":".",
 		"backup-iops-limits":100000,
-		"backup-use-memroy":"2GB",
+		"backup-use-memory":"2GB",
 		"backup-parallel": 2,
 		"mysqld-monitor-interval": 1000
 	},
