@@ -11,6 +11,7 @@ package raft
 import (
 	"model"
 	"sync"
+	"time"
 )
 
 // Candidate tuple.
@@ -30,7 +31,7 @@ type Candidate struct {
 	sendRequestVoteHandler func(chan *model.RaftRPCResponse)
 
 	// candiadte process requestvote response
-	processRequestVoteResponseHandler func(*int, *int, *model.RaftRPCResponse)
+	processRequestVoteResponseHandler func(*int, *int, *model.RaftRPCResponse, *bool)
 }
 
 // NewCandidate creates the new Candidate.
@@ -67,6 +68,8 @@ func (r *Candidate) Loop() {
 	respChan := make(chan *model.RaftRPCResponse, r.getMembers())
 	r.sendRequestVoteHandler(respChan)
 
+	switchMaster := false
+
 	for r.getState() == CANDIDATE {
 		select {
 		case <-r.fired:
@@ -91,7 +94,7 @@ func (r *Candidate) Loop() {
 			r.resetCheckVotesTimeout()
 			r.resetElectionTimeout()
 		case rsp := <-respChan:
-			r.processRequestVoteResponseHandler(&voteGranted, &idleVoted, rsp)
+			r.processRequestVoteResponseHandler(&voteGranted, &idleVoted, rsp, &switchMaster)
 			members := (r.getMembers() - idleVoted)
 			if voteGranted == members {
 				r.WARNING("grants.unanimous.votes[%v]/members[%v].become.leader", voteGranted, members)
@@ -252,7 +255,7 @@ func (r *Candidate) sendRequestVote(respChan chan *model.RaftRPCResponse) {
 }
 
 // Votes who comes from IDLE machine will be filitered out.
-func (r *Candidate) processRequestVoteResponse(voteGranted *int, idleVoted *int, rsp *model.RaftRPCResponse) {
+func (r *Candidate) processRequestVoteResponse(voteGranted *int, idleVoted *int, rsp *model.RaftRPCResponse, switchMaster *bool) {
 	r.WARNING("get.vote.response.from[%+v].rsp.gtid[%v].retcode[%v]", rsp.GetFrom(), rsp.GetGTID(), rsp.RetCode)
 	switch rsp.RetCode {
 	case model.OK:
@@ -274,10 +277,16 @@ func (r *Candidate) processRequestVoteResponse(voteGranted *int, idleVoted *int,
 	case model.ErrorMySQLDown:
 		peers := r.getMembers()
 		r.WARNING("get.vote.response.from[N:%v, V:%v].error[ErrorMySQLDown].peers.number[%v]", rsp.GetFrom(), rsp.GetViewID(), peers)
-		// If the pees less than 3, we grant the vote though the mysql is down.
+		// If the pees less than 3 and the Seconds_Behind_master is 0, we grant the vote though the mysql is down.
 		if peers < 3 {
-			*voteGranted++
+			if *switchMaster {
+				*voteGranted++
+			} else {
+				time.Sleep(time.Duration(120) * time.Second)
+				*switchMaster = true
+			}
 		}
+		return
 	default:
 		// this error is not enough to make us downgrade, just catch it
 		r.WARNING("get.vote.response.from[N:%v, V:%v].error[%v].but.not.downgrade.to.follower", rsp.GetFrom(), rsp.GetViewID(), rsp.RetCode)
@@ -333,6 +342,6 @@ func (r *Candidate) setSendRequestVoteHandler(f func(chan *model.RaftRPCResponse
 	r.sendRequestVoteHandler = f
 }
 
-func (r *Candidate) setProcessRequestVoteResponseHandler(f func(*int, *int, *model.RaftRPCResponse)) {
+func (r *Candidate) setProcessRequestVoteResponseHandler(f func(*int, *int, *model.RaftRPCResponse, *bool)) {
 	r.processRequestVoteResponseHandler = f
 }
