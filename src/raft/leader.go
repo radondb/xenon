@@ -82,7 +82,9 @@ func (r *Leader) Loop() {
 			r.WARNING("state.machine.loop.got.fired")
 		case <-r.heartbeatTick.C:
 			if ackGranted < r.getQuorums() {
-				lessHtAcks++
+				if r.GetMembers() > 2 {
+					lessHtAcks++
+				}
 				r.IncLessHeartbeatAcks()
 				r.WARNING("heartbeat.acks.granted[%v].less.than.quorums[%v].lessHtAcks[%v].maxLessHtAcks[%v]", ackGranted, r.getQuorums(), lessHtAcks, maxLessHtAcks)
 				if lessHtAcks >= maxLessHtAcks {

@@ -1501,6 +1501,7 @@ func TestRaft2NodesWithGTID(t *testing.T) {
 		MockWaitLeaderEggs(rafts, 0)
 		MockWaitLeaderEggs(rafts, 1)
 		want := (LEADER + FOLLOWER)
+		time.Sleep(time.Duration(121) * time.Second)
 		for i, raft := range rafts {
 			got += raft.getState()
 			if raft.getState() == LEADER {
