@@ -71,9 +71,9 @@ func TestCreateUserWithPrivileges(t *testing.T) {
 	mysql := NewMysql(conf, log)
 	mysql.db = db
 
-	query := "GRANT ALTER , ALTER ROUTINE ON test.* TO `xx`@'%' IDENTIFIED BY 'pwd'"
+	query := "GRANT ALTER , ALTER ROUTINE ON test.* TO `xx`@'127.0.0.1' IDENTIFIED BY 'pwd'"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql.CreateUserWithPrivileges("xx", "pwd", "test", "*", "%", "ALTER , ALTER ROUTINE")
+	err = mysql.CreateUserWithPrivileges("xx", "pwd", "test", "*", "127.0.0.1", "ALTER , ALTER ROUTINE")
 	assert.Nil(t, err)
 
 }
@@ -117,9 +117,9 @@ func TestDropUser(t *testing.T) {
 	mysql := NewMysql(conf, log)
 	mysql.db = db
 
-	query := "DROP USER `xx`"
+	query := "DROP USER `xx`@'127.0.0.1'"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql.DropUser("xx")
+	err = mysql.DropUser("xx", "127.0.0.1")
 	assert.Nil(t, err)
 }
 

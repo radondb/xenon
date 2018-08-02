@@ -526,7 +526,7 @@ func mysqlCreateSuperUserCommandFn(cmd *cobra.Command, args []string) {
 // drop user(normal&super)
 func NewMysqlDropUserCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "dropuser <user>",
+		Use:   "dropuser <user> <host>",
 		Short: "drop mysql normal user",
 		Run:   mysqlDropUserCommandFn,
 	}
@@ -535,12 +535,13 @@ func NewMysqlDropUserCommand() *cobra.Command {
 }
 
 func mysqlDropUserCommandFn(cmd *cobra.Command, args []string) {
-	if len(args) != 1 {
-		ErrorOK(fmt.Errorf("args.count.error:should.be.1"))
+	if len(args) != 2 {
+		ErrorOK(fmt.Errorf("args.count.error:should.be.2"))
 	}
 
 	user := args[0]
-	log.Warning("prepare.to.drop.normaluser[%v]", user)
+	host := args[1]
+	log.Warning("prepare.to.drop.normaluser[%v]@[%v]", user, host)
 	conf, err := GetConfig()
 	ErrorOK(err)
 
@@ -548,11 +549,11 @@ func mysqlDropUserCommandFn(cmd *cobra.Command, args []string) {
 	{
 		leader, err := callx.GetClusterLeader(self)
 		ErrorOK(err)
-		rsp, err := callx.DropUserRPC(leader, user)
+		rsp, err := callx.DropUserRPC(leader, user, host)
 		ErrorOK(err)
 		RspOK(rsp.RetCode)
 	}
-	log.Warning("drop.normaluser[%v].done", user)
+	log.Warning("drop.normaluser[%v]@[%v].done", user, host)
 }
 
 // change normal user password
