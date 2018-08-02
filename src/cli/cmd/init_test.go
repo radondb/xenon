@@ -20,7 +20,6 @@ func TestCLIInitCommand(t *testing.T) {
 	err := createConfig()
 	ErrorOK(err)
 	defer removeConfig()
-
 	ip, err := common.GetLocalIP()
 	assert.Nil(t, err)
 

@@ -81,8 +81,8 @@ func (u *User) CreateUser(db *sql.DB, user string, passwd string) error {
 }
 
 // DropUser used to drop the user.
-func (u *User) DropUser(db *sql.DB, user string) error {
-	query := fmt.Sprintf("DROP USER `%s`", user)
+func (u *User) DropUser(db *sql.DB, user string, host string) error {
+	query := fmt.Sprintf("DROP USER `%s`@'%s'", user, host)
 	return Execute(db, query)
 }
 

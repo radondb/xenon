@@ -688,7 +688,7 @@ func CreateSuperUserRPC(node string, user string, passwd string) (*model.MysqlUs
 	return rsp, err
 }
 
-func DropUserRPC(node string, user string) (*model.MysqlUserRPCResponse, error) {
+func DropUserRPC(node string, user string, host string) (*model.MysqlUserRPCResponse, error) {
 	cli, cleanup, err := GetClient(node)
 	if err != nil {
 		return nil, err
@@ -698,6 +698,7 @@ func DropUserRPC(node string, user string) (*model.MysqlUserRPCResponse, error) 
 	method := model.RPCMysqlDropUser
 	req := model.NewMysqlUserRPCRequest()
 	req.User = user
+	req.Host = host
 
 	rsp := model.NewMysqlUserRPCResponse(model.OK)
 	err = cli.Call(method, req, rsp)
@@ -712,8 +713,10 @@ func CreateUserWithPrivRPC(node, user, passwd, database, table, host, privs stri
 	}
 	defer cleanup()
 
-	if database == "" {
+	if database == "" || database == "*" {
 		database = "*"
+	} else {
+		database = fmt.Sprintf("`%s`", database)
 	}
 	if table == "" {
 		table = "*"

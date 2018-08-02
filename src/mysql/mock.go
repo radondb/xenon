@@ -593,7 +593,7 @@ func (u *MockUserA) CreateUserWithPrivileges(db *sql.DB, user, passwd, database,
 }
 
 // DropUser mock.
-func (u *MockUserA) DropUser(db *sql.DB, user string) error {
+func (u *MockUserA) DropUser(db *sql.DB, user string, host string) error {
 	return nil
 }
 

@@ -149,9 +149,9 @@ func (u *UserRPC) DropUser(req *model.MysqlUserRPCRequest, rsp *model.MysqlUserR
 	}
 
 	// drop
-	if err := u.server.mysql.DropUser(req.User); err != nil {
+	if err := u.server.mysql.DropUser(req.User, req.Host); err != nil {
 		rsp.RetCode = err.Error()
-		log.Error("[%v].drop.user.[%v].error[%v]", state.String(), req.User, err)
+		log.Error("[%v].drop.user.[%v]@[%v].error[%v]", state.String(), req.User, req.Host, err)
 		return nil
 	}
 	return nil
