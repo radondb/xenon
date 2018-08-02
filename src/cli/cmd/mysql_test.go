@@ -78,10 +78,10 @@ func TestCLIMysqlCommand(t *testing.T) {
 		assert.Nil(t, err)
 	}
 
-	// drop
+	// drop normal user.
 	{
 		cmd := NewMysqlCommand()
-		_, err := executeCommand(cmd, "dropuser", "userxx")
+		_, err := executeCommand(cmd, "dropuser", "userxx", "%")
 		assert.Nil(t, err)
 	}
 

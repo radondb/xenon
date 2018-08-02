@@ -374,12 +374,12 @@ func (m *Mysql) CreateUser(user string, passwd string) error {
 }
 
 // DropUser used to drop a user.
-func (m *Mysql) DropUser(user string) error {
+func (m *Mysql) DropUser(user string, host string) error {
 	db, err := m.getDB()
 	if err != nil {
 		return err
 	}
-	return m.userHandler.DropUser(db, user)
+	return m.userHandler.DropUser(db, user, host)
 }
 
 // ChangeUserPasswd used to change the user's password.
