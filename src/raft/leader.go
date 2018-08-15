@@ -443,6 +443,9 @@ func (r *Leader) checkSemiSync() {
 		if err := r.mysql.EnableSemiSyncMaster(); err != nil {
 			r.ERROR("mysql.enable.semi-sync.error[%v]", err)
 		}
+		if err := r.mysql.SetSemiWaitSlaveCount((cur - 1) / 2); err != nil {
+			r.ERROR("mysql.set.semi.wait.slave.count.error[%v]", err)
+		}
 	}
 }
 

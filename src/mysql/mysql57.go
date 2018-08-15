@@ -208,6 +208,12 @@ func (my *Mysql57) EnableSemiSyncMaster(db *sql.DB) error {
 	return ExecuteWithTimeout(db, reqTimeout, cmds)
 }
 
+//SetSemiWaitSlaveCount used set rpl_semi_sync_master_wait_for_slave_count
+func (my *Mysql57) SetSemiWaitSlaveCount(db *sql.DB, count int) error {
+	cmds := fmt.Sprintf("SET GLOBAL rpl_semi_sync_master_wait_for_slave_count = %d", count)
+	return ExecuteWithTimeout(db, reqTimeout, cmds)
+}
+
 // DisableSemiSyncMaster used to disable the semi-sync from master.
 func (my *Mysql57) DisableSemiSyncMaster(db *sql.DB) error {
 	cmds := "SET GLOBAL rpl_semi_sync_master_enabled=OFF"

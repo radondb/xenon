@@ -337,6 +337,15 @@ func (m *Mysql) EnableSemiSyncMaster() error {
 	return m.replHandler.EnableSemiSyncMaster(db)
 }
 
+// SetSemiWaitSlaveCount used to set rpl_semi_sync_master_wait_for_slave_count
+func (m *Mysql) SetSemiWaitSlaveCount(count int) error {
+	db, err := m.getDB()
+	if err != nil {
+		return err
+	}
+	return m.replHandler.SetSemiWaitSlaveCount(db, count)
+}
+
 // DisableSemiSyncMaster used to disable the semi-sync from master.
 func (m *Mysql) DisableSemiSyncMaster() error {
 	db, err := m.getDB()

@@ -41,6 +41,7 @@ type MockGTID struct {
 	EnableSemiSyncMasterFn  func(*sql.DB) error
 	DisableSemiSyncMasterFn func(*sql.DB) error
 	SelectSysVarFn          func(*sql.DB, string) (string, error)
+	SetSemiWaitSlaveCountFn func(*sql.DB, int) error
 }
 
 // DefaultGetSlaveGTID returns the default slave gtid.
@@ -225,6 +226,16 @@ func (mogtid *MockGTID) SelectSysVar(db *sql.DB, query string) (string, error) {
 	return mogtid.SelectSysVarFn(db, query)
 }
 
+// DefaultSetSemiWaitSlaveCount mock.
+func DefaultSetSemiWaitSlaveCount(db *sql.DB, count int) error {
+	return nil
+}
+
+// SetSemiWaitSlaveCount mock
+func (mogtid *MockGTID) SetSemiWaitSlaveCount(db *sql.DB, count int) error {
+	return mogtid.SetSemiWaitSlaveCountFn(db, count)
+}
+
 func defaultMockGTID() *MockGTID {
 	mock := &MockGTID{}
 	mock.PingFn = DefaultPing
@@ -245,6 +256,8 @@ func defaultMockGTID() *MockGTID {
 	mock.EnableSemiSyncMasterFn = DefaultEnableSemiSyncMaster
 	mock.DisableSemiSyncMasterFn = DefaultDisableSemiSyncMaster
 	mock.SelectSysVarFn = DefaultSelectSysVar
+	mock.SetSemiWaitSlaveCountFn = DefaultSetSemiWaitSlaveCount
+
 	return mock
 }
 
