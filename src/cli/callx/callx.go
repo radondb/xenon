@@ -16,6 +16,7 @@ import (
 	"model"
 	"os"
 	"raft"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -133,12 +134,13 @@ func FindBestoneForBackup(self string) (string, error) {
 		if node != leader {
 			if rsp, err := GetMysqlStatusRPC(node); err == nil {
 				GTID := rsp.GTID
-				if GTID.Slave_SQL_Running &&
-					GTID.Slave_IO_Running &&
-					node != self {
-					log.Warning("rebuildme.found.best.slave[%v].leader[%v]",
-						node, leader)
-					return node, nil
+				if GTID.Slave_SQL_Running && GTID.Slave_IO_Running {
+					if num, _ := strconv.Atoi(GTID.Seconds_Behind_Master); num < 100 &&
+						node != self {
+						log.Warning("rebuildme.found.best.slave[%v].leader[%v]",
+							node, leader)
+						return node, nil
+					}
 				}
 			}
 		}
