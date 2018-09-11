@@ -39,10 +39,6 @@ const (
 	MysqlReadwrite Option = "READWRITE"
 )
 
-var (
-	downsLimits = 2
-)
-
 // PingEntry tuple.
 type PingEntry struct {
 	Relay_Master_Log_File string
@@ -94,6 +90,8 @@ func (m *Mysql) Ping() {
 	var db *sql.DB
 	var pe *PingEntry
 	log := m.log
+
+	downsLimits := m.conf.AdmitDefeatPingCnt
 
 	if db, err = m.getDB(); err != nil {
 		log.Error("mysql[%v].ping.getdb.error[%v].downs:%v,downslimits:%v", m.getConnStr(), err, m.downs, downsLimits)

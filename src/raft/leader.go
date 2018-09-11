@@ -39,7 +39,7 @@ type Leader struct {
 	processRequestVoteRequestHandler func(*model.RaftRPCRequest) *model.RaftRPCResponse
 
 	// leader send heartbeat request to other followers
-	sendHeartbeatHandler func(*int, chan *model.RaftRPCResponse)
+	sendHeartbeatHandler func(*bool, chan *model.RaftRPCResponse)
 
 	// leader process send heartbeat response
 	processHeartbeatResponseHandler func(*int, *model.RaftRPCResponse)
@@ -65,18 +65,23 @@ func (r *Leader) Loop() {
 	r.stateInit()
 	defer r.stateExit()
 
-	mysqlDowns := 0
+	mysqlDown := false
 	ackGranted := 1
 
 	lessHtAcks := 0
-	maxLessHtAcks := 10
+	maxLessHtAcks := r.Raft.conf.AdmitDefeatHtCnt
 
 	// send heartbeat
 	respChan := make(chan *model.RaftRPCResponse, r.getMembers())
-	r.sendHeartbeatHandler(&mysqlDowns, respChan)
+	r.sendHeartbeatHandler(&mysqlDown, respChan)
 	r.resetHeartbeatTimeout()
 
 	for r.getState() == LEADER {
+		if mysqlDown {
+			r.WARNING("feel.mysql.down.degrade.to.follower")
+			r.degradeToFollower()
+		}
+
 		select {
 		case <-r.fired:
 			r.WARNING("state.machine.loop.got.fired")
@@ -97,7 +102,7 @@ func (r *Leader) Loop() {
 
 			ackGranted = 1
 			respChan = make(chan *model.RaftRPCResponse, r.getMembers())
-			r.sendHeartbeatHandler(&mysqlDowns, respChan)
+			r.sendHeartbeatHandler(&mysqlDown, respChan)
 			r.resetHeartbeatTimeout()
 		case rsp := <-respChan:
 			r.processHeartbeatResponseHandler(&ackGranted, rsp)
@@ -248,10 +253,10 @@ func (r *Leader) processRequestVoteRequest(req *model.RaftRPCRequest) *model.Raf
 
 // leaderSendHeartbeatHandler
 // broadcast hearbeat requests to other peers of the cluster
-func (r *Leader) sendHeartbeat(mysqlDowns *int, c chan *model.RaftRPCResponse) {
+func (r *Leader) sendHeartbeat(mysqlDown *bool, c chan *model.RaftRPCResponse) {
 	// check MySQL down
 	if r.mysql.GetState() == mysql.MysqlDead {
-		r.WARNING("feel.mysql.down")
+		*mysqlDown = true
 		return
 	}
 
@@ -495,7 +500,7 @@ func (r *Leader) setProcessRequestVoteRequestHandler(f func(*model.RaftRPCReques
 	r.processRequestVoteRequestHandler = f
 }
 
-func (r *Leader) setSendHeartbeatHandler(f func(*int, chan *model.RaftRPCResponse)) {
+func (r *Leader) setSendHeartbeatHandler(f func(*bool, chan *model.RaftRPCResponse)) {
 	r.sendHeartbeatHandler = f
 }
 

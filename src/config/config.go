@@ -48,6 +48,9 @@ type RaftConfig struct {
 	// leader heartbeat interval(ms)
 	HeartbeatTimeout int `json:"heartbeat-timeout"`
 
+	// admit defeat count for hearbeat
+	AdmitDefeatHtCnt int `json:"admit-defeat-hearbeat-count"`
+
 	// election timeout(ms)
 	ElectionTimeout int `json:"election-timeout"`
 
@@ -76,6 +79,7 @@ func DefaultRaftConfig() *RaftConfig {
 	return &RaftConfig{
 		MetaDatadir:         ".",
 		HeartbeatTimeout:    1000,
+		AdmitDefeatHtCnt:    10,
 		ElectionTimeout:     3000,
 		PurgeBinlogInterval: 1000 * 60 * 5,
 		LeaderStartCommand:  "nop",
@@ -117,6 +121,9 @@ type MysqlConfig struct {
 	// ping mysql interval(ms)
 	PingTimeout int `json:"ping-timeout"`
 
+	// admit defeat count for ping mysql
+	AdmitDefeatPingCnt int `json:"admit-defeat-ping-count"`
+
 	// master system variables configure(separated by ;)
 	MasterSysVars string `json:"master-sysvars"`
 
@@ -135,16 +142,17 @@ type MysqlConfig struct {
 
 func DefaultMysqlConfig() *MysqlConfig {
 	return &MysqlConfig{
-		Admin:        "root",
-		Passwd:       "",
-		Host:         "localhost",
-		Port:         3306,
-		PingTimeout:  1000,
-		Basedir:      "/u01/mysql_20160606/",
-		DefaultsFile: "/etc/my3306.cnf",
-		ReplHost:     "127.0.0.1",
-		ReplUser:     "repl",
-		ReplPasswd:   "repl",
+		Admin:              "root",
+		Passwd:             "",
+		Host:               "localhost",
+		Port:               3306,
+		PingTimeout:        1000,
+		AdmitDefeatPingCnt: 2,
+		Basedir:            "/u01/mysql_20160606/",
+		DefaultsFile:       "/etc/my3306.cnf",
+		ReplHost:           "127.0.0.1",
+		ReplUser:           "repl",
+		ReplPasswd:         "repl",
 	}
 }
 
