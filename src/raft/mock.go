@@ -208,7 +208,7 @@ func (r *Raft) mockLeaderProcessRequestVoteRequest(req *model.RaftRPCRequest) *m
 
 // mock leader send heartbeat request
 // nop here, so other followers will start a new leader election
-func (r *Raft) mockLeaderSendHeartbeat(mysqlDownLimits *int, c chan *model.RaftRPCResponse) {
+func (r *Raft) mockLeaderSendHeartbeat(mysqlDown *bool, c chan *model.RaftRPCResponse) {
 	r.DEBUG("mock.send.nop.heartbeat.request")
 }
 
