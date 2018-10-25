@@ -203,6 +203,7 @@ func (s *Server) Wait() {
 		syscall.SIGTERM,
 		syscall.SIGHUP)
 	s.log.Info("server.signal:%+v", <-ossig)
+	s.Shutdown()
 }
 
 func (s *Server) GetState() raft.State {

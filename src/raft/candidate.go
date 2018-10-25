@@ -252,6 +252,9 @@ func (r *Candidate) sendRequestVote(respChan chan *model.RaftRPCResponse) {
 			r.WARNING("send.requestvote.done.to[%v]", peer.getID())
 		}(peer)
 	}
+
+	// Wait for the send requestvote work done.
+	r.wg.Wait()
 }
 
 // Votes who comes from IDLE machine will be filitered out.
@@ -314,9 +317,7 @@ func (r *Candidate) stateInit() {
 }
 
 func (r *Candidate) stateExit() {
-	// Wait for the CANDIDATE state-machine async work done.
-	r.wg.Wait()
-	r.WARNING("state.machine.exit")
+	r.WARNING("candidate.state.machine.exit")
 }
 
 // candidate handlers
