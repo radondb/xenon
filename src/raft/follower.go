@@ -327,7 +327,7 @@ func (r *Follower) stateInit() {
 func (r *Follower) stateExit() {
 	// Wait for the FOLLOWER state-machine async work done.
 	r.wg.Wait()
-	r.WARNING("state.machine.exit")
+	r.WARNING("follower.state.machine.exit")
 }
 
 // follower handlers

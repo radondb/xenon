@@ -23,6 +23,9 @@ type Leader struct {
 	// the smallest binlog which slaves executed by SQL-Thread
 	relayMasterLogFile string
 
+	// leader degrade to follower
+	isDegradeToFollower bool
+
 	// Used to wait for the async job done.
 	wg sync.WaitGroup
 
@@ -80,6 +83,7 @@ func (r *Leader) Loop() {
 		if mysqlDown {
 			r.WARNING("feel.mysql.down.degrade.to.follower")
 			r.degradeToFollower()
+			break
 		}
 
 		select {
@@ -95,6 +99,7 @@ func (r *Leader) Loop() {
 				if lessHtAcks >= maxLessHtAcks {
 					r.WARNING("degrade.to.follower.lessHtAcks[%v]>=maxLessHtAcks[%v]", lessHtAcks, maxLessHtAcks)
 					r.degradeToFollower()
+					break
 				}
 			} else {
 				lessHtAcks = 0
@@ -308,10 +313,16 @@ func (r *Leader) processHeartbeatResponse(ackGranted *int, rsp *model.RaftRPCRes
 }
 
 func (r *Leader) degradeToFollower() {
+	r.WARNING("degrade.to.follower.stop.the.vip...")
+	if err := r.leaderStopShellCommand(); err != nil {
+		r.ERROR("stopshell.error[%v]", err)
+	}
+
 	r.purgeBinlogStop()
 	r.checkSemiSyncStop()
-	r.setState(FOLLOWER)
 	r.IncLeaderDegrades()
+	r.setState(FOLLOWER)
+	r.isDegradeToFollower = true
 }
 
 // prepareSettingsAsync
@@ -460,22 +471,24 @@ func (r *Leader) stateInit() {
 	r.purgeBinlogStart()
 	r.checkSemiSyncStart()
 	r.prepareSettingsAsync()
+	r.isDegradeToFollower = false
 
 	r.WARNING("state.machine.run")
 }
 
 func (r *Leader) stateExit() {
-	r.purgeBinlogStop()
-	r.checkSemiSyncStop()
+	if !r.isDegradeToFollower {
+		r.WARNING("state.machine.exit.stop.the.vip...")
+		if err := r.leaderStopShellCommand(); err != nil {
+			r.ERROR("stopshell.error[%v]", err)
+		}
 
-	r.WARNING("state.machine.exit.stop.the.vip...")
-	if err := r.leaderStopShellCommand(); err != nil {
-		r.ERROR("stopshell.error[%v]", err)
+		r.purgeBinlogStop()
+		r.checkSemiSyncStop()
 	}
-
 	// Wait for the LEADER state-machine async work done.
 	r.wg.Wait()
-	r.WARNING("state.machine.exit.done")
+	r.WARNING("leader.state.machine.exit.done")
 }
 
 // leader handlers
