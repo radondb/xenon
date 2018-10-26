@@ -107,7 +107,7 @@ func (u *UserRPC) CreateUserWithPrivileges(req *model.MysqlUserRPCRequest, rsp *
 	}
 
 	// creates
-	if err := u.server.mysql.CreateUserWithPrivileges(req.User, req.Passwd, req.Database, req.Table, req.Host, req.Privileges); err != nil {
+	if err := u.server.mysql.CreateUserWithPrivileges(req.User, req.Passwd, req.Database, req.Table, req.Host, req.Privileges, req.SSL); err != nil {
 		rsp.RetCode = err.Error()
 		log.Error("rpc[%v].create.user[%v].with.priv.error[%v]", state.String(), req.User, err)
 		return nil
