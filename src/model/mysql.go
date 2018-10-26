@@ -175,6 +175,9 @@ type MysqlUserRPCRequest struct {
 
 	// the normal privileges(comma delimited, such as "SELECT,CREATE"
 	Privileges string
+
+	// the ssl required
+	SSL string
 }
 
 type MysqlUser struct {

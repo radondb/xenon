@@ -419,12 +419,12 @@ func (m *Mysql) GrantNormalPrivileges(user string) error {
 }
 
 // CreateUserWithPrivileges used to create a new user with grants.
-func (m *Mysql) CreateUserWithPrivileges(user, passwd, database, table, host, privs string) error {
+func (m *Mysql) CreateUserWithPrivileges(user, passwd, database, table, host, privs string, ssl string) error {
 	db, err := m.getDB()
 	if err != nil {
 		return err
 	}
-	return m.userHandler.CreateUserWithPrivileges(db, user, passwd, database, table, host, privs)
+	return m.userHandler.CreateUserWithPrivileges(db, user, passwd, database, table, host, privs, ssl)
 }
 
 // GrantReplicationPrivileges used to grant replication privs.
