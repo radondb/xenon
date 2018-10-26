@@ -700,7 +700,9 @@ var (
 	grantTable    string
 	grantHost     string
 	grantPrivs    string
+	requireSSL    string
 )
+
 
 // create normal user with privileges
 func NewMysqlCreateUserWithPrivilegesCommand() *cobra.Command {
@@ -715,6 +717,7 @@ func NewMysqlCreateUserWithPrivilegesCommand() *cobra.Command {
 	cmd.Flags().StringVar(&grantTable, "table", "", "--table=<table>")
 	cmd.Flags().StringVar(&grantHost, "host", "", "--host=<host>")
 	cmd.Flags().StringVar(&grantPrivs, "privs", "for example:SELECT,CREATE(comma-separated)", "--privs=<privs>")
+	cmd.Flags().StringVar(&requireSSL, "ssl", "NO","--ssl=<YES/NO>")
 
 	return cmd
 }
@@ -728,7 +731,7 @@ func mysqlCreateUserWithPrivilegesCommandFn(cmd *cobra.Command, args []string) {
 	{
 		leader, err := callx.GetClusterLeader(self)
 		ErrorOK(err)
-		rsp, err := callx.CreateUserWithPrivRPC(leader, grantUser, grantPasswd, grantDatabase, grantTable, grantHost, grantPrivs)
+		rsp, err := callx.CreateUserWithPrivRPC(leader, grantUser, grantPasswd, grantDatabase, grantTable, grantHost, grantPrivs, requireSSL)
 		ErrorOK(err)
 		RspOK(rsp.RetCode)
 	}

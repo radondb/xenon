@@ -36,6 +36,10 @@ var (
 		"SHOW DATABASES", "SHOW VIEW", "UPDATE", "TRIGGER", "REFERENCES",
 		"REPLICATION SLAVE", "REPLICATION CLIENT",
 	}
+
+	mysqlSSLType = []string{
+		"YES", "NO",
+	}
 )
 
 // User tuple.
@@ -110,8 +114,9 @@ func (u *User) GrantNormalPrivileges(db *sql.DB, user string) error {
 }
 
 // CreateUserWithPrivileges for create normal user.
-func (u *User) CreateUserWithPrivileges(db *sql.DB, user, passwd, database, table, host, privs string) error {
+func (u *User) CreateUserWithPrivileges(db *sql.DB, user, passwd, database, table, host, privs string, ssl string) error {
 	// build normal privs map
+	var query string
 	normal := make(map[string]string)
 	for _, priv := range mysqlNormalPrivileges {
 		normal[priv] = priv
@@ -126,7 +131,25 @@ func (u *User) CreateUserWithPrivileges(db *sql.DB, user, passwd, database, tabl
 			return errors.Errorf("cant' create user[%v] with privileges[%v]", user, priv)
 		}
 	}
-	query := fmt.Sprintf("GRANT %s ON %s.%s TO `%s`@'%s' IDENTIFIED BY '%s'", privs, database, table, user, host, passwd)
+
+	// build standard ssl_type map
+	standardSSL := make(map[string]string)
+	for _, ssltype := range mysqlSSLType {
+		standardSSL[ssltype] = ssltype
+	}
+
+	// check ssl_type
+	ssltype := strings.TrimSpace(ssl)
+	if _, ok := standardSSL[ssltype]; !ok {
+		return errors.Errorf("cant' create user[%v] require ssl_type[%v]", user, ssltype)
+	}
+	if ssltype == "YES" {
+		query = fmt.Sprintf("GRANT %s ON %s.%s TO `%s`@'%s' IDENTIFIED BY '%s' REQUIRE X509", privs, database, table, user, host, passwd)
+
+	} else {
+		query = fmt.Sprintf("GRANT %s ON %s.%s TO `%s`@'%s' IDENTIFIED BY '%s'", privs, database, table, user, host, passwd)
+	}
+
 	return u.grantPrivileges(db, query)
 }
 

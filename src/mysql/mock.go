@@ -601,7 +601,7 @@ func (u *MockUserA) GetUser(db *sql.DB) ([]model.MysqlUser, error) {
 }
 
 // CreateUserWithPrivileges mock.
-func (u *MockUserA) CreateUserWithPrivileges(db *sql.DB, user, passwd, database, table, host, privs string) error {
+func (u *MockUserA) CreateUserWithPrivileges(db *sql.DB, user, passwd, database, table, host, privs string, ssl string) error {
 	return nil
 }
 

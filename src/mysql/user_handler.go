@@ -23,6 +23,6 @@ type UserHandler interface {
 	CreateReplUserWithoutBinlog(*sql.DB, string, string) error
 	GrantAllPrivileges(*sql.DB, string) error
 	GrantNormalPrivileges(*sql.DB, string) error
-	CreateUserWithPrivileges(db *sql.DB, user, passwd, database, table, host, privs string) error
+	CreateUserWithPrivileges(db *sql.DB, user, passwd, database, table, host, privs string, ssl string) error
 	GrantReplicationPrivileges(*sql.DB, string) error
 }
