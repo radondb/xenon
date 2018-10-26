@@ -60,7 +60,7 @@ func TestRaftRPCHA(t *testing.T) {
 			err := c.Call(method, req, rsp)
 			assert.Nil(t, err)
 
-			want := model.ErrorInvalidRequest
+			want := model.OK
 			got := rsp.RetCode
 			assert.Equal(t, want, got)
 		}
@@ -142,7 +142,7 @@ func TestRaftRPCHA(t *testing.T) {
 			err := c.Call(method, req, rsp)
 			assert.Nil(t, err)
 
-			want := model.ErrorInvalidRequest
+			want := model.OK
 			got := rsp.RetCode
 			assert.Equal(t, want, got)
 		}
@@ -442,7 +442,7 @@ func TestRaftRPCHATryToLeaderFail_MySQLUnpromotble(t *testing.T) {
 		err := c.Call(method, req, rsp)
 		assert.Nil(t, err)
 
-		want := model.ErrorInvalidRequest
+		want := model.OK
 		got := rsp.RetCode
 		assert.Equal(t, want, got)
 	}

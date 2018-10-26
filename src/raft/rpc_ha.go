@@ -25,7 +25,7 @@ func (h *HARPC) HADisable(req *model.HARPCRequest, rsp *model.HARPCResponse) err
 	state := h.raft.getState()
 	switch state {
 	case IDLE:
-		rsp.RetCode = model.ErrorInvalidRequest
+		rsp.RetCode = model.OK
 		return nil
 	case STOPPED:
 		rsp.RetCode = model.ErrorInvalidRequest
@@ -45,13 +45,13 @@ func (h *HARPC) HAEnable(req *model.HARPCRequest, rsp *model.HARPCResponse) erro
 	state := h.raft.getState()
 	switch state {
 	case LEADER:
-		rsp.RetCode = model.ErrorInvalidRequest
+		rsp.RetCode = model.OK
 		return nil
 	case CANDIDATE:
-		rsp.RetCode = model.ErrorInvalidRequest
+		rsp.RetCode = model.OK
 		return nil
 	case FOLLOWER:
-		rsp.RetCode = model.ErrorInvalidRequest
+		rsp.RetCode = model.OK
 		return nil
 	case STOPPED:
 		rsp.RetCode = model.ErrorInvalidRequest
@@ -71,7 +71,7 @@ func (h *HARPC) HATryToLeader(req *model.HARPCRequest, rsp *model.HARPCResponse)
 	state := h.raft.getState()
 	switch state {
 	case LEADER:
-		rsp.RetCode = model.ErrorInvalidRequest
+		rsp.RetCode = model.OK
 		return nil
 	case CANDIDATE:
 		rsp.RetCode = model.ErrorInvalidRequest
