@@ -356,12 +356,12 @@ func (m *Mysql) DisableSemiSyncMaster() error {
 }
 
 // CheckUserExists used to check the user exists or not.
-func (m *Mysql) CheckUserExists(user string) (bool, error) {
+func (m *Mysql) CheckUserExists(user string, host string) (bool, error) {
 	db, err := m.getDB()
 	if err != nil {
 		return false, err
 	}
-	return m.userHandler.CheckUserExists(db, user)
+	return m.userHandler.CheckUserExists(db, user, host)
 }
 
 // GetUser used to get the mysql user list.

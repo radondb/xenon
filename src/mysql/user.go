@@ -48,8 +48,8 @@ type User struct {
 }
 
 // CheckUserExists used to check the user exists or not.
-func (u *User) CheckUserExists(db *sql.DB, user string) (bool, error) {
-	query := fmt.Sprintf("SELECT User FROM mysql.user WHERE User = '%s'", user)
+func (u *User) CheckUserExists(db *sql.DB, user string, host string) (bool, error) {
+	query := fmt.Sprintf("SELECT User FROM mysql.user WHERE User = '%s' and Host = '%s'", user, host)
 	rows, err := Query(db, query)
 	if err != nil {
 		return false, err

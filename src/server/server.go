@@ -103,7 +103,7 @@ func (s *Server) setupMysql() {
 	}
 
 	log.Info("server.mysql.check.replication.user...")
-	ret, err := s.mysql.CheckUserExists(s.conf.Mysql.ReplUser)
+	ret, err := s.mysql.CheckUserExists(s.conf.Mysql.ReplUser, "%")
 	if err != nil {
 		log.Error("server.mysql.CheckUserExists.error[%+v]", err)
 		return

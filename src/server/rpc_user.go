@@ -92,17 +92,10 @@ func (u *UserRPC) CreateUserWithPrivileges(req *model.MysqlUserRPCRequest, rsp *
 	}
 
 	// check
-	ok, err := u.server.mysql.CheckUserExists(req.User)
+	_, err := u.server.mysql.CheckUserExists(req.User, req.Host)
 	if err != nil {
 		rsp.RetCode = err.Error()
-		log.Error("rpc[%v].create.user[%v].with.priv.error[%v]", state.String(), req.User, err)
-		return nil
-	}
-
-	if ok {
-		msg := fmt.Sprintf("user[%v].is.exists.when.create.with.priv", req.User)
-		rsp.RetCode = msg
-		u.server.log.Error("%v", msg)
+		log.Error("rpc[%v].create.user[%v]@[%v].with.priv.error[%v]", state.String(), req.User, req.Host, err)
 		return nil
 	}
 

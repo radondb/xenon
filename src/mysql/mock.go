@@ -581,7 +581,7 @@ type MockUserA struct {
 }
 
 // CheckUserExists mock.
-func (u *MockUserA) CheckUserExists(db *sql.DB, user string) (bool, error) {
+func (u *MockUserA) CheckUserExists(db *sql.DB, user string, host string) (bool, error) {
 	return false, nil
 }
 
