@@ -70,7 +70,7 @@ xenon-3: 192.168.0.5:8801
 ```
 Executing follow command:
 ```
-./xenoncli cluster add 192.168.0.2:8801 192.168.0.3:8801,192.168.0.5:8801
+./xenoncli cluster add 192.168.0.2:8801,192.168.0.3:8801,192.168.0.5:8801
 ```
 ***xenon allows adding duplicate nodes,  If new nodes are already in the cluster without any action***
 
