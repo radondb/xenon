@@ -29,7 +29,7 @@ Table of Contents
 
 ## Requirements
 1. `Xenon` is a self-contained binary that does not require additional system libraries at the operating system level. It is built on Linux. I have no hint about MS Windows and OS/X, and the build is incompatible with Windows and OS/X. It is a standalone application. When configured to run with a `MySQL` backend, so mysqld is required.
-2. Xenon use `GTID` parallel replication technology, MySQL version is best `5.7 or higher`.
+2. Xenon use `GTID semi-sync` parallel replication technology, MySQL version is best `5.7 or higher`. See the [my.cnf](config/MySQL.md) for details.
 3. [Go](http://golang.org) version 1.8 or newer is required("sudo apt install golang" for ubuntu or "yum install golang" for centOS/redhat).
 
 ## Step1. Download src code from github
