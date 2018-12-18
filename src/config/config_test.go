@@ -57,7 +57,7 @@ func TestParseConfig(t *testing.T) {
 		"backup-iops-limits":100000,
 		"backup-use-memory":"2GB",
 		"backup-parallel": 2,
-		"mysqld-monitor-interval": 1000
+		"mysqld-monitor-interval": 5000
 	},
 
 	"rpc":

@@ -230,7 +230,7 @@ func DefaultBackupConfig() *BackupConfig {
 		BackupIOPSLimits:      100000,
 		UseMemory:             "2GB",
 		Parallel:              2,
-		MysqldMonitorInterval: 1000 * 1,
+		MysqldMonitorInterval: 5000,
 		Admin:        "root",
 		Passwd:       "",
 		Host:         "localhost",
