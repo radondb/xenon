@@ -47,6 +47,20 @@ func TestStateDead(t *testing.T) {
 	mysql.PingStop()
 }
 
+func TestCreateReplUser (t *testing.T) {
+	// log
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	port := common.RandomPort(8000, 9000)
+	_, mysql, cleanup := MockMysqlReplUser(log, port, NewMockGTIDA())
+	defer cleanup()
+
+	time.Sleep(time.Duration(config.DefaultMysqlConfig().PingTimeout*2) * time.Millisecond)
+	got := mysql.GetState()
+	want := MysqlAlive
+	assert.Equal(t, want, got)
+	mysql.PingStop()
+}
+
 /*
 // TEST EFFECTS:
 // test GTIDGreaterThan function

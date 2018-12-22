@@ -118,7 +118,9 @@ func (m *Mysql) Ping() {
 	// check replication users
 	if exists, err := m.userHandler.CheckUserExists(db, m.conf.ReplUser); err == nil {
 		if !exists {
-			m.userHandler.CreateReplUserWithoutBinlog(db, m.conf.ReplUser, m.conf.ReplPasswd)
+			if err = m.userHandler.CreateReplUserWithoutBinlog(db, m.conf.ReplUser, m.conf.ReplPasswd); err != nil {
+				log.Error("server.mysql.create.replication.user[%v].error[%+v]", m.conf.ReplUser, err)
+			}
 		}
 	}
 
