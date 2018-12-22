@@ -661,6 +661,35 @@ func MockMysql(log *xlog.Log, port int, h ReplHandler) (string, *Mysql, func()) 
 	}
 }
 
+// MockMysqlReplUser mock.
+func MockMysqlReplUser(log *xlog.Log, port int, h ReplHandler) (string, *Mysql, func()) {
+	id := fmt.Sprintf("127.0.0.1:%d", port)
+	conf := config.DefaultMysqlConfig()
+	mysql := NewMysql(conf, log)
+
+	// setup rpc
+	rpc, err := xrpc.NewService(xrpc.Log(log),
+		xrpc.ConnectionStr(id))
+	if err != nil {
+		log.Panic("mysqlRPC.NewService.error[%v]", err)
+	}
+	setupRPC(rpc, mysql)
+	rpc.Start()
+
+	// Set Repl functions
+	mysql.SetReplHandler(h)
+
+	// Set User functions
+	mysql.SetUserHandler(new(MockUserA))
+
+	// start ping
+	mysql.PingStart()
+	return id, mysql, func() {
+		mysql.PingStop()
+		rpc.Stop()
+	}
+}
+
 // MockGetClient mock.
 func MockGetClient(t *testing.T, svrConn string) (*xrpc.Client, func()) {
 	client, err := xrpc.NewClient(svrConn, 100)

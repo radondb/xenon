@@ -10,6 +10,7 @@ package mysql
 
 import (
 	"config"
+	"fmt"
 	"model"
 	"testing"
 	"xbase/xlog"
@@ -151,6 +152,34 @@ func TestCreateReplUserWithoutBinlog(t *testing.T) {
 	mock.ExpectExec(queryList[3]).WillReturnResult(sqlmock.NewResult(1, 1))
 	err = mysql.CreateReplUserWithoutBinlog("repl", "replpwd")
 	assert.Nil(t, err)
+}
+
+func TestCreateReplUserWithoutBinlogErr(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.Nil(t, err)
+	defer db.Close()
+
+	// log
+	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
+	conf := config.DefaultMysqlConfig()
+	mysql := NewMysql(conf, log)
+	mysql.db = db
+
+	queryList := []string{
+		"SET sql_log_bin=0",
+		"CREATE USER `repl` IDENTIFIED BY 'replpwd'",
+		"GRANT REPLICATION SLAVE,REPLICATION CLIENT ON *.* TO `repl`",
+		"SET sql_log_bin=1",
+	}
+
+	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(queryList[1]).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(queryList[2]).WillReturnError(fmt.Errorf("ERROR 1045 (28000): Access denied for user 'repl'@'%%'"))
+	mock.ExpectExec(queryList[3]).WillReturnResult(sqlmock.NewResult(1, 1))
+	err = mysql.CreateReplUserWithoutBinlog("repl", "replpwd")
+	want := "ERROR 1045 (28000): Access denied for user 'repl'@'%'"
+	got := err.Error()
+	assert.Equal(t, want, got)
 }
 
 func TestChangeUserPasswd(t *testing.T) {
