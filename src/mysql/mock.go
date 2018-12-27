@@ -23,25 +23,26 @@ import (
 
 // MockGTID tuple.
 type MockGTID struct {
-	PingFn                  func(*sql.DB) (*PingEntry, error)
-	SetReadOnlyFn           func(*sql.DB, bool) error
-	GetMasterGTIDFn         func(*sql.DB) (*model.GTID, error)
-	GetSlaveGTIDFn          func(*sql.DB) (*model.GTID, error)
-	StartSlaveIOThreadFn    func(*sql.DB) error
-	StopSlaveIOThreadFn     func(*sql.DB) error
-	StartSlaveFn            func(*sql.DB) error
-	StopSlaveFn             func(*sql.DB) error
-	ChangeMasterToFn        func(*sql.DB, *model.Repl) error
-	ChangeToMasterFn        func(*sql.DB) error
-	WaitUntilAfterGTIDFn    func(*sql.DB, string) error
-	SetGlobalSysVarFn       func(*sql.DB, string) error
-	ResetMasterFn           func(*sql.DB) error
-	ResetSlaveAllFn         func(*sql.DB) error
-	PurgeBinlogsToFn        func(*sql.DB, string) error
-	EnableSemiSyncMasterFn  func(*sql.DB) error
-	DisableSemiSyncMasterFn func(*sql.DB) error
-	SelectSysVarFn          func(*sql.DB, string) (string, error)
-	SetSemiWaitSlaveCountFn func(*sql.DB, int) error
+	PingFn                   func(*sql.DB) (*PingEntry, error)
+	SetReadOnlyFn            func(*sql.DB, bool) error
+	GetMasterGTIDFn          func(*sql.DB) (*model.GTID, error)
+	GetSlaveGTIDFn           func(*sql.DB) (*model.GTID, error)
+	StartSlaveIOThreadFn     func(*sql.DB) error
+	StopSlaveIOThreadFn      func(*sql.DB) error
+	StartSlaveFn             func(*sql.DB) error
+	StopSlaveFn              func(*sql.DB) error
+	ChangeMasterToFn         func(*sql.DB, *model.Repl) error
+	ChangeToMasterFn         func(*sql.DB) error
+	WaitUntilAfterGTIDFn     func(*sql.DB, string) error
+	SetGlobalSysVarFn        func(*sql.DB, string) error
+	ResetMasterFn            func(*sql.DB) error
+	ResetSlaveAllFn          func(*sql.DB) error
+	PurgeBinlogsToFn         func(*sql.DB, string) error
+	EnableSemiSyncMasterFn   func(*sql.DB) error
+	DisableSemiSyncMasterFn  func(*sql.DB) error
+	SelectSysVarFn           func(*sql.DB, string) (string, error)
+	SetSemiWaitSlaveCountFn  func(*sql.DB, int) error
+	SetSemiSyncMasterDefaultFn func(*sql.DB) error
 }
 
 // DefaultGetSlaveGTID returns the default slave gtid.
@@ -216,6 +217,11 @@ func (mogtid *MockGTID) DisableSemiSyncMaster(db *sql.DB) error {
 	return mogtid.DisableSemiSyncMasterFn(db)
 }
 
+// SetSemiSyncMasterDefault mock.
+func (mogtid *MockGTID) SetSemiSyncMasterDefault(db *sql.DB) error {
+	return mogtid.SetSemiSyncMasterDefaultFn(db)
+}
+
 // DefaultSelectSysVar mock.
 func DefaultSelectSysVar(db *sql.DB, query string) (string, error) {
 	return "", nil
@@ -231,9 +237,15 @@ func DefaultSetSemiWaitSlaveCount(db *sql.DB, count int) error {
 	return nil
 }
 
+
 // SetSemiWaitSlaveCount mock
 func (mogtid *MockGTID) SetSemiWaitSlaveCount(db *sql.DB, count int) error {
 	return mogtid.SetSemiWaitSlaveCountFn(db, count)
+}
+
+// SetSemiSyncMasterDefault mock
+func SetSemiSyncMasterDefault(db *sql.DB) error {
+	return nil
 }
 
 func defaultMockGTID() *MockGTID {
@@ -257,6 +269,7 @@ func defaultMockGTID() *MockGTID {
 	mock.DisableSemiSyncMasterFn = DefaultDisableSemiSyncMaster
 	mock.SelectSysVarFn = DefaultSelectSysVar
 	mock.SetSemiWaitSlaveCountFn = DefaultSetSemiWaitSlaveCount
+	mock.SetSemiSyncMasterDefaultFn = SetSemiSyncMasterDefault
 
 	return mock
 }

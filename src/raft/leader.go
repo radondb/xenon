@@ -452,8 +452,8 @@ func (r *Leader) checkSemiSync() {
 	min := 3
 	cur := r.getMembers()
 	if cur < min {
-		if err := r.mysql.DisableSemiSyncMaster(); err != nil {
-			r.ERROR("mysql.disable.semi-sync.error[%v]", err)
+		if err := r.mysql.SetSemiSyncMasterDefault(); err != nil {
+			r.ERROR("mysql.set.semi-sync.master.timeout.default.error[%v]", err)
 		}
 	} else {
 		if err := r.mysql.EnableSemiSyncMaster(); err != nil {

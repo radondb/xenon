@@ -219,3 +219,9 @@ func (my *Mysql57) DisableSemiSyncMaster(db *sql.DB) error {
 	cmds := "SET GLOBAL rpl_semi_sync_master_enabled=OFF"
 	return ExecuteWithTimeout(db, reqTimeout, cmds)
 }
+
+// SetSemiSyncMasterDefault useed to set semi-sync master timeout = default
+func (my *Mysql57) SetSemiSyncMasterDefault(db *sql.DB) error {
+	cmds := "SET GLOBAL rpl_semi_sync_master_timeout=default"
+	return ExecuteWithTimeout(db, reqTimeout, cmds)
+}
