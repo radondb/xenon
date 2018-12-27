@@ -66,6 +66,9 @@ type ReplHandler interface {
 	// disable master semi sync: don't wait slave ack
 	DisableSemiSyncMaster(db *sql.DB) error
 
+	// set semi-sync master-timeout = default
+	SetSemiSyncMasterDefault(db *sql.DB) error
+
 	//set rpl_semi_master_wait_for_slave_count
 	SetSemiWaitSlaveCount(db *sql.DB, count int) error
 }

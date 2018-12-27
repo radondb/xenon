@@ -329,3 +329,17 @@ func TestMysql57SemiMaster(t *testing.T) {
 	err = mysql57.DisableSemiSyncMaster(db)
 	assert.Nil(t, err)
 }
+
+func TestMysql57SemiMasterDefault(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.Nil(t, err)
+	defer db.Close()
+
+	queryList := []string{
+		"SET GLOBAL rpl_semi_sync_master_timeout=default",
+	}
+
+	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
+	err = mysql57.SetSemiSyncMasterDefault(db)
+	assert.Nil(t, err)
+}
