@@ -703,6 +703,7 @@ func TestSemiSyncMaster(t *testing.T) {
 	queryList := []string{
 		"SET GLOBAL rpl_semi_sync_master_enabled=ON",
 		"SET GLOBAL rpl_semi_sync_master_enabled=OFF",
+		"SET GLOBAL rpl_semi_sync_master_timeout=default",
 	}
 
 	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -711,6 +712,10 @@ func TestSemiSyncMaster(t *testing.T) {
 
 	mock.ExpectExec(queryList[1]).WillReturnResult(sqlmock.NewResult(1, 1))
 	err = mysql.DisableSemiSyncMaster()
+	assert.Nil(t, err)
+
+	mock.ExpectExec(queryList[2]).WillReturnResult(sqlmock.NewResult(1, 1))
+	err = mysql.SetSemiSyncMasterDefault()
 	assert.Nil(t, err)
 }
 
