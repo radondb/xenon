@@ -1501,7 +1501,7 @@ func TestRaft2NodesWithGTID(t *testing.T) {
 		MockWaitLeaderEggs(rafts, 0)
 		MockWaitLeaderEggs(rafts, 1)
 		want := (LEADER + FOLLOWER)
-		time.Sleep(time.Duration(121) * time.Second)
+		time.Sleep(time.Second + 1)
 		for i, raft := range rafts {
 			got += raft.getState()
 			if raft.getState() == LEADER {
@@ -1559,5 +1559,95 @@ func TestRaftLeaderAckLessThanQuorum(t *testing.T) {
 		for i := 0; i < 11; i++ {
 			MockWaitLeaderEggs(rafts, 0)
 		}
+	}
+}
+
+// TEST EFFECTS:
+// test the leader state init WaitUntilAfterGTID failed.
+//
+// TEST PROCESSES:
+// 1.  set rafts GTID
+//     1.0 rafts[0]  with MockGTID_X1{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
+//     1.1 rafts[1]  with MockGTID_X3{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
+//     1.2 rafts[2]  with MockGTID_X5{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123} with WaitUntilAfterGTID error
+// 2.  Start 3 rafts state as FOLLOWER
+// 3.  wait rafts[2] elected as leader
+// 4.  rafts[2] WaitUntilAfterGTID error degrade to FOLLOWER
+
+func TestRaftLeaderWaitUntilAfterGTIDError(t *testing.T) {
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	port := common.RandomPort(8000, 9000)
+	_, rafts, cleanup := MockRafts(log, port, 3)
+	defer cleanup()
+
+	// 1. set rafts GTID
+	//    1.0 rafts[0]  with MockGTIDB{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
+	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
+	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123} with WaitUntilAfterGTID error
+	{
+		rafts[0].mysql.SetReplHandler(mysql.NewMockGTIDX1())
+		rafts[1].mysql.SetReplHandler(mysql.NewMockGTIDX3())
+		rafts[2].mysql.SetReplHandler(mysql.NewMockGTIDX5WaitUntilAfterGTIDError())
+	}
+
+	// 2. Start 3 rafts state as FOLLOWER
+	for _, raft := range rafts {
+		raft.Start()
+	}
+
+	// check new leader is rafts[2]
+	{
+		var got State
+		time.Sleep(time.Millisecond * 3000)
+		want := (LEADER + FOLLOWER + FOLLOWER)
+		for _, raft := range rafts {
+			got += raft.getState()
+		}
+		assert.True(t, got < want)
+	}
+}
+
+// TEST EFFECTS:
+// test the leader state init ChangeMasterToFn failed.
+//
+// TEST PROCESSES:
+// 1.  set rafts GTID
+//     1.0 rafts[0]  with MockGTID_X1{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
+//     1.1 rafts[1]  with MockGTID_X3{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
+//     1.2 rafts[2]  with MockGTID_X5{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123} with ChangeToMaster error
+// 2.  Start 3 rafts state as FOLLOWER
+// 3.  wait rafts[2] elected as leader
+// 4.  rafts[2] ChangeToMaster error, degrade to FOLLOWER
+
+func TestRaftLeaderChangeToMasterError(t *testing.T) {
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	port := common.RandomPort(8000, 9000)
+	_, rafts, cleanup := MockRafts(log, port, 3)
+	defer cleanup()
+
+	// 1. set rafts GTID
+	//    1.0 rafts[0]  with MockGTIDB{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
+	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
+	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123} with ChangeToMaster error
+	{
+		rafts[0].mysql.SetReplHandler(mysql.NewMockGTIDX1())
+		rafts[1].mysql.SetReplHandler(mysql.NewMockGTIDX3())
+		rafts[2].mysql.SetReplHandler(mysql.NewMockGTIDX5ChangeToMasterError())
+	}
+
+	// 2. Start 3 rafts state as FOLLOWER
+	for _, raft := range rafts {
+		raft.Start()
+	}
+
+	// check new leader is rafts[2]
+	{
+		var got State
+		time.Sleep(time.Millisecond * 3000)
+		want := (LEADER + FOLLOWER + FOLLOWER)
+		for _, raft := range rafts {
+			got += raft.getState()
+		}
+		assert.True(t, got < want)
 	}
 }
