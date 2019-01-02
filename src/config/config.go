@@ -73,18 +73,22 @@ type RaftConfig struct {
 
 	// rpc client request tiemout(ms)
 	RequestTimeout int
+
+	// candicate wait timeout(ms) for 2 nodes.
+	CandidateWaitFor2Nodes int `json:"candidate-wait-for-2nodes"`
 }
 
 func DefaultRaftConfig() *RaftConfig {
 	return &RaftConfig{
-		MetaDatadir:         ".",
-		HeartbeatTimeout:    1000,
-		AdmitDefeatHtCnt:    10,
-		ElectionTimeout:     3000,
-		PurgeBinlogInterval: 1000 * 60 * 5,
-		LeaderStartCommand:  "nop",
-		LeaderStopCommand:   "nop",
-		RequestTimeout:      1000,
+		MetaDatadir:            ".",
+		HeartbeatTimeout:       1000,
+		AdmitDefeatHtCnt:       10,
+		ElectionTimeout:        3000,
+		PurgeBinlogInterval:    1000 * 60 * 5,
+		LeaderStartCommand:     "nop",
+		LeaderStopCommand:      "nop",
+		RequestTimeout:         1000,
+		CandidateWaitFor2Nodes: 1000 * 60,
 	}
 }
 

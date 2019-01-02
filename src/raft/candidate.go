@@ -285,7 +285,7 @@ func (r *Candidate) processRequestVoteResponse(voteGranted *int, idleVoted *int,
 			if *switchMaster {
 				*voteGranted++
 			} else {
-				time.Sleep(time.Duration(120) * time.Second)
+				time.Sleep(time.Duration(r.conf.CandidateWaitFor2Nodes) * time.Millisecond)
 				*switchMaster = true
 			}
 		}

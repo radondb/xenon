@@ -575,6 +575,26 @@ func GetSlaveGTIDX5(db *sql.DB) (*model.GTID, error) {
 	return gtid, nil
 }
 
+// NewMockGTIDX5WaitUntilAfterGTIDError mock.
+// with GTID{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123}
+// all functions return is OK except WaitUntilAfterGTID
+func NewMockGTIDX5WaitUntilAfterGTIDError() *MockGTID {
+	mock := defaultMockGTID()
+	mock.GetSlaveGTIDFn = GetSlaveGTIDX5
+	mock.WaitUntilAfterGTIDFn = WaitUntilAfterGTIDError
+	return mock
+}
+
+// NewMockGTIDX5ChangeToMasterError mock.
+// with GTID{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123}
+// all functions return is OK except ChangeToMaster error.
+func NewMockGTIDX5ChangeToMasterError() *MockGTID {
+	mock := defaultMockGTID()
+	mock.GetSlaveGTIDFn = GetSlaveGTIDX5
+	mock.ChangeToMasterFn = ChangeToMasterError
+	return mock
+}
+
 // MockUserA tuple.
 type MockUserA struct {
 	UserHandler

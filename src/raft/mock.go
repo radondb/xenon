@@ -47,6 +47,7 @@ func MockRaftsWithConfig(log *xlog.Log, conf *config.RaftConfig, port int, count
 func MockRafts(log *xlog.Log, port int, count int) ([]string, []*Raft, func()) {
 	conf := config.DefaultRaftConfig()
 	conf.PurgeBinlogInterval = 1
+	conf.CandidateWaitFor2Nodes = 1000
 	conf.MetaDatadir = "/tmp/"
 
 	return mockRafts(log, conf, port, count, false)

@@ -347,7 +347,9 @@ func (r *Leader) prepareSettingsAsync() {
 		r.SetRaftMysqlStatus(model.RAFTMYSQL_WAITUNTILAFTERGTID)
 		if err := r.mysql.WaitUntilAfterGTID(gtid.Retrieved_GTID_Set); err != nil {
 			r.ERROR("mysql.WaitUntilAfterGTID.error[%v]", err)
-			// TODO(array)here we should change state to FOLLOWR
+			r.setState(FOLLOWER)
+			r.isDegradeToFollower = true
+			return
 		}
 		r.ResetRaftMysqlStatus()
 		r.WARNING("mysql.WaitUntilAfterGTID.done")
@@ -355,8 +357,10 @@ func (r *Leader) prepareSettingsAsync() {
 		// MySQL2. change to master
 		r.WARNING("2. mysql.ChangeToMaster.prepare")
 		if err := r.mysql.ChangeToMaster(); err != nil {
-			// WTF, what can we do?
 			r.ERROR("mysql.ChangeToMaster.error[%v]", err)
+			r.setState(FOLLOWER)
+			r.isDegradeToFollower = true
+			return
 		}
 		r.WARNING("mysql.ChangeToMaster.done")
 
