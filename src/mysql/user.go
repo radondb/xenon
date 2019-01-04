@@ -107,6 +107,12 @@ func (u *User) ChangeUserPasswd(db *sql.DB, user string, passwd string) error {
 	return Execute(db, query)
 }
 
+// Change56UserPasswd used to change the mysql56 user password.
+func (u *User) Change56UserPasswd(db *sql.DB, user string, passwd string) error {
+	query := fmt.Sprintf("SET PASSWORD FOR `%s` = PASSWORD('%s')", user, passwd)
+	return Execute(db, query)
+}
+
 // GrantNormalPrivileges used to grants normal privileges.
 func (u *User) GrantNormalPrivileges(db *sql.DB, user string) error {
 	query := fmt.Sprintf("GRANT %s ON *.* TO `%s`", strings.Join(mysqlNormalPrivileges, ","), user)

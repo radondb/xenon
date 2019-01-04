@@ -71,6 +71,13 @@ func TestCLIMysqlCommand(t *testing.T) {
 		assert.Nil(t, err)
 	}
 
+	// change password
+	{
+		cmd := NewMysqlCommand()
+		_, err := executeCommand(cmd, "change56password", "userxx", "passwdxx")
+		assert.Nil(t, err)
+	}
+
 	// get mysql user list
 	{
 		cmd := NewMysqlCommand()

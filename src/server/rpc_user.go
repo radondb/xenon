@@ -136,6 +136,27 @@ func (u *UserRPC) ChangePasword(req *model.MysqlUserRPCRequest, rsp *model.Mysql
 	return nil
 }
 
+// change mysql56 user password
+func (u *UserRPC) Change56Pasword(req *model.MysqlUserRPCRequest, rsp *model.MysqlUserRPCResponse) error {
+	log := u.server.log
+	rsp.RetCode = model.OK
+
+	log.Warning("server.change.password[%+v]...", req)
+	state := u.server.raft.GetState()
+	if state != raft.LEADER {
+		rsp.RetCode = fmt.Sprintf("nonleader.can.not.changepassword")
+		return nil
+	}
+
+	// change
+	if err := u.server.mysql.Change56UserPasswd(req.User, req.Passwd); err != nil {
+		rsp.RetCode = err.Error()
+		log.Error("rpc[%v].change.pwd.[%v].error[%v]", state.String(), req.User, err)
+		return nil
+	}
+	return nil
+}
+
 // drop user
 func (u *UserRPC) DropUser(req *model.MysqlUserRPCRequest, rsp *model.MysqlUserRPCResponse) error {
 	log := u.server.log

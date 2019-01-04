@@ -653,6 +653,11 @@ func (u *MockUserA) ChangeUserPasswd(db *sql.DB, user string, passwd string) err
 	return nil
 }
 
+// Change56UserPasswd mock.
+func (u *MockUserA) Change56UserPasswd(db *sql.DB, user string, passwd string) error {
+	return nil
+}
+
 // GrantNormalPrivileges mock.
 func (u *MockUserA) GrantNormalPrivileges(db *sql.DB, user string) error {
 	return nil

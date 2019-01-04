@@ -20,6 +20,7 @@ type UserHandler interface {
 	CreateUser(*sql.DB, string, string) error
 	DropUser(*sql.DB, string, string) error
 	ChangeUserPasswd(*sql.DB, string, string) error
+	Change56UserPasswd(*sql.DB, string, string) error
 	CreateReplUserWithoutBinlog(*sql.DB, string, string) error
 	GrantAllPrivileges(*sql.DB, string) error
 	GrantNormalPrivileges(*sql.DB, string) error
