@@ -68,7 +68,7 @@ func (my *Mysql57) SetReadOnly(db *sql.DB, readonly bool) error {
 func (my *Mysql57) GetSlaveGTID(db *sql.DB) (*model.GTID, error) {
 	gtid := &model.GTID{}
 
-	query := "SHOW SLAVE STATUS FOR CHANNEL ''"
+	query := "SHOW SLAVE STATUS"
 	rows, err := QueryWithTimeout(db, reqTimeout, query)
 	if err != nil {
 		return gtid, err
@@ -115,25 +115,25 @@ func (my *Mysql57) GetMasterGTID(db *sql.DB) (*model.GTID, error) {
 
 // StartSlaveIOThread used to start the io thread.
 func (my *Mysql57) StartSlaveIOThread(db *sql.DB) error {
-	cmd := "START SLAVE IO_THREAD FOR CHANNEL ''"
+	cmd := "START SLAVE IO_THREAD"
 	return ExecuteWithTimeout(db, reqTimeout, cmd)
 }
 
 // StopSlaveIOThread used to stop the op thread.
 func (my *Mysql57) StopSlaveIOThread(db *sql.DB) error {
-	cmd := "STOP SLAVE IO_THREAD FOR CHANNEL ''"
+	cmd := "STOP SLAVE IO_THREAD"
 	return ExecuteWithTimeout(db, reqTimeout, cmd)
 }
 
 // StartSlave used to start slave.
 func (my *Mysql57) StartSlave(db *sql.DB) error {
-	cmd := "START SLAVE FOR CHANNEL ''"
+	cmd := "START SLAVE"
 	return ExecuteWithTimeout(db, reqTimeout, cmd)
 }
 
 // StopSlave used to stop the slave.
 func (my *Mysql57) StopSlave(db *sql.DB) error {
-	cmd := "STOP SLAVE FOR CHANNEL ''"
+	cmd := "STOP SLAVE"
 	return ExecuteWithTimeout(db, reqTimeout, cmd)
 }
 
@@ -145,7 +145,7 @@ func (my *Mysql57) changeMasterToCommands(master *model.Repl) []string {
 	args = append(args, fmt.Sprintf("MASTER_USER = '%s'", master.Repl_User))
 	args = append(args, fmt.Sprintf("MASTER_PASSWORD = '%s'", master.Repl_Password))
 	args = append(args, "MASTER_AUTO_POSITION = 1")
-	changeMasterTo := "CHANGE MASTER TO\n  " + strings.Join(args, ",\n  ") + " FOR CHANNEL ''"
+	changeMasterTo := "CHANGE MASTER TO\n  " + strings.Join(args, ",\n  ")
 	return []string{changeMasterTo}
 }
 
@@ -154,9 +154,8 @@ func (my *Mysql57) changeMasterToCommands(master *model.Repl) []string {
 func (my *Mysql57) ChangeMasterTo(db *sql.DB, master *model.Repl) error {
 	cmds := []string{}
 	cmds = append(cmds, "STOP SLAVE")
-	cmds = append(cmds, "CHANGE REPLICATION FILTER REPLICATE_DO_DB=(),REPLICATE_IGNORE_DB=(),REPLICATE_DO_TABLE=(),REPLICATE_IGNORE_TABLE=(),REPLICATE_WILD_DO_TABLE=(),REPLICATE_WILD_IGNORE_TABLE=(),REPLICATE_REWRITE_DB=()")
 	cmds = append(cmds, my.changeMasterToCommands(master)...)
-	cmds = append(cmds, "START SLAVE FOR CHANNEL ''")
+	cmds = append(cmds, "START SLAVE")
 	return ExecuteSuperQueryListWithTimeout(db, reqTimeout, cmds)
 }
 

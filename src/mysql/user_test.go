@@ -199,6 +199,22 @@ func TestChangeUserPasswd(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestChange56UserPasswd(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.Nil(t, err)
+	defer db.Close()
+
+	//log
+	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
+	conf := config.DefaultMysqlConfig()
+	mysql := NewMysql(conf, log)
+	mysql.db = db
+	query := "SET PASSWORD FOR `xx` = PASSWORD('xxx')"
+	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
+	err = mysql.Change56UserPasswd("xx", "xxx")
+	assert.Nil(t, err)
+}
+
 func TestGrantAllPrivileges(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)

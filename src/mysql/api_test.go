@@ -59,7 +59,7 @@ func TestStartSlaveIOThread(t *testing.T) {
 	mysql := NewMysql(conf, log)
 	mysql.db = db
 
-	query := "START SLAVE IO_THREAD FOR CHANNEL ''"
+	query := "START SLAVE IO_THREAD"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
 	err = mysql.StartSlaveIOThread()
 	assert.Nil(t, err)
@@ -76,7 +76,7 @@ func TestStopSlaveIOThread(t *testing.T) {
 	mysql := NewMysql(conf, log)
 	mysql.db = db
 
-	query := "STOP SLAVE IO_THREAD FOR CHANNEL ''"
+	query := "STOP SLAVE IO_THREAD"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
 	err = mysql.StopSlaveIOThread()
 	assert.Nil(t, err)
@@ -93,7 +93,7 @@ func TestStartSlave(t *testing.T) {
 	mysql := NewMysql(conf, log)
 	mysql.db = db
 
-	query := "START SLAVE FOR CHANNEL ''"
+	query := "START SLAVE"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
 	err = mysql.StartSlave()
 	assert.Nil(t, err)
@@ -110,7 +110,7 @@ func TestStopSlave(t *testing.T) {
 	mysql := NewMysql(conf, log)
 	mysql.db = db
 
-	query := "STOP SLAVE FOR CHANNEL ''"
+	query := "STOP SLAVE"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
 	err = mysql.StopSlave()
 	assert.Nil(t, err)
@@ -128,15 +128,13 @@ func TestChangeMasterTo(t *testing.T) {
 	mysql.db = db
 
 	queryList := []string{"STOP SLAVE",
-		`CHANGE REPLICATION FILTER REPLICATE_DO_DB=(),REPLICATE_IGNORE_DB=(),REPLICATE_DO_TABLE=(),REPLICATE_IGNORE_TABLE=(),REPLICATE_WILD_DO_TABLE=(),REPLICATE_WILD_IGNORE_TABLE=(),REPLICATE_REWRITE_DB=()`,
-		`CHANGE MASTER TO MASTER_HOST = '127.0.0.1', MASTER_PORT = 3306, MASTER_USER = 'repl', MASTER_PASSWORD = 'repl', MASTER_AUTO_POSITION = 1 FOR CHANNEL ''`,
-		"START SLAVE FOR CHANNEL ''",
+		`CHANGE MASTER TO MASTER_HOST = '127.0.0.1', MASTER_PORT = 3306, MASTER_USER = 'repl', MASTER_PASSWORD = 'repl', MASTER_AUTO_POSITION = 1`,
+		"START SLAVE",
 	}
 
 	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec(queryList[1]).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec(queryList[2]).WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectExec(queryList[3]).WillReturnResult(sqlmock.NewResult(1, 1))
 	repl := mysql.GetRepl()
 	err = mysql.ChangeMasterTo(&repl)
 	assert.Nil(t, err)

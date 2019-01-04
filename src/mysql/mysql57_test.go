@@ -166,7 +166,7 @@ func TestMysql57ChangeMasterToCommand(t *testing.T) {
   MASTER_PORT = 123,
   MASTER_USER = 'username',
   MASTER_PASSWORD = 'password',
-  MASTER_AUTO_POSITION = 1 FOR CHANNEL ''`}
+  MASTER_AUTO_POSITION = 1`}
 
 	master := model.Repl{Master_Host: "localhost",
 		Master_Port:   123,
@@ -183,15 +183,13 @@ func TestMysql57ChangeMasterTo(t *testing.T) {
 	defer db.Close()
 
 	queryList := []string{"STOP SLAVE",
-		"CHANGE REPLICATION FILTER REPLICATE_DO_DB=(),REPLICATE_IGNORE_DB=(),REPLICATE_DO_TABLE=(),REPLICATE_IGNORE_TABLE=(),REPLICATE_WILD_DO_TABLE=(),REPLICATE_WILD_IGNORE_TABLE=(),REPLICATE_REWRITE_DB=()",
-		`CHANGE MASTER TO MASTER_HOST = 'localhost', MASTER_PORT = 123, MASTER_USER = 'username', MASTER_PASSWORD = 'password', MASTER_AUTO_POSITION = 1 FOR CHANNEL ''`,
-		"START SLAVE FOR CHANNEL ''",
+		`CHANGE MASTER TO MASTER_HOST = 'localhost', MASTER_PORT = 123, MASTER_USER = 'username', MASTER_PASSWORD = 'password', MASTER_AUTO_POSITION = 1`,
+		"START SLAVE",
 	}
 
 	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec(queryList[1]).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec(queryList[2]).WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectExec(queryList[3]).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	master := model.Repl{Master_Host: "localhost",
 		Master_Port:   123,
@@ -222,8 +220,8 @@ func TestMysql57SlaveIOThread(t *testing.T) {
 	defer db.Close()
 
 	queryList := []string{
-		"START SLAVE IO_THREAD FOR CHANNEL ''",
-		"STOP SLAVE IO_THREAD FOR CHANNEL ''",
+		"START SLAVE IO_THREAD",
+		"STOP SLAVE IO_THREAD",
 	}
 
 	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
