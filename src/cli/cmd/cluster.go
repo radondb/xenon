@@ -18,6 +18,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"raft"
 	"regexp"
 	"sort"
 	"strings"
@@ -319,35 +320,25 @@ func clusterGTIDCommandFn(cmd *cobra.Command, args []string) {
 	nodes, err := callx.GetNodes(conf.Server.Endpoint)
 	ErrorOK(err)
 
+	leader := ""
 	for _, node := range nodes {
-		raft := "UNKNOW"
-		mysqlInfo := "UNKNOW"
-		Executed_GTID_Set := "UNKNOW"
-		Retrieved_GTID_Set := "UNKNOW"
+		raftState := "UNKNOW"
+
 		// raft
 		{
 			if rsp, err := callx.GetNodesRPC(node); err == nil {
-				raft = rsp.State
+				if rsp.State == raft.LEADER.String() {
+					leader = node
+					continue
+				}
+				raftState = rsp.State
 			}
 		}
 
-		// mysql
-		{
-			if rsp, err := callx.GetMysqlStatusRPC(node); err == nil {
-				mysqlInfo = rsp.Status
-				Executed_GTID_Set = rsp.GTID.Executed_GTID_Set
-				Retrieved_GTID_Set = rsp.GTID.Retrieved_GTID_Set
-			}
-		}
-
-		row := []string{
-			node,
-			raft,
-			strings.TrimSpace(mysqlInfo),
-			strings.TrimSpace(Executed_GTID_Set),
-			strings.TrimSpace(Retrieved_GTID_Set),
-		}
-		rows = append(rows, row)
+		rows = append(rows, clusterGTIDCommandGetRow(node, raftState))
+	}
+	if leader != "" {
+		rows = append(rows, clusterGTIDCommandGetRow(leader, raft.LEADER.String()))
 	}
 
 	columns := []string{
@@ -359,6 +350,31 @@ func clusterGTIDCommandFn(cmd *cobra.Command, args []string) {
 	}
 
 	callx.PrintQueryOutput(columns, rows)
+}
+
+func clusterGTIDCommandGetRow(node string, raftState string) []string {
+	mysqlInfo := "UNKNOW"
+	Executed_GTID_Set := "UNKNOW"
+	Retrieved_GTID_Set := "UNKNOW"
+
+	// mysql
+	{
+		if rsp, err := callx.GetMysqlStatusRPC(node); err == nil {
+			mysqlInfo = rsp.Status
+			Executed_GTID_Set = rsp.GTID.Executed_GTID_Set
+			Retrieved_GTID_Set = rsp.GTID.Retrieved_GTID_Set
+		}
+	}
+
+	row := []string{
+		node,
+		raftState,
+		strings.TrimSpace(mysqlInfo),
+		strings.TrimSpace(Executed_GTID_Set),
+		strings.TrimSpace(Retrieved_GTID_Set),
+	}
+
+	return row
 }
 
 // mysqlstatus
