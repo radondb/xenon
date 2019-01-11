@@ -21,12 +21,9 @@ type HARPC struct {
 func (h *HARPC) HADisable(req *model.HARPCRequest, rsp *model.HARPCResponse) error {
 	h.raft.WARNING("RPC.HADisable.call.from[%v]", req.GetFrom())
 
-	// except state IDLE/STOPPED
+	// except state STOPPED
 	state := h.raft.getState()
 	switch state {
-	case IDLE:
-		rsp.RetCode = model.OK
-		return nil
 	case STOPPED:
 		rsp.RetCode = model.ErrorInvalidRequest
 		return nil

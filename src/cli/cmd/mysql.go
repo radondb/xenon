@@ -330,7 +330,10 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 	{
 		// check whether the state is IDLE or not
 		if conf.Raft.StartAsIDLE {
-			log.Warning("S16-->enable.raft.skiped.since.StartAsIDLE=true...")
+			log.Warning("S16-->disable.raft.again...")
+			if _, err := callx.DisableRaftRPC(self); err != nil {
+				log.Error("enbleRaftRPC.error[%v]", err)
+			}
 			log.Warning("S16-->run.as.IDLE...")
 		} else {
 			log.Warning("S16-->enable.raft.begin...")
@@ -703,7 +706,6 @@ var (
 	requireSSL    string
 )
 
-
 // create normal user with privileges
 func NewMysqlCreateUserWithPrivilegesCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -717,7 +719,7 @@ func NewMysqlCreateUserWithPrivilegesCommand() *cobra.Command {
 	cmd.Flags().StringVar(&grantTable, "table", "", "--table=<table>")
 	cmd.Flags().StringVar(&grantHost, "host", "", "--host=<host>")
 	cmd.Flags().StringVar(&grantPrivs, "privs", "for example:SELECT,CREATE(comma-separated)", "--privs=<privs>")
-	cmd.Flags().StringVar(&requireSSL, "ssl", "NO","--ssl=<YES/NO>")
+	cmd.Flags().StringVar(&requireSSL, "ssl", "NO", "--ssl=<YES/NO>")
 
 	return cmd
 }
