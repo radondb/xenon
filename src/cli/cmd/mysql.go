@@ -330,7 +330,10 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 	{
 		// check whether the state is IDLE or not
 		if conf.Raft.StartAsIDLE {
-			log.Warning("S16-->enable.raft.skiped.since.StartAsIDLE=true...")
+			log.Warning("S16-->disable.raft.again...")
+			if _, err := callx.DisableRaftRPC(self); err != nil {
+				log.Error("enbleRaftRPC.error[%v]", err)
+			}
 			log.Warning("S16-->run.as.IDLE...")
 		} else {
 			log.Warning("S16-->enable.raft.begin...")
