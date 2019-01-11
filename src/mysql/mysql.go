@@ -46,42 +46,35 @@ type PingEntry struct {
 
 // Mysql tuple.
 type Mysql struct {
-	db          *sql.DB
-	conf        *config.MysqlConfig
-	log         *xlog.Log
-	state       State
-	option      Option
-	mutex       sync.RWMutex
-	dbmutex     sync.RWMutex
-	replHandler ReplHandler
-	userHandler UserHandler
-	pingEntry   PingEntry
-	pingTicker  *time.Ticker
-	stats       model.MysqlStats
-	downs       int
+	db           *sql.DB
+	conf         *config.MysqlConfig
+	log          *xlog.Log
+	state        State
+	option       Option
+	mutex        sync.RWMutex
+	dbmutex      sync.RWMutex
+	mysqlHandler MysqlHandler
+	pingEntry    PingEntry
+	pingTicker   *time.Ticker
+	stats        model.MysqlStats
+	downs        int
 }
 
 // NewMysql creates the new Mysql.
 func NewMysql(conf *config.MysqlConfig, log *xlog.Log) *Mysql {
 	return &Mysql{
-		db:          nil,
-		log:         log,
-		conf:        conf,
-		state:       MysqlDead,
-		replHandler: new(Mysql57),
-		userHandler: new(User),
-		pingTicker:  common.NormalTicker(conf.PingTimeout),
+		db:           nil,
+		log:          log,
+		conf:         conf,
+		state:        MysqlDead,
+		mysqlHandler: getHandler(conf.Version),
+		pingTicker:   common.NormalTicker(conf.PingTimeout),
 	}
 }
 
-// SetReplHandler used to set the repl handler.
-func (m *Mysql) SetReplHandler(h ReplHandler) {
-	m.replHandler = h
-}
-
-// SetUserHandler used to set the user handler.
-func (m *Mysql) SetUserHandler(h UserHandler) {
-	m.userHandler = h
+// SetMysqlHandler used to set the repl handler.
+func (m *Mysql) SetMysqlHandler(h MysqlHandler) {
+	m.mysqlHandler = h
 }
 
 // Ping used to get the master binlog every ping.
@@ -104,7 +97,7 @@ func (m *Mysql) Ping() {
 		return
 	}
 
-	if pe, err = m.replHandler.Ping(db); err != nil {
+	if pe, err = m.mysqlHandler.Ping(db); err != nil {
 		log.Error("mysql[%v].ping.error[%v].downs:%v,downslimits:%v", m.getConnStr(), err, m.downs, downsLimits)
 		if m.downs > downsLimits {
 			log.Error("mysql.dead.downs:%v,downslimits:%v", m.downs, downsLimits)
@@ -116,9 +109,9 @@ func (m *Mysql) Ping() {
 	}
 
 	// check replication users
-	if exists, err := m.userHandler.CheckUserExists(db, m.conf.ReplUser); err == nil {
+	if exists, err := m.mysqlHandler.CheckUserExists(db, m.conf.ReplUser); err == nil {
 		if !exists {
-			if err = m.userHandler.CreateReplUserWithoutBinlog(db, m.conf.ReplUser, m.conf.ReplPasswd); err != nil {
+			if err = m.mysqlHandler.CreateReplUserWithoutBinlog(db, m.conf.ReplUser, m.conf.ReplPasswd); err != nil {
 				log.Error("server.mysql.create.replication.user[%v].error[%+v]", m.conf.ReplUser, err)
 			}
 		}
@@ -140,7 +133,7 @@ func (m *Mysql) GetMasterGTID() (*model.GTID, error) {
 		return nil, err
 	}
 
-	if gtid, err = m.replHandler.GetMasterGTID(db); err != nil {
+	if gtid, err = m.mysqlHandler.GetMasterGTID(db); err != nil {
 		return nil, err
 	}
 	return gtid, nil
@@ -156,7 +149,7 @@ func (m *Mysql) GetSlaveGTID() (*model.GTID, error) {
 		return nil, err
 	}
 
-	if gtid, err = m.replHandler.GetSlaveGTID(db); err != nil {
+	if gtid, err = m.mysqlHandler.GetSlaveGTID(db); err != nil {
 		return nil, err
 	}
 	return gtid, nil

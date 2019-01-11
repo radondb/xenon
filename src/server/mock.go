@@ -49,8 +49,7 @@ func MockServers(log *xlog.Log, port int, count int) ([]*Server, func()) {
 		server.mysqld = mysqld
 
 		// mock mysql
-		server.mysql.SetReplHandler(mysql.NewMockGTIDA())
-		server.mysql.SetUserHandler(new(mysql.MockUserA))
+		server.mysql.SetMysqlHandler(mysql.NewMockGTIDA())
 
 		server.Init()
 		servers = append(servers, server)

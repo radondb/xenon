@@ -15,7 +15,6 @@ const (
 	RPCMysqlCreateNormalUser         = "UserRPC.CreateNormalUser"
 	RPCMysqlCreateSuperUser          = "UserRPC.CreateSuperUser"
 	RPCMysqlChangePassword           = "UserRPC.ChangePasword"
-	RPCMysqlChange56Password         = "UserRPC.Change56Pasword"
 	RPCMysqlDropUser                 = "UserRPC.DropUser"
 	RPCMysqlGetUser                  = "UserRPC.GetUser"
 	RPCMysqlStartSlave               = "MysqlRPC.StartSlave"

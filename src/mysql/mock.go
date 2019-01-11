@@ -23,26 +23,38 @@ import (
 
 // MockGTID tuple.
 type MockGTID struct {
-	PingFn                   func(*sql.DB) (*PingEntry, error)
-	SetReadOnlyFn            func(*sql.DB, bool) error
-	GetMasterGTIDFn          func(*sql.DB) (*model.GTID, error)
-	GetSlaveGTIDFn           func(*sql.DB) (*model.GTID, error)
-	StartSlaveIOThreadFn     func(*sql.DB) error
-	StopSlaveIOThreadFn      func(*sql.DB) error
-	StartSlaveFn             func(*sql.DB) error
-	StopSlaveFn              func(*sql.DB) error
-	ChangeMasterToFn         func(*sql.DB, *model.Repl) error
-	ChangeToMasterFn         func(*sql.DB) error
-	WaitUntilAfterGTIDFn     func(*sql.DB, string) error
-	SetGlobalSysVarFn        func(*sql.DB, string) error
-	ResetMasterFn            func(*sql.DB) error
-	ResetSlaveAllFn          func(*sql.DB) error
-	PurgeBinlogsToFn         func(*sql.DB, string) error
-	EnableSemiSyncMasterFn   func(*sql.DB) error
-	DisableSemiSyncMasterFn  func(*sql.DB) error
-	SelectSysVarFn           func(*sql.DB, string) (string, error)
-	SetSemiWaitSlaveCountFn  func(*sql.DB, int) error
+	PingFn                     func(*sql.DB) (*PingEntry, error)
+	SetReadOnlyFn              func(*sql.DB, bool) error
+	GetMasterGTIDFn            func(*sql.DB) (*model.GTID, error)
+	GetSlaveGTIDFn             func(*sql.DB) (*model.GTID, error)
+	StartSlaveIOThreadFn       func(*sql.DB) error
+	StopSlaveIOThreadFn        func(*sql.DB) error
+	StartSlaveFn               func(*sql.DB) error
+	StopSlaveFn                func(*sql.DB) error
+	ChangeMasterToFn           func(*sql.DB, *model.Repl) error
+	ChangeToMasterFn           func(*sql.DB) error
+	WaitUntilAfterGTIDFn       func(*sql.DB, string) error
+	SetGlobalSysVarFn          func(*sql.DB, string) error
+	ResetMasterFn              func(*sql.DB) error
+	ResetSlaveAllFn            func(*sql.DB) error
+	PurgeBinlogsToFn           func(*sql.DB, string) error
+	EnableSemiSyncMasterFn     func(*sql.DB) error
+	DisableSemiSyncMasterFn    func(*sql.DB) error
+	SelectSysVarFn             func(*sql.DB, string) (string, error)
+	SetSemiWaitSlaveCountFn    func(*sql.DB, int) error
 	SetSemiSyncMasterDefaultFn func(*sql.DB) error
+
+	// Users
+	GetUserFn                     func(*sql.DB) ([]model.MysqlUser, error)
+	CheckUserExistsFn             func(*sql.DB, string) (bool, error)
+	CreateUserFn                  func(*sql.DB, string, string) error
+	DropUserFn                    func(*sql.DB, string, string) error
+	ChangeUserPasswdFn            func(*sql.DB, string, string) error
+	CreateReplUserWithoutBinlogFn func(*sql.DB, string, string) error
+	GrantAllPrivilegesFn          func(*sql.DB, string) error
+	GrantNormalPrivilegesFn       func(*sql.DB, string) error
+	CreateUserWithPrivilegesFn    func(*sql.DB, string, string, string, string, string, string, string) error
+	GrantReplicationPrivilegesFn  func(*sql.DB, string) error
 }
 
 // DefaultGetSlaveGTID returns the default slave gtid.
@@ -237,7 +249,6 @@ func DefaultSetSemiWaitSlaveCount(db *sql.DB, count int) error {
 	return nil
 }
 
-
 // SetSemiWaitSlaveCount mock
 func (mogtid *MockGTID) SetSemiWaitSlaveCount(db *sql.DB, count int) error {
 	return mogtid.SetSemiWaitSlaveCountFn(db, count)
@@ -246,6 +257,103 @@ func (mogtid *MockGTID) SetSemiWaitSlaveCount(db *sql.DB, count int) error {
 // SetSemiSyncMasterDefault mock
 func SetSemiSyncMasterDefault(db *sql.DB) error {
 	return nil
+}
+
+// User handlers.
+
+// CheckUserExists mock.
+func DefaultCheckUserExists(db *sql.DB, user string) (bool, error) {
+	return false, nil
+}
+
+func (mogtid *MockGTID) CheckUserExists(db *sql.DB, query string) (bool, error) {
+	return mogtid.CheckUserExistsFn(db, query)
+}
+
+// CreateUser mock.
+func DefaultCreateUser(db *sql.DB, user string, passwd string) error {
+	return nil
+}
+
+func (mogtid *MockGTID) CreateUser(db *sql.DB, user string, passwd string) error {
+	return mogtid.CreateUserFn(db, user, passwd)
+}
+
+// GetUser mock.
+func DefaultGetUser(db *sql.DB) ([]model.MysqlUser, error) {
+	return []model.MysqlUser{
+		{User: "user1",
+			Host: "localhost"},
+		{User: "root",
+			Host: "localhost"},
+	}, nil
+}
+
+func (mogtid *MockGTID) GetUser(db *sql.DB) ([]model.MysqlUser, error) {
+	return mogtid.GetUserFn(db)
+}
+
+// CreateUserWithPrivileges mock.
+func DefaultCreateUserWithPrivileges(db *sql.DB, user, passwd, database, table, host, privs string, ssl string) error {
+	return nil
+}
+
+func (mogtid *MockGTID) CreateUserWithPrivileges(db *sql.DB, user, passwd, database, table, host, privs string, ssl string) error {
+	return mogtid.CreateUserWithPrivilegesFn(db, user, passwd, database, table, host, privs, ssl)
+}
+
+// DropUser mock.
+func DefaultDropUser(db *sql.DB, user string, host string) error {
+	return nil
+}
+
+func (mogtid *MockGTID) DropUser(db *sql.DB, user string, host string) error {
+	return mogtid.DropUserFn(db, user, host)
+}
+
+// CreateReplUserWithoutBinlog mock.
+func DefaultCreateReplUserWithoutBinlog(db *sql.DB, user string, passwd string) error {
+	return nil
+}
+
+func (mogtid *MockGTID) CreateReplUserWithoutBinlog(db *sql.DB, user string, passwd string) error {
+	return mogtid.CreateReplUserWithoutBinlogFn(db, user, passwd)
+}
+
+// ChangeUserPasswd mock.
+func DefaultChangeUserPasswd(db *sql.DB, user string, passwd string) error {
+	return nil
+}
+
+func (mogtid *MockGTID) ChangeUserPasswd(db *sql.DB, user string, passwd string) error {
+	return mogtid.ChangeUserPasswdFn(db, user, passwd)
+}
+
+// GrantNormalPrivileges mock.
+func DefaultGrantNormalPrivileges(db *sql.DB, user string) error {
+	return nil
+}
+
+func (mogtid *MockGTID) GrantNormalPrivileges(db *sql.DB, user string) error {
+	return mogtid.GrantNormalPrivilegesFn(db, user)
+}
+
+// GrantReplicationPrivileges mock.
+func DefaultGrantReplicationPrivileges(db *sql.DB, user string) error {
+	return nil
+}
+
+func (mogtid *MockGTID) GrantReplicationPrivileges(db *sql.DB, user string) error {
+	return mogtid.GrantReplicationPrivilegesFn(db, user)
+}
+
+// GrantAllPrivileges mock.
+func DefaultGrantAllPrivileges(db *sql.DB, user string) error {
+	return nil
+}
+
+func (mogtid *MockGTID) GrantAllPrivileges(db *sql.DB, user string) error {
+	return mogtid.GrantAllPrivilegesFn(db, user)
 }
 
 func defaultMockGTID() *MockGTID {
@@ -270,6 +378,18 @@ func defaultMockGTID() *MockGTID {
 	mock.SelectSysVarFn = DefaultSelectSysVar
 	mock.SetSemiWaitSlaveCountFn = DefaultSetSemiWaitSlaveCount
 	mock.SetSemiSyncMasterDefaultFn = SetSemiSyncMasterDefault
+
+	// Users.
+	mock.CheckUserExistsFn = DefaultCheckUserExists
+	mock.CreateUserFn = DefaultCreateUser
+	mock.GetUserFn = DefaultGetUser
+	mock.CreateUserWithPrivilegesFn = DefaultCreateUserWithPrivileges
+	mock.DropUserFn = DefaultDropUser
+	mock.CreateReplUserWithoutBinlogFn = DefaultCreateReplUserWithoutBinlog
+	mock.ChangeUserPasswdFn = DefaultChangeUserPasswd
+	mock.GrantNormalPrivilegesFn = DefaultGrantNormalPrivileges
+	mock.GrantReplicationPrivilegesFn = DefaultGrantReplicationPrivileges
+	mock.GrantAllPrivilegesFn = DefaultGrantAllPrivileges
 
 	return mock
 }
@@ -608,73 +728,8 @@ func NewMockGTIDX5ChangeToMasterError() *MockGTID {
 	return mock
 }
 
-// MockUserA tuple.
-type MockUserA struct {
-	UserHandler
-}
-
-// CheckUserExists mock.
-func (u *MockUserA) CheckUserExists(db *sql.DB, user string) (bool, error) {
-	return false, nil
-}
-
-// CreateUser mock.
-func (u *MockUserA) CreateUser(db *sql.DB, user string, passwd string) error {
-	return nil
-}
-
-// GetUser mock.
-func (u *MockUserA) GetUser(db *sql.DB) ([]model.MysqlUser, error) {
-	return []model.MysqlUser{
-		{User: "user1",
-			Host: "localhost"},
-		{User: "root",
-			Host: "localhost"},
-	}, nil
-}
-
-// CreateUserWithPrivileges mock.
-func (u *MockUserA) CreateUserWithPrivileges(db *sql.DB, user, passwd, database, table, host, privs string, ssl string) error {
-	return nil
-}
-
-// DropUser mock.
-func (u *MockUserA) DropUser(db *sql.DB, user string, host string) error {
-	return nil
-}
-
-// CreateReplUserWithoutBinlog mock.
-func (u *MockUserA) CreateReplUserWithoutBinlog(db *sql.DB, user string, passwd string) error {
-	return nil
-}
-
-// ChangeUserPasswd mock.
-func (u *MockUserA) ChangeUserPasswd(db *sql.DB, user string, passwd string) error {
-	return nil
-}
-
-// Change56UserPasswd mock.
-func (u *MockUserA) Change56UserPasswd(db *sql.DB, user string, passwd string) error {
-	return nil
-}
-
-// GrantNormalPrivileges mock.
-func (u *MockUserA) GrantNormalPrivileges(db *sql.DB, user string) error {
-	return nil
-}
-
-// GrantReplicationPrivileges mock.
-func (u *MockUserA) GrantReplicationPrivileges(db *sql.DB, user string) error {
-	return nil
-}
-
-// GrantAllPrivileges mock.
-func (u *MockUserA) GrantAllPrivileges(db *sql.DB, user string) error {
-	return nil
-}
-
 // MockMysql mock.
-func MockMysql(log *xlog.Log, port int, h ReplHandler) (string, *Mysql, func()) {
+func MockMysql(log *xlog.Log, port int, h MysqlHandler) (string, *Mysql, func()) {
 	id := fmt.Sprintf("127.0.0.1:%d", port)
 	conf := config.DefaultMysqlConfig()
 	mysql := NewMysql(conf, log)
@@ -689,7 +744,7 @@ func MockMysql(log *xlog.Log, port int, h ReplHandler) (string, *Mysql, func()) 
 	rpc.Start()
 
 	// Set mock functions
-	mysql.SetReplHandler(h)
+	mysql.SetMysqlHandler(h)
 
 	// start ping
 	mysql.PingStart()
@@ -700,7 +755,7 @@ func MockMysql(log *xlog.Log, port int, h ReplHandler) (string, *Mysql, func()) 
 }
 
 // MockMysqlReplUser mock.
-func MockMysqlReplUser(log *xlog.Log, port int, h ReplHandler) (string, *Mysql, func()) {
+func MockMysqlReplUser(log *xlog.Log, port int, h MysqlHandler) (string, *Mysql, func()) {
 	id := fmt.Sprintf("127.0.0.1:%d", port)
 	conf := config.DefaultMysqlConfig()
 	mysql := NewMysql(conf, log)
@@ -715,10 +770,7 @@ func MockMysqlReplUser(log *xlog.Log, port int, h ReplHandler) (string, *Mysql, 
 	rpc.Start()
 
 	// Set Repl functions
-	mysql.SetReplHandler(h)
-
-	// Set User functions
-	mysql.SetUserHandler(new(MockUserA))
+	mysql.SetMysqlHandler(h)
 
 	// start ping
 	mysql.PingStart()

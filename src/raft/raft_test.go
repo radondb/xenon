@@ -792,7 +792,7 @@ func TestRaftElectionUnderIDLEInMajority(t *testing.T) {
 		}
 
 		// set rafts[0] mysql as GTID_E(mock mysql error)
-		MockSetReplHandler(rafts[0], mysql.NewMockGTIDError())
+		MockSetMysqlHandler(rafts[0], mysql.NewMockGTIDError())
 	}
 
 	// 2. wait leader election from actives FOLLOWERs
@@ -989,8 +989,8 @@ func TestRaftLeaderWithGTID(t *testing.T) {
 	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
 	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 124}
 	{
-		rafts[GTIDBIDX].mysql.SetReplHandler(mysql.NewMockGTIDB())
-		rafts[GTIDCIDX].mysql.SetReplHandler(mysql.NewMockGTIDC())
+		rafts[GTIDBIDX].mysql.SetMysqlHandler(mysql.NewMockGTIDB())
+		rafts[GTIDCIDX].mysql.SetMysqlHandler(mysql.NewMockGTIDC())
 	}
 
 	// 2. Start 3 rafts state as FOLLOWER
@@ -1087,9 +1087,9 @@ func TestRaftWithFollowerGetSlaveGTIDError(t *testing.T) {
 	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
 	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 124}
 	{
-		rafts[GTIDAIDX].mysql.SetReplHandler(mysql.NewMockGTIDError())
-		rafts[GTIDBIDX].mysql.SetReplHandler(mysql.NewMockGTIDB())
-		rafts[GTIDCIDX].mysql.SetReplHandler(mysql.NewMockGTIDC())
+		rafts[GTIDAIDX].mysql.SetMysqlHandler(mysql.NewMockGTIDError())
+		rafts[GTIDBIDX].mysql.SetMysqlHandler(mysql.NewMockGTIDB())
+		rafts[GTIDCIDX].mysql.SetMysqlHandler(mysql.NewMockGTIDC())
 	}
 
 	// 2. Start 3 rafts state as FOLLOWER
@@ -1154,9 +1154,9 @@ func TestRaftLeaderPurgeBinlog(t *testing.T) {
 	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
 	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123}
 	{
-		rafts[0].mysql.SetReplHandler(mysql.NewMockGTIDX1())
-		rafts[1].mysql.SetReplHandler(mysql.NewMockGTIDX3())
-		rafts[2].mysql.SetReplHandler(mysql.NewMockGTIDX5())
+		rafts[0].mysql.SetMysqlHandler(mysql.NewMockGTIDX1())
+		rafts[1].mysql.SetMysqlHandler(mysql.NewMockGTIDX3())
+		rafts[2].mysql.SetMysqlHandler(mysql.NewMockGTIDX5())
 	}
 
 	// 2. Start 3 rafts state as FOLLOWER
@@ -1255,9 +1255,9 @@ func TestRaftChangeMasterToFail(t *testing.T) {
 	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
 	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123}
 	{
-		rafts[0].mysql.SetReplHandler(mysql.NewMockGTIDX1())
-		rafts[1].mysql.SetReplHandler(mysql.NewMockGTIDX3())
-		rafts[2].mysql.SetReplHandler(mysql.NewMockGTIDX5())
+		rafts[0].mysql.SetMysqlHandler(mysql.NewMockGTIDX1())
+		rafts[1].mysql.SetMysqlHandler(mysql.NewMockGTIDX3())
+		rafts[2].mysql.SetMysqlHandler(mysql.NewMockGTIDX5())
 	}
 
 	// 2. Start 3 rafts state as FOLLOWER
@@ -1289,7 +1289,7 @@ func TestRaftChangeMasterToFail(t *testing.T) {
 
 	// set leader MySQL to Error
 	{
-		rafts[2].mysql.SetReplHandler(mysql.NewMockGTIDError())
+		rafts[2].mysql.SetMysqlHandler(mysql.NewMockGTIDError())
 		MockWaitMySQLPingTimeout()
 
 		var got State
@@ -1332,7 +1332,7 @@ func TestRaftChangeMasterToFail(t *testing.T) {
 
 	// set rafts[2].MySQL to OK
 	{
-		rafts[2].mysql.SetReplHandler(mysql.NewMockGTIDX5())
+		rafts[2].mysql.SetMysqlHandler(mysql.NewMockGTIDX5())
 		MockWaitMySQLPingTimeout()
 
 		var got State
@@ -1463,8 +1463,8 @@ func TestRaft2NodesWithGTID(t *testing.T) {
 	//    1.0 rafts[0]  with MockGTIDB{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
 	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
 	{
-		rafts[0].mysql.SetReplHandler(mysql.NewMockGTIDX1())
-		rafts[1].mysql.SetReplHandler(mysql.NewMockGTIDX3())
+		rafts[0].mysql.SetMysqlHandler(mysql.NewMockGTIDX1())
+		rafts[1].mysql.SetMysqlHandler(mysql.NewMockGTIDX3())
 	}
 
 	// 2. Start 2 rafts state as FOLLOWER
@@ -1492,7 +1492,7 @@ func TestRaft2NodesWithGTID(t *testing.T) {
 
 	// set leader MySQL to Error
 	{
-		rafts[1].mysql.SetReplHandler(mysql.NewMockGTIDError())
+		rafts[1].mysql.SetMysqlHandler(mysql.NewMockGTIDError())
 		MockWaitMySQLPingTimeout()
 
 		var got State
@@ -1525,9 +1525,9 @@ func TestRaftLeaderAckLessThanQuorum(t *testing.T) {
 	// 1. set rafts GTID
 	//    1.0 rafts[0]  with MockGTIDB{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
 	{
-		rafts[0].mysql.SetReplHandler(mysql.NewMockGTIDX1())
-		rafts[1].mysql.SetReplHandler(mysql.NewMockGTIDX1())
-		rafts[2].mysql.SetReplHandler(mysql.NewMockGTIDX1())
+		rafts[0].mysql.SetMysqlHandler(mysql.NewMockGTIDX1())
+		rafts[1].mysql.SetMysqlHandler(mysql.NewMockGTIDX1())
+		rafts[2].mysql.SetMysqlHandler(mysql.NewMockGTIDX1())
 	}
 
 	// 2. Start 3 rafts state as FOLLOWER
@@ -1585,9 +1585,9 @@ func TestRaftLeaderWaitUntilAfterGTIDError(t *testing.T) {
 	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
 	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123} with WaitUntilAfterGTID error
 	{
-		rafts[0].mysql.SetReplHandler(mysql.NewMockGTIDX1())
-		rafts[1].mysql.SetReplHandler(mysql.NewMockGTIDX3())
-		rafts[2].mysql.SetReplHandler(mysql.NewMockGTIDX5WaitUntilAfterGTIDError())
+		rafts[0].mysql.SetMysqlHandler(mysql.NewMockGTIDX1())
+		rafts[1].mysql.SetMysqlHandler(mysql.NewMockGTIDX3())
+		rafts[2].mysql.SetMysqlHandler(mysql.NewMockGTIDX5WaitUntilAfterGTIDError())
 	}
 
 	// 2. Start 3 rafts state as FOLLOWER
@@ -1630,9 +1630,9 @@ func TestRaftLeaderChangeToMasterError(t *testing.T) {
 	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
 	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123} with ChangeToMaster error
 	{
-		rafts[0].mysql.SetReplHandler(mysql.NewMockGTIDX1())
-		rafts[1].mysql.SetReplHandler(mysql.NewMockGTIDX3())
-		rafts[2].mysql.SetReplHandler(mysql.NewMockGTIDX5ChangeToMasterError())
+		rafts[0].mysql.SetMysqlHandler(mysql.NewMockGTIDX1())
+		rafts[1].mysql.SetMysqlHandler(mysql.NewMockGTIDX3())
+		rafts[2].mysql.SetMysqlHandler(mysql.NewMockGTIDX5ChangeToMasterError())
 	}
 
 	// 2. Start 3 rafts state as FOLLOWER

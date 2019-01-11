@@ -56,7 +56,7 @@ func TestCLIMysqlCommand(t *testing.T) {
 		_, err := executeCommand(cmd, "createuser", "userxx", "passwdxx")
 		assert.Nil(t, err)
 	}
-	
+
 	// create super user.
 	{
 		cmd := NewMysqlCommand()
@@ -68,13 +68,6 @@ func TestCLIMysqlCommand(t *testing.T) {
 	{
 		cmd := NewMysqlCommand()
 		_, err := executeCommand(cmd, "changepassword", "userxx", "passwdxx")
-		assert.Nil(t, err)
-	}
-
-	// change password
-	{
-		cmd := NewMysqlCommand()
-		_, err := executeCommand(cmd, "change56password", "userxx", "passwdxx")
 		assert.Nil(t, err)
 	}
 
