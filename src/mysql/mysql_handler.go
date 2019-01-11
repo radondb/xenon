@@ -13,8 +13,8 @@ import (
 	"model"
 )
 
-// ReplHandler interface.
-type ReplHandler interface {
+// MysqlHandler interface.
+type MysqlHandler interface {
 	// check health and return log_bin_basename
 	Ping(*sql.DB) (*PingEntry, error)
 
@@ -71,4 +71,33 @@ type ReplHandler interface {
 
 	//set rpl_semi_master_wait_for_slave_count
 	SetSemiWaitSlaveCount(db *sql.DB, count int) error
+
+	// User handlers.
+	GetUser(*sql.DB) ([]model.MysqlUser, error)
+	CheckUserExists(*sql.DB, string) (bool, error)
+	CreateUser(*sql.DB, string, string) error
+	DropUser(*sql.DB, string, string) error
+	ChangeUserPasswd(*sql.DB, string, string) error
+	CreateReplUserWithoutBinlog(*sql.DB, string, string) error
+	GrantAllPrivileges(*sql.DB, string) error
+	GrantNormalPrivileges(*sql.DB, string) error
+	CreateUserWithPrivileges(db *sql.DB, user, passwd, database, table, host, privs string, ssl string) error
+	GrantReplicationPrivileges(*sql.DB, string) error
+}
+
+var (
+	handlers = make(map[string]MysqlHandler)
+)
+
+func init() {
+	handlers["mysql56"] = new(Mysql56)
+	handlers["mysql57"] = new(Mysql57)
+}
+
+func getHandler(name string) MysqlHandler {
+	handler, ok := handlers[name]
+	if !ok {
+		return new(Mysql57)
+	}
+	return handler
 }

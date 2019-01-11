@@ -83,7 +83,7 @@ func mockRafts(log *xlog.Log, conf *config.RaftConfig, port int, count int, islo
 
 		// setup mysql
 		mysql57 := mysql.NewMysql(config.DefaultMysqlConfig(), log)
-		mysql57.SetReplHandler(mysql.NewMockGTIDA())
+		mysql57.SetMysqlHandler(mysql.NewMockGTIDA())
 		mysql57.PingStart()
 
 		// setup raft
@@ -116,9 +116,9 @@ func mockRafts(log *xlog.Log, conf *config.RaftConfig, port int, count int, islo
 	}
 }
 
-// MockSetReplHandler used to set mysql repl hander for test.
-func MockSetReplHandler(raft *Raft, h mysql.ReplHandler) {
-	raft.mysql.SetReplHandler(h)
+// MockSetMysqlHandler used to set mysql repl hander for test.
+func MockSetMysqlHandler(raft *Raft, h mysql.MysqlHandler) {
+	raft.mysql.SetMysqlHandler(h)
 }
 
 // MockWaitMySQLPingTimeout used to wait mysql ping timeout.

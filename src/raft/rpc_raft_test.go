@@ -124,9 +124,9 @@ func TestRaftRPCPurgeBinlog(t *testing.T) {
 	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
 	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123}
 	{
-		rafts[0].mysql.SetReplHandler(mysql.NewMockGTIDX1())
-		rafts[1].mysql.SetReplHandler(mysql.NewMockGTIDX3())
-		rafts[2].mysql.SetReplHandler(mysql.NewMockGTIDX5())
+		rafts[0].mysql.SetMysqlHandler(mysql.NewMockGTIDX1())
+		rafts[1].mysql.SetMysqlHandler(mysql.NewMockGTIDX3())
+		rafts[2].mysql.SetMysqlHandler(mysql.NewMockGTIDX5())
 	}
 
 	// 2. Start 3 rafts state as FOLLOWER

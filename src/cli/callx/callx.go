@@ -673,7 +673,6 @@ func CreateNormalUserRPC(node string, user string, passwd string) (*model.MysqlU
 	return rsp, err
 }
 
-
 func CreateSuperUserRPC(node string, user string, passwd string) (*model.MysqlUserRPCResponse, error) {
 	cli, cleanup, err := GetClient(node)
 	if err != nil {
@@ -752,25 +751,6 @@ func ChangeUserPasswordRPC(node string, user string, passwd string) (*model.Mysq
 	defer cleanup()
 
 	method := model.RPCMysqlChangePassword
-	req := model.NewMysqlUserRPCRequest()
-	req.User = user
-	req.Passwd = passwd
-
-	rsp := model.NewMysqlUserRPCResponse(model.OK)
-	err = cli.Call(method, req, rsp)
-
-	return rsp, err
-}
-
-func Change56UserPasswordRPC(node string, user string, passwd string) (*model.MysqlUserRPCResponse, error) {
-	cli, cleanup, err := GetClient(node)
-
-	if err != nil {
-		return nil, err
-	}
-	defer cleanup()
-
-	method := model.RPCMysqlChange56Password
 	req := model.NewMysqlUserRPCRequest()
 	req.User = user
 	req.Passwd = passwd

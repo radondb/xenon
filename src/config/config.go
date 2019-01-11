@@ -119,6 +119,9 @@ type MysqlConfig struct {
 	// mysql basedir
 	Basedir string `json:"basedir"`
 
+	// mysql version
+	Version string `json:"version"`
+
 	// mysql default file path
 	DefaultsFile string `json:"defaults-file"`
 
@@ -150,6 +153,7 @@ func DefaultMysqlConfig() *MysqlConfig {
 		Passwd:             "",
 		Host:               "localhost",
 		Port:               3306,
+		Version:            "mysql57",
 		PingTimeout:        1000,
 		AdmitDefeatPingCnt: 2,
 		Basedir:            "/u01/mysql_20160606/",

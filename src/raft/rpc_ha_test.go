@@ -279,8 +279,8 @@ func TestRaftRPCHATryToLeaderFail_GTID(t *testing.T) {
 	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
 	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 124}
 	{
-		rafts[GTIDBIDX].mysql.SetReplHandler(mysql.NewMockGTIDB())
-		rafts[GTIDCIDX].mysql.SetReplHandler(mysql.NewMockGTIDC())
+		rafts[GTIDBIDX].mysql.SetMysqlHandler(mysql.NewMockGTIDB())
+		rafts[GTIDCIDX].mysql.SetMysqlHandler(mysql.NewMockGTIDC())
 	}
 
 	// 2. Start 3 rafts state as FOLLOWER
@@ -390,9 +390,9 @@ func TestRaftRPCHATryToLeaderFail_MySQLUnpromotble(t *testing.T) {
 	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
 	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 124}
 	{
-		rafts[GTIDERRIDX].mysql.SetReplHandler(mysql.NewMockGTIDPingError())
-		rafts[GTIDBIDX].mysql.SetReplHandler(mysql.NewMockGTIDB())
-		rafts[GTIDCIDX].mysql.SetReplHandler(mysql.NewMockGTIDC())
+		rafts[GTIDERRIDX].mysql.SetMysqlHandler(mysql.NewMockGTIDPingError())
+		rafts[GTIDBIDX].mysql.SetMysqlHandler(mysql.NewMockGTIDB())
+		rafts[GTIDCIDX].mysql.SetMysqlHandler(mysql.NewMockGTIDC())
 	}
 
 	// 2. Start 3 rafts state as FOLLOWER

@@ -69,7 +69,7 @@ func (m *Mysql) SetReadOnly() (err error) {
 		return
 	}
 
-	if err = m.replHandler.SetReadOnly(db, true); err != nil {
+	if err = m.mysqlHandler.SetReadOnly(db, true); err != nil {
 		return
 	}
 	m.setOption(MysqlReadonly)
@@ -84,7 +84,7 @@ func (m *Mysql) SetReadWrite() (err error) {
 		return
 	}
 
-	if err = m.replHandler.SetReadOnly(db, false); err != nil {
+	if err = m.mysqlHandler.SetReadOnly(db, false); err != nil {
 		return
 	}
 	m.setOption(MysqlReadwrite)
@@ -120,7 +120,7 @@ func (m *Mysql) StartSlaveIOThread() error {
 	if err != nil {
 		return err
 	}
-	return m.replHandler.StartSlaveIOThread(db)
+	return m.mysqlHandler.StartSlaveIOThread(db)
 }
 
 // StopSlaveIOThread used to stop the slave io thread.
@@ -129,7 +129,7 @@ func (m *Mysql) StopSlaveIOThread() error {
 	if err != nil {
 		return err
 	}
-	return m.replHandler.StopSlaveIOThread(db)
+	return m.mysqlHandler.StopSlaveIOThread(db)
 }
 
 // StartSlave used to start the slave.
@@ -138,7 +138,7 @@ func (m *Mysql) StartSlave() error {
 	if err != nil {
 		return err
 	}
-	return m.replHandler.StartSlave(db)
+	return m.mysqlHandler.StartSlave(db)
 }
 
 // StopSlave used to stop the slave.
@@ -147,7 +147,7 @@ func (m *Mysql) StopSlave() error {
 	if err != nil {
 		return err
 	}
-	return m.replHandler.StopSlave(db)
+	return m.mysqlHandler.StopSlave(db)
 }
 
 // ChangeMasterTo used to do the 'change master to' command.
@@ -156,7 +156,7 @@ func (m *Mysql) ChangeMasterTo(repl *model.Repl) error {
 	if err != nil {
 		return err
 	}
-	return m.replHandler.ChangeMasterTo(db, repl)
+	return m.mysqlHandler.ChangeMasterTo(db, repl)
 }
 
 // ChangeToMaster used to do the 'reset slave all' command.
@@ -165,7 +165,7 @@ func (m *Mysql) ChangeToMaster() error {
 	if err != nil {
 		return err
 	}
-	return m.replHandler.ChangeToMaster(db)
+	return m.mysqlHandler.ChangeToMaster(db)
 }
 
 // ResetSlaveAll used to reset slave.
@@ -174,7 +174,7 @@ func (m *Mysql) ResetSlaveAll() error {
 	if err != nil {
 		return err
 	}
-	return m.replHandler.ResetSlaveAll(db)
+	return m.mysqlHandler.ResetSlaveAll(db)
 }
 
 // WaitUntilAfterGTID used to do 'SELECT WAIT_UNTIL_SQL_THREAD_AFTER_GTIDS' command.
@@ -183,7 +183,7 @@ func (m *Mysql) WaitUntilAfterGTID(targetGTID string) error {
 	if err != nil {
 		return err
 	}
-	return m.replHandler.WaitUntilAfterGTID(db, targetGTID)
+	return m.mysqlHandler.WaitUntilAfterGTID(db, targetGTID)
 }
 
 // GetState returns the mysql state.
@@ -267,7 +267,7 @@ func (m *Mysql) SetGlobalSysVar(varsql string) error {
 	if err != nil {
 		return err
 	}
-	return m.replHandler.SetGlobalSysVar(db, varsql)
+	return m.mysqlHandler.SetGlobalSysVar(db, varsql)
 }
 
 // SetMasterGlobalSysVar used to set master global variables.
@@ -316,7 +316,7 @@ func (m *Mysql) ResetMaster() error {
 	if err != nil {
 		return err
 	}
-	return m.replHandler.ResetMaster(db)
+	return m.mysqlHandler.ResetMaster(db)
 }
 
 // PurgeBinlogsTo used to purge binlog.
@@ -325,7 +325,7 @@ func (m *Mysql) PurgeBinlogsTo(binlog string) error {
 	if err != nil {
 		return err
 	}
-	return m.replHandler.PurgeBinlogsTo(db, binlog)
+	return m.mysqlHandler.PurgeBinlogsTo(db, binlog)
 }
 
 // EnableSemiSyncMaster used to enable the semi-sync on master.
@@ -334,7 +334,7 @@ func (m *Mysql) EnableSemiSyncMaster() error {
 	if err != nil {
 		return err
 	}
-	return m.replHandler.EnableSemiSyncMaster(db)
+	return m.mysqlHandler.EnableSemiSyncMaster(db)
 }
 
 // SetSemiWaitSlaveCount used to set rpl_semi_sync_master_wait_for_slave_count
@@ -343,7 +343,7 @@ func (m *Mysql) SetSemiWaitSlaveCount(count int) error {
 	if err != nil {
 		return err
 	}
-	return m.replHandler.SetSemiWaitSlaveCount(db, count)
+	return m.mysqlHandler.SetSemiWaitSlaveCount(db, count)
 }
 
 // DisableSemiSyncMaster used to disable the semi-sync from master.
@@ -352,7 +352,7 @@ func (m *Mysql) DisableSemiSyncMaster() error {
 	if err != nil {
 		return err
 	}
-	return m.replHandler.DisableSemiSyncMaster(db)
+	return m.mysqlHandler.DisableSemiSyncMaster(db)
 }
 
 // SetSemiSyncMasterDefault useed to set semi-sync master timeout = default.
@@ -361,7 +361,7 @@ func (m *Mysql) SetSemiSyncMasterDefault() error {
 	if err != nil {
 		return err
 	}
-	return m.replHandler.SetSemiSyncMasterDefault(db)
+	return m.mysqlHandler.SetSemiSyncMasterDefault(db)
 }
 
 // CheckUserExists used to check the user exists or not.
@@ -370,7 +370,7 @@ func (m *Mysql) CheckUserExists(user string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return m.userHandler.CheckUserExists(db, user)
+	return m.mysqlHandler.CheckUserExists(db, user)
 }
 
 // GetUser used to get the mysql user list.
@@ -379,7 +379,7 @@ func (m *Mysql) GetUser() ([]model.MysqlUser, error) {
 	if err != nil {
 		return nil, err
 	}
-	return m.userHandler.GetUser(db)
+	return m.mysqlHandler.GetUser(db)
 }
 
 // CreateUser used to create the new user.
@@ -388,7 +388,7 @@ func (m *Mysql) CreateUser(user string, passwd string) error {
 	if err != nil {
 		return err
 	}
-	return m.userHandler.CreateUser(db, user, passwd)
+	return m.mysqlHandler.CreateUser(db, user, passwd)
 }
 
 // DropUser used to drop a user.
@@ -397,7 +397,7 @@ func (m *Mysql) DropUser(user string, host string) error {
 	if err != nil {
 		return err
 	}
-	return m.userHandler.DropUser(db, user, host)
+	return m.mysqlHandler.DropUser(db, user, host)
 }
 
 // ChangeUserPasswd used to change the user's password.
@@ -406,15 +406,7 @@ func (m *Mysql) ChangeUserPasswd(user string, passwd string) error {
 	if err != nil {
 		return err
 	}
-	return m.userHandler.ChangeUserPasswd(db, user, passwd)
-}
-
-func (m *Mysql) Change56UserPasswd(user string, passwd string) error {
-	db, err := m.getDB()
-	if err != nil {
-		return err
-	}
-	return m.userHandler.Change56UserPasswd(db, user, passwd)
+	return m.mysqlHandler.ChangeUserPasswd(db, user, passwd)
 }
 
 // CreateReplUserWithoutBinlog used to create a repl user without binlog.
@@ -423,7 +415,7 @@ func (m *Mysql) CreateReplUserWithoutBinlog(user string, passwd string) error {
 	if err != nil {
 		return err
 	}
-	return m.userHandler.CreateReplUserWithoutBinlog(db, user, passwd)
+	return m.mysqlHandler.CreateReplUserWithoutBinlog(db, user, passwd)
 }
 
 // GrantNormalPrivileges used grant normal privs.
@@ -432,7 +424,7 @@ func (m *Mysql) GrantNormalPrivileges(user string) error {
 	if err != nil {
 		return err
 	}
-	return m.userHandler.GrantNormalPrivileges(db, user)
+	return m.mysqlHandler.GrantNormalPrivileges(db, user)
 }
 
 // CreateUserWithPrivileges used to create a new user with grants.
@@ -441,7 +433,7 @@ func (m *Mysql) CreateUserWithPrivileges(user, passwd, database, table, host, pr
 	if err != nil {
 		return err
 	}
-	return m.userHandler.CreateUserWithPrivileges(db, user, passwd, database, table, host, privs, ssl)
+	return m.mysqlHandler.CreateUserWithPrivileges(db, user, passwd, database, table, host, privs, ssl)
 }
 
 // GrantReplicationPrivileges used to grant replication privs.
@@ -450,7 +442,7 @@ func (m *Mysql) GrantReplicationPrivileges(user string) error {
 	if err != nil {
 		return err
 	}
-	return m.userHandler.GrantReplicationPrivileges(db, user)
+	return m.mysqlHandler.GrantReplicationPrivileges(db, user)
 }
 
 // GrantAllPrivileges used to grants all privs for the user.
@@ -459,5 +451,5 @@ func (m *Mysql) GrantAllPrivileges(user string) error {
 	if err != nil {
 		return err
 	}
-	return m.userHandler.GrantAllPrivileges(db, user)
+	return m.mysqlHandler.GrantAllPrivileges(db, user)
 }

@@ -76,7 +76,7 @@ func TestMysqlGTIDGreatThan(t *testing.T) {
 	mysql := NewMysql(conf, log)
 
 	// Set mock functions
-	mysql.SetReplHandler(new(MockGTIDB))
+	mysql.SetMysqlHandler(new(MockGTIDB))
 
 	// start ping
 	mysql.PingStart()
@@ -108,7 +108,7 @@ func TestMysqlGTIDGreatThan(t *testing.T) {
 
 	// 4. nil compare: not greater than
 	// set mock: this mock sets  null GTID
-	mysql.SetReplHandler(new(MockGTIDA))
+	mysql.SetMysqlHandler(new(MockGTIDA))
 
 	// wait for ping
 	time.Sleep(time.Duration(conf.PingTimeout*2) * time.Millisecond)
@@ -116,7 +116,7 @@ func TestMysqlGTIDGreatThan(t *testing.T) {
 	a = model.GTID{Master_Log_File: "",
 		Read_Master_Log_Pos: 0}
 	want = false
-	mysql.SetReplHandler(new(MockGTIDB))
+	mysql.SetMysqlHandler(new(MockGTIDB))
 	assert.Equal(t, want, got)
 }
 */

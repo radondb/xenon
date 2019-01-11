@@ -36,7 +36,6 @@ func NewMysqlCommand() *cobra.Command {
 	cmd.AddCommand(NewMysqlCreateSuperUserCommand())
 	cmd.AddCommand(NewMysqlDropUserCommand())
 	cmd.AddCommand(NewMysqlChangePasswordCommand())
-	cmd.AddCommand(NewMysqlChange56PasswordCommand())
 	cmd.AddCommand(NewMysqlSetVarCommand())
 	cmd.AddCommand(NewMysqlKillCommand())
 	cmd.AddCommand(NewMysqlStatusCommand())
@@ -557,40 +556,6 @@ func mysqlDropUserCommandFn(cmd *cobra.Command, args []string) {
 	log.Warning("drop.normaluser[%v]@[%v].done", user, host)
 }
 
-// change mysql56 normal user password
-func NewMysqlChange56PasswordCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "change56password <user> <password>",
-		Short: "update mysql56 normal user password",
-		Run:   mysqlChange56PasswordCommandFn,
-	}
-
-	return cmd
-}
-
-func mysqlChange56PasswordCommandFn(cmd *cobra.Command, args []string) {
-	if len(args) != 2 {
-		ErrorOK(fmt.Errorf("args.count.error:should.be.2"))
-	}
-
-	user := args[0]
-	passwd := args[1]
-	log.Warning("prepare.to.change56password.normaluser[%v]", user)
-	conf, err := GetConfig()
-	ErrorOK(err)
-
-	self := conf.Server.Endpoint
-	{
-		leader, err := callx.GetClusterLeader(self)
-		ErrorOK(err)
-
-		rsp, err := callx.Change56UserPasswordRPC(leader, user, passwd)
-		ErrorOK(err)
-		RspOK(rsp.RetCode)
-	}
-	log.Warning("create.change56password[%v].done", user)
-}
-
 // change normal user password
 func NewMysqlChangePasswordCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -738,7 +703,6 @@ var (
 	requireSSL    string
 )
 
-
 // create normal user with privileges
 func NewMysqlCreateUserWithPrivilegesCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -752,7 +716,7 @@ func NewMysqlCreateUserWithPrivilegesCommand() *cobra.Command {
 	cmd.Flags().StringVar(&grantTable, "table", "", "--table=<table>")
 	cmd.Flags().StringVar(&grantHost, "host", "", "--host=<host>")
 	cmd.Flags().StringVar(&grantPrivs, "privs", "for example:SELECT,CREATE(comma-separated)", "--privs=<privs>")
-	cmd.Flags().StringVar(&requireSSL, "ssl", "NO","--ssl=<YES/NO>")
+	cmd.Flags().StringVar(&requireSSL, "ssl", "NO", "--ssl=<YES/NO>")
 
 	return cmd
 }
