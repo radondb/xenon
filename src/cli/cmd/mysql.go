@@ -328,17 +328,11 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 
 	// 16. enable raft
 	{
-		// check whether the state is IDLE or not
-		if conf.Raft.StartAsIDLE {
-			log.Warning("S16-->enable.raft.skiped.since.StartAsIDLE=true...")
-			log.Warning("S16-->run.as.IDLE...")
-		} else {
-			log.Warning("S16-->enable.raft.begin...")
-			if _, err := callx.EnableRaftRPC(self); err != nil {
-				log.Error("enbleRaftRPC.error[%v]", err)
-			}
-			log.Warning("S16-->enable.raft.done...")
+		log.Warning("S16-->enable.raft.begin...")
+		if _, err := callx.EnableRaftRPC(self); err != nil {
+			log.Error("enbleRaftRPC.error[%v]", err)
 		}
+		log.Warning("S16-->enable.raft.done...")
 	}
 
 	// 17. wait change to master

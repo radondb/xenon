@@ -108,8 +108,9 @@ func (r *Raft) Start() error {
 	r.c = make(chan *ev)
 
 	// state
-	if r.conf.StartAsIDLE {
+	if r.conf.SuperIDLE {
 		r.setState(IDLE)
+		r.WARNING("start.as.super.IDLE")
 	} else {
 		r.setState(FOLLOWER)
 	}
