@@ -836,12 +836,12 @@ func TestRaftElectionUnderIDLEInMajority(t *testing.T) {
 // test run as IDLE with config.StartAsIDLE=true configuration
 //
 // TEST PROCESSES:
-// 1. Start 1 raft with StartAsIDLE=true
+// 1. Start 1 raft with SuperIDLE=true
 // 2. check the IDLE
 func TestRaftStartAsIDLE(t *testing.T) {
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	conf := config.DefaultRaftConfig()
-	conf.StartAsIDLE = true
+	conf.SuperIDLE = true
 	port := common.RandomPort(8100, 8200)
 	_, rafts, cleanup := MockRaftsWithConfig(log, conf, port, 1)
 	defer cleanup()
