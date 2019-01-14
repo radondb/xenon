@@ -451,11 +451,11 @@ func (r *Leader) checkSemiSyncStop() {
 	r.INFO("check.semi-sync.thread.stop...")
 }
 
-// Disable the semi-sync if the nodes number less than 3.
+// Disable the semi-sync if the nodes number less than 3 or allow-semi-sync-degrade:"true" in xenon.conf.
 func (r *Leader) checkSemiSync() {
 	min := 3
 	cur := r.getMembers()
-	if cur < min {
+	if (cur < min || r.conf.SemiSyncDegrade) {
 		if err := r.mysql.SetSemiSyncMasterDefault(); err != nil {
 			r.ERROR("mysql.set.semi-sync.master.timeout.default.error[%v]", err)
 		}

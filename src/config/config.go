@@ -45,6 +45,9 @@ type RaftConfig struct {
 	// raft meta datadir
 	MetaDatadir string `json:"meta-datadir"`
 
+	// raft control mysql semisync degrade to async. defaults false
+	SemiSyncDegrade bool `json:"semi-sync-degrade"`
+
 	// leader heartbeat interval(ms)
 	HeartbeatTimeout int `json:"heartbeat-timeout"`
 
