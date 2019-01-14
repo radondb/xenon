@@ -86,6 +86,32 @@ func GetRaftState(endpoint string) (string, []string, error) {
 	return rsp.State, rsp.GetNodes(), nil
 }
 
+func IsNodeIdle(node string) (bool, error) {
+	cli, cleanup, err := GetClient(node)
+	if err != nil {
+		log.Warning("%s", err)
+		return false, err
+	}
+	defer cleanup()
+
+	method := model.RPCNodes
+	req := model.NewNodeRPCRequest()
+	rsp := model.NewNodeRPCResponse(model.OK)
+	if err := cli.Call(method, req, rsp); err != nil {
+		return false, err
+	}
+
+	if rsp.RetCode != model.OK {
+		return false, err
+	}
+
+	if rsp.State == raft.IDLE.String() {
+		return true, nil
+	}
+
+	return false, nil
+}
+
 func GetClusterLeader(self string) (string, error) {
 	nodes, err := GetNodes(self)
 	if err != nil {
@@ -131,6 +157,16 @@ func FindBestoneForBackup(self string) (string, error) {
 	}
 
 	for _, node := range nodes {
+		isIdle, err := IsNodeIdle(node)
+		if err != nil {
+			log.Warning("%s", err)
+			continue
+		}
+
+		if isIdle {
+			continue
+		}
+
 		if node != leader {
 			if rsp, err := GetMysqlStatusRPC(node); err == nil {
 				GTID := rsp.GTID
