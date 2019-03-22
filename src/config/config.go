@@ -220,7 +220,7 @@ type BackupConfig struct {
 	// mysql host
 	Host string
 
-	// mysql prot
+	// mysql port
 	Port int
 
 	// mysql basedir
