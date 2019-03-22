@@ -133,7 +133,7 @@ func MockWaitMySQLPingTimeout() {
 func MockWaitLeaderEggs(rafts []*Raft, leadernums int) int {
 	// wait
 	if leadernums == 0 {
-		// wait hearbeat boradcast
+		// wait hearbeat broadcast
 		time.Sleep(time.Millisecond * time.Duration(rafts[0].getElectionTimeout()*2))
 		return -1
 	}
@@ -147,7 +147,7 @@ func MockWaitLeaderEggs(rafts []*Raft, leadernums int) int {
 				if raft.getState() == LEADER {
 					nums++
 					if nums == leadernums {
-						// wait hearbeat boradcast
+						// wait hearbeat broadcast
 						time.Sleep(time.Millisecond * time.Duration(rafts[0].getElectionTimeout()))
 						done <- i
 						return

@@ -29,7 +29,7 @@ type GTID struct {
 	// Mysql master log file which the slave is reading
 	Master_Log_File string
 
-	// Mysql master log postion which the slave has read
+	// Mysql master log position which the slave has read
 	Read_Master_Log_Pos uint64
 
 	// The name of the master binary log file containing the most recent event executed by the SQL thread
