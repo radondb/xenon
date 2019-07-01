@@ -62,7 +62,7 @@ func (r *Candidate) Loop() {
 	r.resetElectionTimeout()
 	r.resetCheckVotesTimeout()
 
-	// boradcast voterequest
+	// broadcast voterequest
 	voteGranted := 1
 	idleVoted := 0
 	respChan := make(chan *model.RaftRPCResponse, r.getMembers())
@@ -86,7 +86,7 @@ func (r *Candidate) Loop() {
 			r.resetCheckVotesTimeout()
 		case <-r.electionTick.C:
 			voteGranted = 1
-			// boradcast voterequest
+			// broadcast voterequest
 			respChan = make(chan *model.RaftRPCResponse, r.getMembers())
 			r.sendRequestVoteHandler(respChan)
 

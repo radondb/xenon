@@ -342,6 +342,7 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 			}
 			log.Warning("S16-->enable.raft.done...")
 		}
+		log.Warning("S16-->enable.raft.done...")
 	}
 
 	// 17. wait change to master

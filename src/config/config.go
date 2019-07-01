@@ -60,8 +60,8 @@ type RaftConfig struct {
 	// purge binlog interval (ms)
 	PurgeBinlogInterval int `json:"purge-binlog-interval"`
 
-	// start as idle
-	StartAsIDLE bool `json:"start-as-idle"`
+	// Super IDLE cant' change to FOLLOWER.
+	SuperIDLE bool `json:"super-idle"`
 
 	// MUST: set in init
 	// the shell command when leader start
@@ -223,7 +223,7 @@ type BackupConfig struct {
 	// mysql host
 	Host string
 
-	// mysql prot
+	// mysql port
 	Port int
 
 	// mysql basedir

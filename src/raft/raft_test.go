@@ -251,7 +251,7 @@ func TestRaftLeaderDown(t *testing.T) {
 // 5.  Stop cluster1.leader
 // 6.  Stop cluster2.follower
 // 6.  wait cluster1.candidate eggs
-// 8.  cluster2.leader add cluster1.candidate as his peers and boradcast heartbeat to him
+// 8.  cluster2.leader add cluster1.candidate as his peers and broadcast heartbeat to him
 // 9.  cluster1.candidate give an ErrorInvalidRequest to cluster2.leader, since you are not a member of cluster1
 // 10. cluster1.candidate add cluster2.leader as his peers
 // 11. cluster2.leader get a requestvote from cluster1.candidate
@@ -836,12 +836,12 @@ func TestRaftElectionUnderIDLEInMajority(t *testing.T) {
 // test run as IDLE with config.StartAsIDLE=true configuration
 //
 // TEST PROCESSES:
-// 1. Start 1 raft with StartAsIDLE=true
+// 1. Start 1 raft with SuperIDLE=true
 // 2. check the IDLE
 func TestRaftStartAsIDLE(t *testing.T) {
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	conf := config.DefaultRaftConfig()
-	conf.StartAsIDLE = true
+	conf.SuperIDLE = true
 	port := common.RandomPort(8100, 8200)
 	_, rafts, cleanup := MockRaftsWithConfig(log, conf, port, 1)
 	defer cleanup()

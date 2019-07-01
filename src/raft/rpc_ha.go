@@ -42,8 +42,13 @@ func (h *HARPC) HAEnable(req *model.HARPCRequest, rsp *model.HARPCResponse) erro
 	state := h.raft.getState()
 	switch state {
 	case IDLE:
-		h.raft.setState(FOLLOWER)
-		h.raft.loopFired()
+		if h.raft.conf.SuperIDLE {
+			// Set SuperIDLE to noLeader to fire the 'change master to'.
+			h.raft.setLeader(noLeader)
+		} else {
+			h.raft.setState(FOLLOWER)
+			h.raft.loopFired()
+		}
 		rsp.RetCode = model.OK
 		return nil
 	case STOPPED:

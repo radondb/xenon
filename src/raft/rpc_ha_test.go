@@ -485,3 +485,81 @@ func TestRaftRPCHATryToLeaderFail_MySQLUnpromotble(t *testing.T) {
 		assert.Equal(t, whoisleader, GTIDCIDX)
 	}
 }
+
+func TestRaftSuperIDLEEnableHA(t *testing.T) {
+	var testName = "TestRaftSuperIDLEEnableHA"
+	var want, got State
+	var whoisleader int
+	var leader *Raft
+	var idler *Raft
+
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	port := common.RandomPort(8000, 9000)
+	names, rafts, cleanup := MockRafts(log, port, 3)
+	defer cleanup()
+
+	// 1.  Start 3 rafts.
+	{
+		for i, raft := range rafts {
+			if i == 2 {
+				raft.conf.SuperIDLE = true
+				idler = raft
+			}
+			raft.Start()
+		}
+	}
+
+	// 2.  wait leader election.
+	{
+		MockWaitLeaderEggs(rafts, 1)
+		whoisleader = 0
+		got = 0
+		want = (LEADER + FOLLOWER + IDLE)
+		for i, raft := range rafts {
+			got += raft.getState()
+			if raft.getState() == LEADER {
+				whoisleader = i
+			}
+		}
+		// [LEADER, FOLLOWER, IDLE]
+		assert.Equal(t, want, got)
+	}
+	idlerLeader1 := idler.getLeader()
+
+	// 3.  set leader handlers to mock
+	{
+		leader = rafts[whoisleader]
+		log.Warning("%v.leader[%v].set.mock.functions", testName, rafts[whoisleader].getID())
+		leader.L.setProcessHeartbeatRequestHandler(leader.mockLeaderProcessHeartbeatRequest)
+		leader.L.setProcessRequestVoteRequestHandler(leader.mockLeaderProcessRequestVoteRequest)
+	}
+
+	// 4.  Stop leader hearbeat
+	{
+		log.Warning("%v.leader[%v].Stop.heartbeat", testName, leader.getID())
+		leader.L.setSendHeartbeatHandler(leader.mockLeaderSendHeartbeat)
+	}
+
+	// 5.  Wait new leader.
+	{
+		MockWaitLeaderEggs(rafts, 2)
+	}
+
+	{
+		c, cleanup := MockGetClient(t, names[2])
+		defer cleanup()
+
+		method := model.RPCHAEnable
+		req := model.NewHARPCRequest()
+		rsp := model.NewHARPCResponse(model.OK)
+		err := c.Call(method, req, rsp)
+		assert.Nil(t, err)
+
+		want := model.OK
+		got := rsp.RetCode
+		assert.Equal(t, want, got)
+	}
+
+	idlerLeader2 := idler.getLeader()
+	assert.NotEqual(t, idlerLeader1, idlerLeader2)
+}

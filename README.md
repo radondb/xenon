@@ -28,7 +28,9 @@ Xenon has many cool features, such as:
 
 ## Use case
 
-Xenon is production ready, it has been used in production like [MySQL Plus](https://www.qingcloud.com/products/mysql-plus/)
+Xenon is production ready, it has been used in production like:
+- [MySQL Plus](https://www.qingcloud.com/products/mysql-plus/) -  A Highly Available MySQL Clusters
+-  [RadonDB](https://www.qingcloud.com/products/radondb) -  A  cloud-native MySQL database for building global, scalable cloud services
 
 ## Issues
 
