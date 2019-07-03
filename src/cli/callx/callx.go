@@ -86,7 +86,7 @@ func GetRaftState(endpoint string) (string, []string, error) {
 	return rsp.State, rsp.GetNodes(), nil
 }
 
-func IsNodeIdle(node string) (bool, error) {
+func IsNodeIdleOrInvalid(node string) (bool, error) {
 	cli, cleanup, err := GetClient(node)
 	if err != nil {
 		log.Warning("%s", err)
@@ -105,7 +105,7 @@ func IsNodeIdle(node string) (bool, error) {
 		return false, err
 	}
 
-	if rsp.State == raft.IDLE.String() {
+	if strings.Contains("IDLE, INVALID", rsp.State) {
 		return true, nil
 	}
 
@@ -157,13 +157,13 @@ func FindBestoneForBackup(self string) (string, error) {
 	}
 
 	for _, node := range nodes {
-		isIdle, err := IsNodeIdle(node)
+		isIdleOrInvalid, err := IsNodeIdleOrInvalid(node)
 		if err != nil {
 			log.Warning("%s", err)
 			continue
 		}
 
-		if isIdle {
+		if isIdleOrInvalid {
 			continue
 		}
 

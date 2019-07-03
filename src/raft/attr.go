@@ -38,6 +38,10 @@ const (
 	// neither process heartbeat nor voterequest(return ErrorInvalidRequest)
 	IDLE
 
+	// INVALID state.
+	// neither process heartbeat nor voterequest(return ErrorInvalidRequest)
+	INVALID
+
 	// STOPPED state.
 	STOPPED
 )
@@ -53,6 +57,8 @@ func (s State) String() string {
 	case 1 << 3:
 		return "IDLE"
 	case 1 << 4:
+		return "INVALID"
+	case 1 << 5:
 		return "STOPPED"
 	}
 	return "UNKNOW"
@@ -67,6 +73,9 @@ const (
 
 	// MsgRaftRequestVote type.
 	MsgRaftRequestVote
+
+	// MsgRaftPing type.
+	MsgRaftPing
 )
 
 var (

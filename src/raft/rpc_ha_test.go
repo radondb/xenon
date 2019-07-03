@@ -417,7 +417,7 @@ func TestRaftRPCHATryToLeaderFail_MySQLUnpromotble(t *testing.T) {
 
 		var got State
 		whoisleader = 0
-		want := (LEADER + FOLLOWER + FOLLOWER)
+		want := (LEADER + INVALID + FOLLOWER)
 		for i, raft := range rafts {
 			got += raft.getState()
 			if raft.getState() == LEADER {
@@ -458,7 +458,7 @@ func TestRaftRPCHATryToLeaderFail_MySQLUnpromotble(t *testing.T) {
 		err := c.Call(method, req, rsp)
 		assert.Nil(t, err)
 
-		want := model.RPCError_MySQLUnpromotable
+		want := model.ErrorInvalidRequest
 		got := rsp.RetCode
 		assert.Equal(t, want, got)
 	}
@@ -471,7 +471,7 @@ func TestRaftRPCHATryToLeaderFail_MySQLUnpromotble(t *testing.T) {
 
 		var got State
 		whoisleader = 0
-		want := (LEADER + FOLLOWER + FOLLOWER)
+		want := (LEADER + INVALID + FOLLOWER)
 		for i, raft := range rafts {
 			got += raft.getState()
 			if raft.getState() == LEADER {

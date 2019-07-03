@@ -10,10 +10,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 	"xbase/common"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestCLIInitCommand(t *testing.T) {

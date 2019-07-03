@@ -12,48 +12,47 @@ import (
 	"model"
 )
 
-// IDLE is a special STATE with other FOLLOWER/CANDICATE/LEADER states.
+// Invalid is a special STATE with other FOLLOWER/CANDICATE/LEADER states.
+// But it seems like IDLE state.
 // It is usually used as READ-ONLY but does not have RAFT features, such as
 // LEADER election
 // FOLLOWER promotion
 //
-// Because of we bring IDLE state in RaftRPCResponse as vote-request response,
-// the IDLE vote will be filtered out by other CANDIDATEs.
-// IDLE is one member of a RAFT cluster but without the rights to vote.
+// IDLE is one member of a RAFT cluster but without the rights to vote and return ErrorInvalidRequest to CANDICATEs
 
-// Idle tuple.
-type Idle struct {
+// Invalid tuple.
+type Invalid struct {
 	*Raft
 
-	// idle process heartbeat request handler
+	// Invalid process heartbeat request handler
 	processHeartbeatRequestHandler func(*model.RaftRPCRequest) *model.RaftRPCResponse
 
-	// idle process voterequest request handler
+	// Invalid process voterequest request handler
 	processRequestVoteRequestHandler func(*model.RaftRPCRequest) *model.RaftRPCResponse
 
-	// idle process ping request handler
+	// Invalid process ping request handler
 	processPingRequestHandler func(*model.RaftRPCRequest) *model.RaftRPCResponse
 }
 
-// NewIdle creates new Idle.
-func NewIdle(r *Raft) *Idle {
-	I := &Idle{Raft: r}
-	I.initHandlers()
-	return I
+// NewInvalid creates new Invalid.
+func NewInvalid(r *Raft) *Invalid {
+	IV := &Invalid{Raft: r}
+	IV.initHandlers()
+	return IV
 }
 
 // Loop used to start the loop of the state machine.
 //--------------------------------------
 // State Machine
 //--------------------------------------
-// in IDLE state, we never do leader election
+// in INVALID state, we never do leader election
 //
-func (r *Idle) Loop() {
+func (r *Invalid) Loop() {
 	// update begin
 	r.updateStateBegin()
 	r.stateInit()
 
-	for r.getState() == IDLE {
+	for r.getState() == INVALID {
 		select {
 		case <-r.fired:
 			r.WARNING("state.machine.loop.got.fired")
@@ -84,9 +83,9 @@ func (r *Idle) Loop() {
 // processHeartbeatRequest
 // EFFECT
 // handles the heartbeat request from the leader
-// In IDLE state, we only handle the master changed
+// In Invalid state, we only handle the master changed
 //
-func (r *Idle) processHeartbeatRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
+func (r *Invalid) processHeartbeatRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
 	rsp := model.NewRaftRPCResponse(model.OK)
 	rsp.Raft.From = r.getID()
 	rsp.Raft.ViewID = r.getViewID()
@@ -148,25 +147,21 @@ func (r *Idle) processHeartbeatRequest(req *model.RaftRPCRequest) *model.RaftRPC
 // processRequestVoteRequest
 // EFFECT
 // handles the requestvote request from other CANDIDATEs
-// IDLE is special, it returns OK expect Request Denied
+// Invalid is special, it returns ErrorInvalidRequest
 //
 // RETURN
-// 1. OK: give a vote
-func (r *Idle) processRequestVoteRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
-	rsp := model.NewRaftRPCResponse(model.OK)
+// 1. ErrorInvalidRequest: do not give a vote
+func (r *Invalid) processRequestVoteRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
+	rsp := model.NewRaftRPCResponse(model.ErrorInvalidRequest)
 	rsp.Raft.From = r.getID()
 	rsp.Raft.ViewID = r.getViewID()
 	rsp.Raft.EpochID = r.getEpochID()
 	rsp.Raft.State = r.state.String()
 
-	if !r.checkRequest(req) {
-		rsp.RetCode = model.ErrorInvalidRequest
-		return rsp
-	}
 	return rsp
 }
 
-func (r *Idle) stateInit() {
+func (r *Invalid) stateInit() {
 	// 1. stop vip
 	if err := r.leaderStopShellCommand(); err != nil {
 		// TODO(array): what todo?
@@ -184,7 +179,7 @@ func (r *Idle) stateInit() {
 	}
 }
 
-func (r *Idle) processPingRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
+func (r *Invalid) processPingRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
 	rsp := model.NewRaftRPCResponse(model.OK)
 	rsp.Raft.State = r.state.String()
 
@@ -192,21 +187,21 @@ func (r *Idle) processPingRequest(req *model.RaftRPCRequest) *model.RaftRPCRespo
 }
 
 // handlers
-func (r *Idle) initHandlers() {
+func (r *Invalid) initHandlers() {
 	r.setProcessHeartbeatRequestHandler(r.processHeartbeatRequest)
 	r.setProcessRequestVoteRequestHandler(r.processRequestVoteRequest)
 	r.setProcessPingRequestHandler(r.processPingRequest)
 }
 
 // for tests
-func (r *Idle) setProcessHeartbeatRequestHandler(f func(*model.RaftRPCRequest) *model.RaftRPCResponse) {
+func (r *Invalid) setProcessHeartbeatRequestHandler(f func(*model.RaftRPCRequest) *model.RaftRPCResponse) {
 	r.processHeartbeatRequestHandler = f
 }
 
-func (r *Idle) setProcessRequestVoteRequestHandler(f func(*model.RaftRPCRequest) *model.RaftRPCResponse) {
+func (r *Invalid) setProcessRequestVoteRequestHandler(f func(*model.RaftRPCRequest) *model.RaftRPCResponse) {
 	r.processRequestVoteRequestHandler = f
 }
 
-func (r *Idle) setProcessPingRequestHandler(f func(*model.RaftRPCRequest) *model.RaftRPCResponse) {
+func (r *Invalid) setProcessPingRequestHandler(f func(*model.RaftRPCRequest) *model.RaftRPCResponse) {
 	r.processPingRequestHandler = f
 }

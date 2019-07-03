@@ -227,8 +227,8 @@ func TestRaftLeaderDown(t *testing.T) {
 		for _, raft := range rafts {
 			got += raft.getState()
 		}
-		// [CANDIDATE, STOPPED, STOPPED]
-		want = (CANDIDATE + STOPPED + STOPPED)
+		// [FOLLOWER, STOPPED, STOPPED]
+		want = (FOLLOWER + STOPPED + STOPPED)
 		assert.Equal(t, want, got)
 	}
 }
@@ -262,8 +262,8 @@ func TestRaftDoubleClusterDiffraction(t *testing.T) {
 	var want, got State
 	var cluster1WhoIsLeader int
 	var cluster1Leader *Raft
-	var cluster1WhoIsCandidate int
-	var cluster1Candidate *Raft
+	var cluster1WhoIsFollower int
+	var cluster1Follower *Raft
 
 	var cluster2WhoIsLeader int
 	var cluster2Leader *Raft
@@ -346,15 +346,15 @@ func TestRaftDoubleClusterDiffraction(t *testing.T) {
 		MockWaitLeaderEggs(rafts1, 0)
 
 		got = 0
-		want = (CANDIDATE + STOPPED)
+		want = (FOLLOWER + STOPPED)
 		for i, raft := range rafts1 {
 			got += raft.getState()
-			if raft.getState() == CANDIDATE {
-				cluster1WhoIsCandidate = i
+			if raft.getState() == FOLLOWER {
+				cluster1WhoIsFollower = i
 			}
 		}
 
-		// [CANDIDATE, STOPPED]
+		// [FOLLOWER, STOPPED]
 		assert.Equal(t, want, got)
 	}
 
@@ -365,19 +365,19 @@ func TestRaftDoubleClusterDiffraction(t *testing.T) {
 		// cluster2Leader never degrade with this hook
 		cluster2Leader.L.setProcessHeartbeatResponseHandler(cluster2Leader.mockLeaderProcessSendHeartbeatResponse)
 
-		cluster1Candidate = rafts1[cluster1WhoIsCandidate]
-		cluster2Leader.AddPeer(cluster1Candidate.getID())
+		cluster1Follower = rafts1[cluster1WhoIsFollower]
+		cluster2Leader.AddPeer(cluster1Follower.getID())
 
 		// wait a hearbeat broadcast
-		// cluster1Candidate will give ErrorInvalidRequest because cluster2Leader not one of our cluster member
+		// cluster1Follower will give ErrorInvalidRequest because cluster2Leader not one of our cluster member
 		MockWaitLeaderEggs(rafts1, 0)
 	}
 
-	// 6. add cluster2Leader to cluster1Candidate
+	// 6. add cluster2Leader to cluster1Follower
 	{
 		cluster2Leader = rafts2[cluster2WhoIsLeader]
-		cluster1Candidate = rafts1[cluster1WhoIsCandidate]
-		cluster1Candidate.AddPeer(cluster2Leader.getID())
+		cluster1Follower = rafts1[cluster1WhoIsFollower]
+		cluster1Follower.AddPeer(cluster2Leader.getID())
 
 		// wait a hearbeat broadcast
 		MockWaitLeaderEggs(rafts1, 0)
@@ -482,13 +482,14 @@ func TestRaftLeaderDownAndUp(t *testing.T) {
 		leader.L.setSendHeartbeatHandler(leader.mockLeaderSendHeartbeat)
 	}
 
-	// 5.  wait new-leader election from 2 FOLLOWER
+	// 5.  wait a pingtimeout, wait new-leader election from 2 FOLLOWER
 	{
-		MockWaitLeaderEggs(rafts, 2)
+		MockWaitMySQLPingTimeout()
+		MockWaitLeaderEggs(rafts, 1)
 
 		got = 0
 		imoldleader := whoisleader
-		want = (LEADER + LEADER + FOLLOWER)
+		want = (LEADER + FOLLOWER + FOLLOWER)
 		for i, raft := range rafts {
 			got += raft.getState()
 			if raft.getState() == LEADER {
@@ -774,7 +775,7 @@ func TestRaftElectionUnderIDLEInMajority(t *testing.T) {
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 
 	raftnums = 7
-	idles := int(raftnums - (raftnums / 2))
+	idles := int(raftnums - (raftnums / 2 + 1))
 	actives := int(raftnums) - idles
 	port := common.RandomPort(8100, 8200)
 	_, rafts, cleanup := MockRafts(log, port, int(raftnums))
@@ -862,20 +863,56 @@ func TestRaftStartAsIDLE(t *testing.T) {
 }
 
 // TEST EFFECTS:
-// test a cluster with 17 rafts
+// test run as FOLLOWER
 //
 // TEST PROCESSES:
-// 1. Start 17 rafts state as FOLLOWER
-// 2. wait leader election from 32 FOLLOWERs
+// 1. Start 1 raft as FOLLOWER
+// 2. check the STATE still FOLLOWER
+func TestRaftStartAsFOLLOWER(t *testing.T) {
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	conf := config.DefaultRaftConfig()
+	port := common.RandomPort(8100, 8200)
+	_, rafts, cleanup := MockRaftsWithConfig(log, conf, port, 1)
+	defer cleanup()
+
+	// 1. Start rafts
+	{
+		for _, raft := range rafts {
+			raft.Start()
+		}
+	}
+
+	// 2. check state
+	{
+		want := FOLLOWER
+		got := rafts[0].getState()
+		assert.Equal(t, want, got)
+	}
+
+	// 3. wait a election timeout check state
+	{
+		MockWaitLeaderEggs(rafts, 0)
+		want := FOLLOWER
+		got := rafts[0].getState()
+		assert.Equal(t, want, got)
+	}
+}
+
+// TEST EFFECTS:
+// test a cluster with 9 rafts
+//
+// TEST PROCESSES:
+// 1. Start 11 rafts state as FOLLOWER
+// 2. wait leader election from 10 FOLLOWERs
 // 3. Stop the leader
 // 4. wait the new leader eggs
 // 5. Byzantine Failures Attack
-func TestRaft17Rafts1Cluster(t *testing.T) {
+func TestRaft11Rafts1Cluster(t *testing.T) {
 	var raftnums State
 	var whoisleader int
 	var leader *Raft
 
-	raftnums = 17
+	raftnums = 11
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8600, 9000)
 	_, rafts, cleanup := MockRafts(log, port, int(raftnums))
@@ -921,8 +958,8 @@ func TestRaft17Rafts1Cluster(t *testing.T) {
 		assert.Equal(t, want, got)
 	}
 
-	// 3. Stop the leader(mock to IDLE)
-	MockStateTransition(leader, IDLE)
+	// 3. Stop the leader(mock to INVALID)
+	MockStateTransition(leader, INVALID)
 
 	// 4. wait the new leader eggs
 	{
@@ -938,12 +975,12 @@ func TestRaft17Rafts1Cluster(t *testing.T) {
 		}
 
 		var got State
-		want := (LEADER + IDLE + FOLLOWER*(raftnums-2))
+		want := (LEADER + INVALID + FOLLOWER*(raftnums-2))
 		for _, raft := range rafts {
 			got += raft.getState()
 		}
 
-		//want = (LEADER + IDLE + FOLLOWER*(raftnums-2))
+		//want = (LEADER + INVALID + FOLLOWER*(raftnums-2))
 		assert.Equal(t, want, got)
 	}
 
@@ -986,8 +1023,11 @@ func TestRaftLeaderWithGTID(t *testing.T) {
 
 	// 1. set rafts GTID
 	//    1.0 rafts[0]  with MockGTIDB{Master_Log_File = "", Read_Master_Log_Pos = 0}
-	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
-	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 124}
+	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123
+	//            gtid.Executed_GTID_Set = "c78e798a-cccc-cccc-cccc-525433e8e796:1"}
+	//
+	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 124
+	//            gtid.Executed_GTID_Set = "c78e798a-cccc-cccc-cccc-525433e8e796:2"}
 	{
 		rafts[GTIDBIDX].mysql.SetMysqlHandler(mysql.NewMockGTIDB())
 		rafts[GTIDCIDX].mysql.SetMysqlHandler(mysql.NewMockGTIDC())
@@ -1072,6 +1112,7 @@ func TestRaftLeaderWithGTID(t *testing.T) {
 // 4. Stop all rafts
 func TestRaftWithFollowerGetSlaveGTIDError(t *testing.T) {
 	var whoisleader int
+	var whoisinvalid int
 
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
@@ -1112,11 +1153,14 @@ func TestRaftWithFollowerGetSlaveGTIDError(t *testing.T) {
 	{
 		MockWaitLeaderEggs(rafts, 1)
 		var got State
-		want := (LEADER + FOLLOWER + FOLLOWER)
+		want := (LEADER + INVALID + FOLLOWER)
 		for i, raft := range rafts {
 			got += raft.getState()
 			if raft.getState() == LEADER {
 				whoisleader = i
+			}
+			if raft.getState() == INVALID {
+				whoisinvalid = i
 			}
 		}
 		// [LEADER, FOLLOWER, FOLLOWER]
@@ -1124,6 +1168,9 @@ func TestRaftWithFollowerGetSlaveGTIDError(t *testing.T) {
 
 		// leader should be rafts[GTIDCIDX]
 		assert.Equal(t, whoisleader, GTIDCIDX)
+
+		// invalid should be rafts[GTIDAIDX]
+		assert.Equal(t, whoisinvalid, GTIDAIDX)
 	}
 }
 
@@ -1297,7 +1344,7 @@ func TestRaftChangeMasterToFail(t *testing.T) {
 
 		MockWaitLeaderEggs(rafts, 0)
 		MockWaitLeaderEggs(rafts, 1)
-		want := (LEADER + FOLLOWER + FOLLOWER)
+		want := (LEADER + INVALID + FOLLOWER)
 		for i, raft := range rafts {
 			got += raft.getState()
 			if raft.getState() == LEADER {
@@ -1315,7 +1362,7 @@ func TestRaftChangeMasterToFail(t *testing.T) {
 		var whoisleader int
 
 		MockWaitLeaderEggs(rafts, 0)
-		want := (LEADER + FOLLOWER + FOLLOWER)
+		want := (LEADER + INVALID + FOLLOWER)
 		for i, raft := range rafts {
 			got += raft.getState()
 			if raft.getState() == LEADER {
@@ -1340,7 +1387,7 @@ func TestRaftChangeMasterToFail(t *testing.T) {
 
 		MockWaitLeaderEggs(rafts, 0)
 		MockWaitLeaderEggs(rafts, 1)
-		want := (LEADER + FOLLOWER + FOLLOWER)
+		want := (LEADER + INVALID + FOLLOWER)
 		for i, raft := range rafts {
 			got += raft.getState()
 			if raft.getState() == LEADER {
@@ -1405,6 +1452,7 @@ func TestRaft1Nodes(t *testing.T) {
 // TEST PROCESSES:
 // 1. Start 2 rafts
 // 2. check quorums and leader
+/*
 func TestRaft2Nodes(t *testing.T) {
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
@@ -1441,7 +1489,7 @@ func TestRaft2Nodes(t *testing.T) {
 
 	time.Sleep(time.Millisecond * 5000)
 }
-
+*/
 // TEST EFFECTS:
 // test the 2 nodes leader election
 //
@@ -1453,6 +1501,7 @@ func TestRaft2Nodes(t *testing.T) {
 // 3.  wait rafts[1] elected as leader
 // 4.  set rafts[1].MySQL to MockGTIDE(mock MySQL down)
 // 5.  wait rafts[0] elected as new-leader
+/*
 func TestRaft2NodesWithGTID(t *testing.T) {
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
@@ -1513,7 +1562,7 @@ func TestRaft2NodesWithGTID(t *testing.T) {
 		assert.Equal(t, 0, whoisleader)
 	}
 }
-
+*/
 // TEST EFFECTS:
 // test the leader heartbeat acks less than the quorum.
 func TestRaftLeaderAckLessThanQuorum(t *testing.T) {

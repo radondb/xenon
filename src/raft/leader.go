@@ -46,6 +46,9 @@ type Leader struct {
 
 	// leader process send heartbeat response
 	processHeartbeatResponseHandler func(*int, *model.RaftRPCResponse)
+
+	// leader process ping request handler
+	processPingRequestHandler func(*model.RaftRPCRequest) *model.RaftRPCResponse
 }
 
 // NewLeader creates new Leader.
@@ -68,6 +71,7 @@ func (r *Leader) Loop() {
 	r.stateInit()
 	defer r.stateExit()
 
+	incViewID := true
 	mysqlDown := false
 	ackGranted := 1
 
@@ -103,6 +107,14 @@ func (r *Leader) Loop() {
 				}
 			} else {
 				lessHtAcks = 0
+				if incViewID {
+					if ackGranted != r.getMembers() {
+						r.updateView(r.getViewID()+2, r.GetLeader())
+						incViewID = false
+					}
+				} else if ackGranted == r.getMembers() {
+					incViewID = true
+				}
 			}
 
 			ackGranted = 1
@@ -123,8 +135,12 @@ func (r *Leader) Loop() {
 				req := e.request.(*model.RaftRPCRequest)
 				rsp := r.processRequestVoteRequestHandler(req)
 				e.response <- rsp
+			case MsgRaftPing:
+				req := e.request.(*model.RaftRPCRequest)
+				rsp := r.processPingRequestHandler(req)
+				e.response <- rsp
 			default:
-				r.ERROR("get.unkonw.request[%+v]", e.Type)
+				r.ERROR("get.unknown.request[%+v]", e.Type)
 			}
 		}
 	}
@@ -211,7 +227,7 @@ func (r *Leader) processRequestVoteRequest(req *model.RaftRPCRequest) *model.Raf
 	// 1. check viewid
 	//    request viewid is from an old view, reject
 	{
-		if req.GetViewID() < r.getViewID() {
+		if req.GetViewID() <= r.getViewID() {
 			r.WARNING("get.requestvote.from[N:%v, V:%v, E:%v].stale.viewid", req.GetFrom(), req.GetViewID(), req.GetEpochID())
 			rsp.RetCode = model.ErrorInvalidViewID
 			return rsp
@@ -241,9 +257,9 @@ func (r *Leader) processRequestVoteRequest(req *model.RaftRPCRequest) *model.Raf
 		}
 	}
 
-	// 3. update viewid
+	// 3. update viewid, if Candidate viewid equal with Leader viewid donot update viewid
 	{
-		if req.GetViewID() >= r.getViewID() {
+		if req.GetViewID() > r.getViewID() {
 			r.WARNING("get.requestvote.from[N:%v, V:%v, E:%v].degrade.to.follower", req.GetFrom(), req.GetViewID(), req.GetEpochID())
 			r.updateView(req.GetViewID(), noLeader)
 			// downgrade to FOLLOWER
@@ -310,6 +326,13 @@ func (r *Leader) processHeartbeatResponse(ackGranted *int, rsp *model.RaftRPCRes
 		}
 	}
 
+}
+
+func (r *Leader) processPingRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
+	rsp := model.NewRaftRPCResponse(model.OK)
+	rsp.Raft.State = r.state.String()
+
+	return rsp
 }
 
 func (r *Leader) degradeToFollower() {
@@ -455,7 +478,7 @@ func (r *Leader) checkSemiSyncStop() {
 func (r *Leader) checkSemiSync() {
 	min := 3
 	cur := r.getMembers()
-	if (cur < min || r.conf.SemiSyncDegrade) {
+	if cur < min || r.conf.SemiSyncDegrade {
 		if err := r.mysql.SetSemiSyncMasterDefault(); err != nil {
 			r.ERROR("mysql.set.semi-sync.master.timeout.default.error[%v]", err)
 		}
@@ -506,6 +529,9 @@ func (r *Leader) initHandlers() {
 	// send heartbeat
 	r.setSendHeartbeatHandler(r.sendHeartbeat)
 	r.setProcessHeartbeatResponseHandler(r.processHeartbeatResponse)
+
+	// ping request
+	r.setProcessPingRequestHandler(r.processPingRequest)
 }
 
 // for tests
@@ -523,4 +549,8 @@ func (r *Leader) setSendHeartbeatHandler(f func(*bool, chan *model.RaftRPCRespon
 
 func (r *Leader) setProcessHeartbeatResponseHandler(f func(*int, *model.RaftRPCResponse)) {
 	r.processHeartbeatResponseHandler = f
+}
+
+func (r *Leader) setProcessPingRequestHandler(f func(*model.RaftRPCRequest) *model.RaftRPCResponse) {
+	r.processPingRequestHandler = f
 }

@@ -402,7 +402,7 @@ func TestGetGTID(t *testing.T) {
 
 		want := model.GTID{Master_Log_File: "mysql-bin.000001",
 			Read_Master_Log_Pos:     147,
-			Retrieved_GTID_Set:      "",
+			Retrieved_GTID_Set:      "84030605-66aa-11e6-9465-52540e7fd51c:154-160",
 			Executed_GTID_Set:       "84030605-66aa-11e6-9465-52540e7fd51c:154-160",
 			Slave_IO_Running:        true,
 			Slave_SQL_Running:       true,

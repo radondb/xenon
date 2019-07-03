@@ -127,6 +127,12 @@ func MockWaitMySQLPingTimeout() {
 	time.Sleep(time.Millisecond * time.Duration(pingTimeout))
 }
 
+// MockHeartbeatTimeout used to wait raft HeartBeat timeout.
+func MockHeartbeatTimeout(nums int) {
+	heatbeatTimeout := config.DefaultRaftConfig().HeartbeatTimeout * nums
+	time.Sleep(time.Millisecond * time.Duration(heatbeatTimeout))
+}
+
 // MockWaitLeaderEggs mock.
 // wait the leader eggs when leadernums >0
 // if leadernums == 0, we just want to sleep for a heartbeat broadcast
