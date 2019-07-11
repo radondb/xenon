@@ -126,6 +126,7 @@ func (my *MysqlBase) GetMasterGTID(db *sql.DB) (*model.GTID, error) {
 		gtid.Master_Log_File = row["File"]
 		gtid.Read_Master_Log_Pos, _ = strconv.ParseUint(row["Position"], 10, 64)
 		gtid.Executed_GTID_Set = row["Executed_Gtid_Set"]
+		gtid.Retrieved_GTID_Set = row["Executed_Gtid_Set"]
 		gtid.Seconds_Behind_Master = "0"
 		gtid.Slave_IO_Running = true
 		gtid.Slave_SQL_Running = true
@@ -191,6 +192,22 @@ func (my *MysqlBase) ChangeToMaster(db *sql.DB) error {
 func (my *MysqlBase) WaitUntilAfterGTID(db *sql.DB, targetGTID string) error {
 	query := fmt.Sprintf("SELECT WAIT_UNTIL_SQL_THREAD_AFTER_GTIDS('%s')", targetGTID)
 	return Execute(db, query)
+}
+
+// GetGtidSubtract used to do "SELECT GTID_SUBTRACT('subsetGTID','setGTID') as gtid_sub" command
+func (my *MysqlBase) GetGtidSubtract(db *sql.DB, subsetGTID string, setGTID string) (string, error) {
+	query := fmt.Sprintf("SELECT GTID_SUBTRACT('%s','%s') as gtid_sub", subsetGTID, setGTID)
+	rows, err := QueryWithTimeout(db, reqTimeout, query)
+	if err != nil {
+		return "", err
+	}
+
+	if len(rows) > 0 {
+		row := rows[0]
+		gtid_sub := row["gtid_sub"]
+		return gtid_sub, nil
+	}
+	return "", nil
 }
 
 // SetGlobalSysVar used to set global variables.

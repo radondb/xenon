@@ -114,6 +114,45 @@ func (m *Mysql) GTIDGreaterThan(gtid *model.GTID) (bool, model.GTID, error) {
 	return cmp > 0, this, nil
 }
 
+// CheckGTID use to compare the followerGTID and candidateGTID
+func (m *Mysql) CheckGTID(followerGTID *model.GTID, candidateGTID *model.GTID) bool {
+	log := m.log
+	fRetrivedGTID := followerGTID.Retrieved_GTID_Set
+	cRetrivedGTID := candidateGTID.Retrieved_GTID_Set
+
+	// follower never generate events, should vote, but if some one execute reset master, this may be error
+	// if a normal restart the follower retrived_gtid_set will be "" can't setState(INVALID)
+	if fRetrivedGTID == "" {
+		return false
+	}
+
+	// candidate has none RetrivedGTID, may be none retrived_gtid_set
+	// this means the candidate or new leader has not written, shouldnt vote
+	if cRetrivedGTID == "" {
+		return false
+	}
+
+	// gtid_sub is not none, means the follower gtid is bigger than candidate gtid
+	// if viewdiff<=0 it must be localcommitted
+	gtid_sub, err := m.GetGtidSubtract(fRetrivedGTID, cRetrivedGTID)
+	if err != nil {
+		log.Error("mysql.CheckGTID.error[%v]", err)
+		return false
+	} else if err == nil && gtid_sub != "" {
+		log.Warning("follower.gtid[%v].bigger.than.remote[%v]", followerGTID, candidateGTID)
+		return true
+	}
+	return false
+}
+
+func (m *Mysql) GetGtidSubtract(subsetGTID string, setGTID string) (string, error) {
+	db, err := m.getDB()
+	if err != nil {
+		return "", err
+	}
+	return m.mysqlHandler.GetGtidSubtract(db, subsetGTID, setGTID)
+}
+
 // StartSlaveIOThread used to start the slave io thread.
 func (m *Mysql) StartSlaveIOThread() error {
 	db, err := m.getDB()

@@ -47,7 +47,7 @@ func TestStateDead(t *testing.T) {
 	mysql.PingStop()
 }
 
-func TestCreateReplUser (t *testing.T) {
+func TestCreateReplUser(t *testing.T) {
 	// log
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)

@@ -127,6 +127,12 @@ func MockWaitMySQLPingTimeout() {
 	time.Sleep(time.Millisecond * time.Duration(pingTimeout))
 }
 
+// MockWaitHeartBeatTimeout used to wait mysql ping timeout.
+func MockWaitHeartBeatTimeout() {
+	hbTimeout := config.DefaultRaftConfig().HeartbeatTimeout * 6
+	time.Sleep(time.Millisecond * time.Duration(hbTimeout))
+}
+
 // MockWaitLeaderEggs mock.
 // wait the leader eggs when leadernums >0
 // if leadernums == 0, we just want to sleep for a heartbeat broadcast

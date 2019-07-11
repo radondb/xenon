@@ -30,7 +30,7 @@ type NodeRPCResponse struct {
 	ViewID uint64
 
 	// The State of the raft:
-	// FOLLOWER/CANDIDATE/LEADER/IDLE
+	// FOLLOWER/CANDIDATE/LEADER/IDLE/INVALID
 	State string
 
 	// The Leader endpoint of the cluster

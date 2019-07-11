@@ -36,6 +36,7 @@ func TestMysqlRPCStatus(t *testing.T) {
 		GTID := model.GTID{
 			Master_Log_File:     "mysql-bin.000001",
 			Read_Master_Log_Pos: 123,
+			Executed_GTID_Set:   "c78e798a-cccc-cccc-cccc-525433e8e796:1-2",
 			Slave_IO_Running:    true,
 			Slave_SQL_Running:   true,
 		}

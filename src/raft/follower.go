@@ -10,6 +10,7 @@ package raft
 
 import (
 	"model"
+	"strings"
 	"sync"
 )
 
@@ -27,6 +28,9 @@ type Follower struct {
 
 	// follower process voterequest request handler
 	processRequestVoteRequestHandler func(*model.RaftRPCRequest) *model.RaftRPCResponse
+
+	// follower process raft ping request handler
+	processPingRequestHandler func(*model.RaftRPCRequest) *model.RaftRPCResponse
 }
 
 // NewFollower creates new Follower.
@@ -41,7 +45,7 @@ func NewFollower(r *Raft) *Follower {
 //--------------------------------------
 // State Machine
 //--------------------------------------
-//                  timeout
+//   timeout and ping ack greater or equal to n/2+1
 // State1. FOLLOWER ------------------> CANDIDATE
 //
 func (r *Follower) Loop() {
@@ -58,8 +62,8 @@ func (r *Follower) Loop() {
 			// promotable cases:
 			// 1. MySQL is MYSQL_ALIVE
 			// 2. Slave_SQL_RNNNING is OK
-			if r.mysql.Promotable() {
-				r.WARNING("timeout.promote.to.candidate")
+			if r.fUpgradeToC && r.mysql.Promotable() {
+				r.WARNING("timeout.and.ping.almost.node.successed.promote.to.candidate")
 				r.upgradeToCandidate()
 			}
 
@@ -86,8 +90,12 @@ func (r *Follower) Loop() {
 				if rsp.RetCode == model.OK {
 					r.resetElectionTimeout()
 				}
+			case MsgRaftPing:
+				req := e.request.(*model.RaftRPCRequest)
+				rsp := r.processPingRequestHandler(req)
+				e.response <- rsp
 			default:
-				r.ERROR("get.unkonw.request[%v]", e.Type)
+				r.ERROR("get.unknown.request[%v]", e.Type)
 			}
 		}
 	}
@@ -145,9 +153,14 @@ func (r *Follower) processHeartbeatRequest(req *model.RaftRPCRequest) *model.Raf
 
 		// MySQL4: change master
 		if r.getLeader() != req.GetFrom() {
-			if gtid, err := r.mysql.GetGTID(); err == nil {
+			gtid, err := r.mysql.GetGTID()
+			if err == nil {
 				r.WARNING("get.heartbeat.my.gtid.is:%v", gtid)
 			}
+
+			// before change master need check gtid, if local gtid bigger than remote gtid degrade to INVALID
+			r.degradeToInvalid(&gtid, &req.GTID)
+
 			r.WARNING("get.heartbeat.from[N:%v, V:%v, E:%v].change.mysql.master", req.GetFrom(), req.GetViewID(), req.GetEpochID())
 
 			if err := r.mysql.ChangeMasterTo(&req.Repl); err != nil {
@@ -242,11 +255,11 @@ func (r *Follower) processRequestVoteRequest(req *model.RaftRPCRequest) *model.R
 	}
 
 	// 3. check viewid(req.viewid >= thisnode.viewid)
-	// if the req.viewid is larger than this node, update the viewid
-	// if the req.viewid is equal and we have voted for other one then
-	// don't voted for this candidate
+	// if the req.viewid is larger than or equal with this node, update the viewid
+	// if the req.viewid is less than this node, we don't voted for other one then
+	// voted for this candidate
 	{
-		if req.GetViewID() > r.getViewID() {
+		if req.GetViewID() >= r.getViewID() {
 			r.updateView(req.GetViewID(), noLeader)
 		} else {
 			if (r.votedFor != noVote) && (r.votedFor != req.GetFrom()) {
@@ -260,6 +273,67 @@ func (r *Follower) processRequestVoteRequest(req *model.RaftRPCRequest) *model.R
 	// 4. voted for this candidate
 	r.votedFor = req.GetFrom()
 	return rsp
+}
+
+func (r *Follower) processPingRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
+	rsp := model.NewRaftRPCResponse(model.OK)
+	rsp.Raft.State = r.state.String()
+
+	return rsp
+}
+
+func (r *Follower) startCheckUpgradeToC() {
+	r.WARNING("start.check.upgrade.to.candidate")
+
+	var cnt int
+	respChan := make(chan *model.RaftRPCResponse, r.getMembers())
+	r.resetCheckUpgradeToCTimeout()
+	go func() {
+		for r.getState() == FOLLOWER {
+			select {
+			case <-r.fired:
+				r.WARNING("state.machine.exit.startCheckUpgradeToC.exit")
+			case <-r.checkUpgradeTick.C:
+				r.WARNING("timeout.to.do.new.check.upgrade.to.candidate")
+				cnt = 1
+				for {
+					if len(respChan) == 0 {
+						break
+					}
+					<-respChan
+				}
+				r.sendClusterPing(respChan)
+				r.resetCheckUpgradeToCTimeout()
+			case rsp := <-respChan:
+				if rsp.RetCode == model.OK {
+					if rsp.Raft.State == "LEADER" {
+						r.WARNING("ping.responses.includes.leader.skip")
+						r.fUpgradeToC = false
+						continue
+					} else if strings.Contains("FOLLOWER, CANDIDATE, IDLE", rsp.Raft.State) {
+						cnt++
+					}
+				}
+
+				if cnt >= r.GetQuorums() {
+					r.WARNING("ping.responses[%v].more.than.half.upgrade.to.candidate", cnt)
+					r.fUpgradeToC = true
+					continue
+				}
+			}
+		}
+	}()
+	r.INFO("start.checkUpgradeToC.can.UpgradeToC[%v]", r.fUpgradeToC)
+}
+
+func (r *Follower) sendClusterPing(respChan chan *model.RaftRPCResponse) {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+	for _, peer := range r.peers {
+		go func(peer *Peer) {
+			peer.SendPing(respChan)
+		}(peer)
+	}
 }
 
 func (r *Follower) upgradeToCandidate() {
@@ -281,6 +355,29 @@ func (r *Follower) upgradeToCandidate() {
 	}
 	r.setState(CANDIDATE)
 	r.IncCandidatePromotes()
+}
+
+func (r *Follower) degradeToInvalid(followerGTID *model.GTID, candidateGTID *model.GTID) {
+	// only you
+	if len(r.peers) == 0 {
+		r.WARNING("peers.is.null.can.not.upgrade.to.candidate")
+		return
+	}
+
+	// stop io thread
+	// it will re-start again when heartbeat received
+	if err := r.mysql.StopSlaveIOThread(); err != nil {
+		r.ERROR("mysql.StopSlaveIOThread.error[%v]", err)
+	}
+
+	// if error can not vote candidate
+	greater := r.mysql.CheckGTID(followerGTID, candidateGTID)
+	if greater {
+		// degrade to INVALID
+		r.setState(INVALID)
+		return
+	}
+	return
 }
 
 // setMySQLAsync used to setting mysql in async
@@ -334,6 +431,7 @@ func (r *Follower) stateExit() {
 func (r *Follower) initHandlers() {
 	r.setProcessHeartbeatRequestHandler(r.processHeartbeatRequest)
 	r.setProcessRequestVoteRequestHandler(r.processRequestVoteRequest)
+	r.setProcessPingRequestHandler(r.processPingRequest)
 }
 
 // for tests
@@ -343,4 +441,8 @@ func (r *Follower) setProcessHeartbeatRequestHandler(f func(*model.RaftRPCReques
 
 func (r *Follower) setProcessRequestVoteRequestHandler(f func(*model.RaftRPCRequest) *model.RaftRPCResponse) {
 	r.processRequestVoteRequestHandler = f
+}
+
+func (r *Follower) setProcessPingRequestHandler(f func(*model.RaftRPCRequest) *model.RaftRPCResponse) {
+	r.processPingRequestHandler = f
 }

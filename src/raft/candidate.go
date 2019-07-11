@@ -32,6 +32,9 @@ type Candidate struct {
 
 	// candiadte process requestvote response
 	processRequestVoteResponseHandler func(*int, *int, *model.RaftRPCResponse, *bool)
+
+	// candidate process ping request handler
+	processPingRequestHandler func(*model.RaftRPCRequest) *model.RaftRPCResponse
 }
 
 // NewCandidate creates the new Candidate.
@@ -114,8 +117,12 @@ func (r *Candidate) Loop() {
 				req := e.request.(*model.RaftRPCRequest)
 				rsp := r.processRequestVoteRequestHandler(req)
 				e.response <- rsp
+			case MsgRaftPing:
+				req := e.request.(*model.RaftRPCRequest)
+				rsp := r.processPingRequestHandler(req)
+				e.response <- rsp
 			default:
-				r.ERROR("get.unkonw.request[%v]", e.Type)
+				r.ERROR("get.unknown.request[%v]", e.Type)
 			}
 		}
 	}
@@ -297,6 +304,13 @@ func (r *Candidate) processRequestVoteResponse(voteGranted *int, idleVoted *int,
 	}
 }
 
+func (r *Candidate) processPingRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
+	rsp := model.NewRaftRPCResponse(model.OK)
+	rsp.Raft.State = r.state.String()
+
+	return rsp
+}
+
 // candidateUpgradeToLeader
 // 1. goto the LEADER state
 // 2. start the vip for public rafts
@@ -328,6 +342,9 @@ func (r *Candidate) initHandlers() {
 	// send vote requet
 	r.setSendRequestVoteHandler(r.sendRequestVote)
 	r.setProcessRequestVoteResponseHandler(r.processRequestVoteResponse)
+
+	// ping request
+	r.setProcessPingRequestHandler(r.processPingRequest)
 }
 
 // for tests
@@ -345,4 +362,8 @@ func (r *Candidate) setSendRequestVoteHandler(f func(chan *model.RaftRPCResponse
 
 func (r *Candidate) setProcessRequestVoteResponseHandler(f func(*int, *int, *model.RaftRPCResponse, *bool)) {
 	r.processRequestVoteResponseHandler = f
+}
+
+func (r *Candidate) setProcessPingRequestHandler(f func(*model.RaftRPCRequest) *model.RaftRPCResponse) {
+	r.processPingRequestHandler = f
 }

@@ -213,7 +213,7 @@ func raftNodesCommandFn(cmd *cobra.Command, args []string) {
 func NewRaftStatusCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "status in JSON(state(LEADER/CANDIDATE/FOLLOWER/IDLE))",
+		Short: "status in JSON(state(LEADER/CANDIDATE/FOLLOWER/IDLE/INVALID))",
 		Run:   raftStatusCommandFn,
 	}
 

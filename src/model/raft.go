@@ -15,6 +15,7 @@ const (
 	RAFTMYSQL_WAITUNTILAFTERGTID RAFTMYSQL_STATUS = "WaitUntilAfterGTID"
 )
 const (
+	RPCRaftPing               = "RaftRPC.Ping"
 	RPCRaftHeartbeat          = "RaftRPC.Heartbeat"
 	RPCRaftRequestVote        = "RaftRPC.RequestVote"
 	RPCRaftStatus             = "RaftRPC.Status"
@@ -39,7 +40,7 @@ type Raft struct {
 	// The endpoint of the rpc call to
 	To string
 
-	// The state string(LEADER/CANCIDATE/FOLLOWER/IDLE)
+	// The state string(LEADER/CANCIDATE/FOLLOWER/IDLE/INVALID)
 	State string
 }
 
