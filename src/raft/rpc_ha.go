@@ -78,6 +78,9 @@ func (h *HARPC) HATryToLeader(req *model.HARPCRequest, rsp *model.HARPCResponse)
 	case IDLE:
 		rsp.RetCode = model.ErrorInvalidRequest
 		return nil
+	case INVALID:
+		rsp.RetCode = model.ErrorInvalidRequest
+		return nil
 	}
 	// promotable cases:
 	// 1. MySQL is MYSQL_ALIVE

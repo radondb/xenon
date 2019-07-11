@@ -239,12 +239,12 @@ func DefaultBackupConfig() *BackupConfig {
 		UseMemory:             "2GB",
 		Parallel:              2,
 		MysqldMonitorInterval: 1000 * 1,
-		Admin:        "root",
-		Passwd:       "",
-		Host:         "localhost",
-		Port:         3306,
-		Basedir:      "/u01/mysql_20160606/",
-		DefaultsFile: "/etc/my3306.cnf",
+		Admin:                 "root",
+		Passwd:                "",
+		Host:                  "localhost",
+		Port:                  3306,
+		Basedir:               "/u01/mysql_20160606/",
+		DefaultsFile:          "/etc/my3306.cnf",
 	}
 }
 

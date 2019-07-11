@@ -17,6 +17,17 @@ type RaftRPC struct {
 	raft *Raft
 }
 
+// Ping rpc.
+// send MsgRaftPing
+func (r *RaftRPC) Ping(req *model.RaftRPCRequest, rsp *model.RaftRPCResponse) error {
+	ret, err := r.raft.send(MsgRaftPing, req)
+	if err != nil {
+		return err
+	}
+	*rsp = *ret.(*model.RaftRPCResponse)
+	return nil
+}
+
 // Heartbeat rpc.
 func (r *RaftRPC) Heartbeat(req *model.RaftRPCRequest, rsp *model.RaftRPCResponse) error {
 	ret, err := r.raft.send(MsgRaftHeartbeat, req)

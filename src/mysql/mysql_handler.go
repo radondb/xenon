@@ -48,6 +48,9 @@ type MysqlHandler interface {
 	// waits until slave replication reaches at least targetGTID
 	WaitUntilAfterGTID(*sql.DB, string) error
 
+	// get gtid subtract with slavegtid and master gtid
+	GetGtidSubtract(*sql.DB, string, string) (string, error)
+
 	// set global variables
 	SetGlobalSysVar(db *sql.DB, varsql string) error
 
