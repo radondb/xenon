@@ -315,11 +315,12 @@ func (r *Follower) startCheckUpgradeToC() {
 					}
 				}
 
-				if cnt >= r.GetQuorums() {
-					r.WARNING("ping.responses[%v].more.than.half.upgrade.to.candidate", cnt)
-					r.fUpgradeToC = true
+				if cnt < r.GetQuorums() {
+					r.fUpgradeToC = false
 					continue
 				}
+				r.WARNING("ping.responses[%v].more.than.half.upgrade.to.candidate", cnt)
+				r.fUpgradeToC = true
 			}
 		}
 	}()
@@ -377,7 +378,6 @@ func (r *Follower) degradeToInvalid(followerGTID *model.GTID, candidateGTID *mod
 		r.setState(INVALID)
 		return
 	}
-	return
 }
 
 // setMySQLAsync used to setting mysql in async

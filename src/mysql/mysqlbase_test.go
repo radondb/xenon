@@ -136,7 +136,7 @@ func TestMysqlBaseGetMasterGTID(t *testing.T) {
 
 		want := model.GTID{Master_Log_File: "mysql-bin.000001",
 			Read_Master_Log_Pos:     147,
-			Retrieved_GTID_Set:      "84030605-66aa-11e6-9465-52540e7fd51c:154-160",
+			Retrieved_GTID_Set:      "",
 			Executed_GTID_Set:       "84030605-66aa-11e6-9465-52540e7fd51c:154-160",
 			Slave_IO_Running:        true,
 			Slave_SQL_Running:       true,
@@ -157,6 +157,22 @@ func TestMysqlBaseGetMasterGTID(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, want, *got)
 	}
+}
+
+func TestGetUUID(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.Nil(t, err)
+	defer db.Close()
+
+	query := "SELECT @@SERVER_UUID"
+	columns := []string{"@@SERVER_UUID"}
+	mockRows := sqlmock.NewRows(columns).AddRow("84030605-66aa-11e6-9465-52540e7fd51c")
+	mock.ExpectQuery(query).WillReturnRows(mockRows)
+
+	want := "84030605-66aa-11e6-9465-52540e7fd51c"
+
+	got, _ := mysqlbase.GetUUID(db)
+	assert.Equal(t, want, got)
 }
 
 func TestMysqlBaseChangeMasterToCommand(t *testing.T) {

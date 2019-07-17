@@ -178,6 +178,27 @@ func TestWaitUntilAfterGTID(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestGetLocalGTID(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.Nil(t, err)
+	defer db.Close()
+
+	//log
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	conf := config.DefaultMysqlConfig()
+	mysql := NewMysql(conf, log)
+	mysql.db = db
+
+	query := "SELECT @@SERVER_UUID"
+	columns := []string{"@@SERVER_UUID"}
+	mockRows := sqlmock.NewRows(columns).AddRow("84030605-66aa-11e6-9465-52540e7fd51c")
+	mock.ExpectQuery(query).WillReturnRows(mockRows)
+
+	want := "84030605-66aa-11e6-9465-52540e7fd51c:1-160"
+	got, err := mysql.GetLocalGTID("84030605-66aa-11e6-9465-52540e7fd51c:1-160, 84030605-66bb-11e6-9465-52540e7fd51c:1-160")
+	assert.Equal(t, want, got)
+}
+
 func TestCheckGTID(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)
@@ -190,13 +211,18 @@ func TestCheckGTID(t *testing.T) {
 	mysql := NewMysql(conf, log)
 	mysql.db = db
 
-	// local is a normal follower, leader Executed_Gtid_Set is ""
+	// local is a normal follower, leader Executed_GTID_Set is ""
 	{
+		query := "SELECT @@SERVER_UUID"
+		columns := []string{"@@SERVER_UUID"}
+		mockRows := sqlmock.NewRows(columns).AddRow("84030605-66aa-11e6-9465-52540e7fd51c")
+		mock.ExpectQuery(query).WillReturnRows(mockRows)
+
 		GTID1 = model.GTID{
-			Retrieved_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:154-160",
+			Executed_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:154-160",
 		}
 		GTID2 = model.GTID{
-			Retrieved_GTID_Set: "",
+			Executed_GTID_Set: "",
 		}
 
 		want := false
@@ -205,13 +231,13 @@ func TestCheckGTID(t *testing.T) {
 		assert.Equal(t, want, got)
 	}
 
-	// local is a normal follower Retrieved_GTID_Set is "", leader Executed_Gtid_Set is ""
+	// local is a normal follower Executed_GTID_Set is "", leader Executed_GTID_Set is ""
 	{
 		GTID1 = model.GTID{
-			Retrieved_GTID_Set: "",
+			Executed_GTID_Set: "",
 		}
 		GTID2 = model.GTID{
-			Retrieved_GTID_Set: "",
+			Executed_GTID_Set: "",
 		}
 
 		want := false
@@ -220,13 +246,19 @@ func TestCheckGTID(t *testing.T) {
 		assert.Equal(t, want, got)
 	}
 
-	// local is a normal follower Retrieved_GTID_Set is "", leader do some dml
+	// local is a normal follower Executed_GTID_Set is "", leader do some dml
 	{
 		GTID1 = model.GTID{
-			Retrieved_GTID_Set: "",
+			Executed_GTID_Set: "",
 		}
+
+		query := "SELECT @@SERVER_UUID"
+		columns := []string{"@@SERVER_UUID"}
+		mockRows := sqlmock.NewRows(columns).AddRow("84030605-66aa-11e6-9465-52540e7fd51c")
+		mock.ExpectQuery(query).WillReturnRows(mockRows)
+
 		GTID2 = model.GTID{
-			Retrieved_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:1-160",
+			Executed_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:1-160",
 		}
 
 		want := false
@@ -237,37 +269,57 @@ func TestCheckGTID(t *testing.T) {
 
 	// local is a leader bug sprain, remote has leader but has none write
 	{
+		query := "SELECT @@SERVER_UUID"
+		columns := []string{"@@SERVER_UUID"}
+		mockRows := sqlmock.NewRows(columns).AddRow("84030605-66aa-11e6-9465-52540e7fd51c")
+		mock.ExpectQuery(query).WillReturnRows(mockRows)
+
 		GTID1 = model.GTID{
-			Retrieved_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:1-160",
-		}
-		GTID2 = model.GTID{
-			Retrieved_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:1-160",
+			Executed_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:1-160",
 		}
 
-		query := "SELECT GTID_SUBTRACT\\('84030605-66aa-11e6-9465-52540e7fd51c:1-160','84030605-66aa-11e6-9465-52540e7fd51c:1-160'\\) as gtid_sub"
-		log.Warning("%v", query)
-		columns := []string{"gtid_sub"}
-		mockRows := sqlmock.NewRows(columns).AddRow("")
+		query = "SELECT @@SERVER_UUID"
+		columns = []string{"@@SERVER_UUID"}
+		mockRows = sqlmock.NewRows(columns).AddRow("84030605-66aa-11e6-9465-52540e7fd51c")
+		mock.ExpectQuery(query).WillReturnRows(mockRows)
+
+		GTID2 = model.GTID{
+			Executed_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:1-160",
+		}
+
+		query = "SELECT GTID_SUBTRACT\\('84030605-66aa-11e6-9465-52540e7fd51c:1-160','84030605-66aa-11e6-9465-52540e7fd51c:1-160'\\) as gtid_sub"
+		columns = []string{"gtid_sub"}
+		mockRows = sqlmock.NewRows(columns).AddRow("")
 		mock.ExpectQuery(query).WillReturnRows(mockRows)
 
 		want := false
 		got := mysql.CheckGTID(&GTID1, &GTID2)
-
 		assert.Equal(t, want, got)
 	}
 
 	// local is a leader bug sprain, remote has leader has writen
 	{
+		query := "SELECT @@SERVER_UUID"
+		columns := []string{"@@SERVER_UUID"}
+		mockRows := sqlmock.NewRows(columns).AddRow("84030605-66aa-11e6-9465-52540e7fd51c")
+		mock.ExpectQuery(query).WillReturnRows(mockRows)
+
 		GTID1 = model.GTID{
-			Retrieved_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:1-160",
-		}
-		GTID2 = model.GTID{
-			Retrieved_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:1-160, 84030605-77bb-11e6-9465-52540e7fd51c:1-10",
+			Executed_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:1-160",
 		}
 
-		query := "SELECT GTID_SUBTRACT\\('84030605-66aa-11e6-9465-52540e7fd51c:1-160','84030605-66aa-11e6-9465-52540e7fd51c:1-160, 84030605-77bb-11e6-9465-52540e7fd51c:1-10'\\) as gtid_sub"
-		columns := []string{"gtid_sub"}
-		mockRows := sqlmock.NewRows(columns).AddRow("")
+		query = "SELECT @@SERVER_UUID"
+		columns = []string{"@@SERVER_UUID"}
+		mockRows = sqlmock.NewRows(columns).AddRow("84030605-66aa-11e6-9465-52540e7fd51c")
+		mock.ExpectQuery(query).WillReturnRows(mockRows)
+
+		GTID2 = model.GTID{
+			Executed_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:1-160, 84030605-77bb-11e6-9465-52540e7fd51c:1-10",
+		}
+
+		query = "SELECT GTID_SUBTRACT\\('84030605-66aa-11e6-9465-52540e7fd51c:1-160','84030605-66aa-11e6-9465-52540e7fd51c:1-160'\\) as gtid_sub"
+		columns = []string{"gtid_sub"}
+		mockRows = sqlmock.NewRows(columns).AddRow("")
 		mock.ExpectQuery(query).WillReturnRows(mockRows)
 
 		want := false
@@ -278,16 +330,27 @@ func TestCheckGTID(t *testing.T) {
 
 	// local is a leader bug sprain and localcommitted, remote has leader has writen
 	{
+		query := "SELECT @@SERVER_UUID"
+		columns := []string{"@@SERVER_UUID"}
+		mockRows := sqlmock.NewRows(columns).AddRow("84030605-66aa-11e6-9465-52540e7fd51c")
+		mock.ExpectQuery(query).WillReturnRows(mockRows)
+
 		GTID1 = model.GTID{
-			Retrieved_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:1-161",
-		}
-		GTID2 = model.GTID{
-			Retrieved_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:1-160, 84030605-77bb-11e6-9465-52540e7fd51c:1-10",
+			Executed_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:1-161",
 		}
 
-		query := "SELECT GTID_SUBTRACT\\('84030605-66aa-11e6-9465-52540e7fd51c:1-161','84030605-66aa-11e6-9465-52540e7fd51c:1-160, 84030605-77bb-11e6-9465-52540e7fd51c:1-10'\\) as gtid_sub"
-		columns := []string{"gtid_sub"}
-		mockRows := sqlmock.NewRows(columns).AddRow("84030605-66aa-11e6-9465-52540e7fd51c:161")
+		query = "SELECT @@SERVER_UUID"
+		columns = []string{"@@SERVER_UUID"}
+		mockRows = sqlmock.NewRows(columns).AddRow("84030605-66aa-11e6-9465-52540e7fd51c")
+		mock.ExpectQuery(query).WillReturnRows(mockRows)
+
+		GTID2 = model.GTID{
+			Executed_GTID_Set: "84030605-66aa-11e6-9465-52540e7fd51c:1-160, 84030605-77bb-11e6-9465-52540e7fd51c:1-10",
+		}
+
+		query = "SELECT GTID_SUBTRACT\\('84030605-66aa-11e6-9465-52540e7fd51c:1-161','84030605-66aa-11e6-9465-52540e7fd51c:1-160'\\) as gtid_sub"
+		columns = []string{"gtid_sub"}
+		mockRows = sqlmock.NewRows(columns).AddRow("84030605-66aa-11e6-9465-52540e7fd51c:161")
 		mock.ExpectQuery(query).WillReturnRows(mockRows)
 
 		want := true
@@ -521,7 +584,7 @@ func TestGetGTID(t *testing.T) {
 
 		want := model.GTID{Master_Log_File: "mysql-bin.000001",
 			Read_Master_Log_Pos:     147,
-			Retrieved_GTID_Set:      "84030605-66aa-11e6-9465-52540e7fd51c:154-160",
+			Retrieved_GTID_Set:      "",
 			Executed_GTID_Set:       "84030605-66aa-11e6-9465-52540e7fd51c:154-160",
 			Slave_IO_Running:        true,
 			Slave_SQL_Running:       true,

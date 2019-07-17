@@ -825,7 +825,6 @@ func TestRaftEpochChangeUnderIDLE(t *testing.T) {
 		// wait epoch change broadcast
 		MockWaitLeaderEggs(rafts, 0)
 
-		whoisleader = 0
 		for _, raft := range rafts {
 			peers := raft.GetPeers()
 			for _, peer := range peers {
@@ -1050,10 +1049,8 @@ func TestRaft11Rafts1Cluster(t *testing.T) {
 		// wait leader eggs
 		MockWaitLeaderEggs(rafts, 1)
 
-		whoisleader = 0
-		for i, raft := range rafts {
+		for _, raft := range rafts {
 			if raft.getState() == LEADER {
-				whoisleader = i
 				break
 			}
 		}
@@ -1732,6 +1729,7 @@ func TestRaftLeaderWaitUntilAfterGTIDError(t *testing.T) {
 		want := (LEADER + FOLLOWER + FOLLOWER)
 		for _, raft := range rafts {
 			got += raft.getState()
+			log.Printf("test.raft.state.[%v]", raft.getState())
 		}
 		assert.True(t, got < want)
 	}

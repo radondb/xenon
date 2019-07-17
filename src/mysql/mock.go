@@ -35,6 +35,7 @@ type MockGTID struct {
 	ChangeToMasterFn           func(*sql.DB) error
 	WaitUntilAfterGTIDFn       func(*sql.DB, string) error
 	GetGtidSubtractFn          func(*sql.DB, string, string) (string, error)
+	GetUUIDFn                  func(*sql.DB) (string, error)
 	CheckGTIDFn                func(*model.GTID, *model.GTID) bool
 	SetGlobalSysVarFn          func(*sql.DB, string) error
 	ResetMasterFn              func(*sql.DB) error
@@ -68,6 +69,16 @@ func DefaultGetSlaveGTID(db *sql.DB) (*model.GTID, error) {
 // GetSlaveGTID mock.
 func (mogtid *MockGTID) GetSlaveGTID(db *sql.DB) (*model.GTID, error) {
 	return mogtid.GetSlaveGTIDFn(db)
+}
+
+// DefaultGetUUID mock.
+func DefaultGetUUID(db *sql.DB) (string, error) {
+	return "84030605-66aa-11e6-9465-52540e7fd51c", nil
+}
+
+// GetUUID mock.
+func (mogtid *MockGTID) GetUUID(db *sql.DB) (string, error) {
+	return mogtid.GetUUIDFn(db)
 }
 
 // DefaultGetMasterGTID mock.
@@ -386,6 +397,7 @@ func defaultMockGTID() *MockGTID {
 	mock.ChangeToMasterFn = DefaultChangeToMaster
 	mock.WaitUntilAfterGTIDFn = DefaultWaitUntilAfterGTID
 	mock.GetGtidSubtractFn = DefaultGetGtidSubtract
+	mock.GetUUIDFn = DefaultGetUUID
 	mock.CheckGTIDFn = DefaultCheckGTID
 	mock.SetGlobalSysVarFn = DefaultSetGlobalSysVar
 	mock.ResetMasterFn = DefaultResetMaster
@@ -450,31 +462,21 @@ func GetMasterGTIDA(db *sql.DB) (*model.GTID, error) {
 	return gtid, nil
 }
 
+func GetUUIDA(db *sql.DB) (string, error) {
+	return "052077a5-b6f4-ee1b-61ec-d80a8b27d749", nil
+}
+
 // NewMockGTIDA mock.
 func NewMockGTIDA() *MockGTID {
 	mock := defaultMockGTID()
 	mock.GetMasterGTIDFn = GetMasterGTIDA
 	mock.GetSlaveGTIDFn = GetSlaveGTIDA
+	mock.GetUUIDFn = GetUUIDA
 	return mock
 }
 
-// GetSlaveGTIDLC mock.
-func GetSlaveGTIDLC(db *sql.DB) (*model.GTID, error) {
-	gtid := &model.GTID{}
-	gtid.Master_Log_File = ""
-	gtid.Read_Master_Log_Pos = 0
-	gtid.Slave_IO_Running = true
-	gtid.Slave_SQL_Running = true
-	gtid.Slave_IO_Running_Str = "Yes"
-	gtid.Slave_SQL_Running_Str = "Yes"
-	gtid.Seconds_Behind_Master = "1"
-	gtid.Last_Error = ""
-	gtid.Slave_SQL_Running_State = "Slave has read all relay log; waiting for the slave I/O thread to update it"
-	gtid.Executed_GTID_Set = `052077a5-b6f4-ee1b-61ec-d80a8b27d749:1-37,
-    12446bf7-3219-11e5-9434-080027079e3d:8058-963126`
-	gtid.Retrieved_GTID_Set = `052077a5-b6f4-ee1b-61ec-d80a8b27d749:1-36,
-    12446bf7-3219-11e5-9434-080027079e3d:8058-963126`
-	return gtid, nil
+func GetUUIDLC(db *sql.DB) (string, error) {
+	return "052077a5-b6f4-ee1b-61ec-d80a8b27d749", nil
 }
 
 // GetMasterGTIDLC mock.
@@ -505,6 +507,7 @@ func NewMockGTIDLC() *MockGTID {
 	mock.GetSlaveGTIDFn = GetMasterGTIDLC
 	mock.CheckGTIDFn = CheckGTIDLC
 	mock.GetGtidSubtractFn = GetGtidSubtractInvalid
+	mock.GetUUIDFn = GetUUIDLC
 	return mock
 }
 
