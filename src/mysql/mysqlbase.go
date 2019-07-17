@@ -126,12 +126,27 @@ func (my *MysqlBase) GetMasterGTID(db *sql.DB) (*model.GTID, error) {
 		gtid.Master_Log_File = row["File"]
 		gtid.Read_Master_Log_Pos, _ = strconv.ParseUint(row["Position"], 10, 64)
 		gtid.Executed_GTID_Set = row["Executed_Gtid_Set"]
-		gtid.Retrieved_GTID_Set = row["Executed_Gtid_Set"]
 		gtid.Seconds_Behind_Master = "0"
 		gtid.Slave_IO_Running = true
 		gtid.Slave_SQL_Running = true
 	}
 	return gtid, nil
+}
+
+// GetUUID used to get local uuid.
+func (my *MysqlBase) GetUUID(db *sql.DB) (string, error) {
+	uuid := ""
+	query := "SELECT @@SERVER_UUID"
+	rows, err := QueryWithTimeout(db, reqTimeout, query)
+	if err != nil {
+		return uuid, err
+	}
+	if len(rows) > 0 {
+		row := rows[0]
+		uuid = row["@@SERVER_UUID"]
+	}
+
+	return uuid, nil
 }
 
 // StartSlaveIOThread used to start the io thread.

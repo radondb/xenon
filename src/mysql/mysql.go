@@ -123,6 +123,27 @@ func (m *Mysql) Ping() {
 	m.pingEntry = *pe
 }
 
+// GetUUID used to get local uuid.
+func (m *Mysql) GetUUID() (string, error) {
+	var err error
+	var db *sql.DB
+	var uuid string
+	log := m.log
+
+	if db, err = m.getDB(); err != nil {
+		log.Error("mysql.get.local.uuid.error[%v]", err)
+		return "", err
+	}
+
+	if uuid, err = m.mysqlHandler.GetUUID(db); err != nil {
+		log.Error("mysql.get.local.uuid.error[%v]", err)
+		return "", err
+	}
+	log.Info("mysql.get.local.uuid:[%v]", uuid)
+
+	return uuid, nil
+}
+
 // GetMasterGTID used to get master binlog info.
 func (m *Mysql) GetMasterGTID() (*model.GTID, error) {
 	var err error

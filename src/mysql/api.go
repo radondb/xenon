@@ -114,27 +114,58 @@ func (m *Mysql) GTIDGreaterThan(gtid *model.GTID) (bool, model.GTID, error) {
 	return cmp > 0, this, nil
 }
 
+func (m *Mysql) GetLocalGTID(gtid string) (string, error) {
+	log := m.log
+	if gtid == "" {
+		return "", nil
+	}
+
+	uuid, err := m.GetUUID()
+	if err != nil {
+		log.Error("mysql.GetLocalGTID.error[%v]", err)
+		return "", err
+	}
+
+	s_gtid := strings.Split(gtid, ",")
+	for _, gtid := range s_gtid {
+		if strings.Contains(gtid, uuid) {
+			return gtid, nil
+		}
+	}
+
+	return "", nil
+}
+
 // CheckGTID use to compare the followerGTID and candidateGTID
 func (m *Mysql) CheckGTID(followerGTID *model.GTID, candidateGTID *model.GTID) bool {
 	log := m.log
-	fRetrivedGTID := followerGTID.Retrieved_GTID_Set
-	cRetrivedGTID := candidateGTID.Retrieved_GTID_Set
+	fExecutedGTID := followerGTID.Executed_GTID_Set
+	fGTID, err := m.GetLocalGTID(fExecutedGTID)
+	if err != nil {
+		log.Error("mysql.CheckGTID.error[%v]", err)
+	}
+
+	cExecutedGTID := candidateGTID.Executed_GTID_Set
+	cGTID, err := m.GetLocalGTID(cExecutedGTID)
+	if err != nil {
+		log.Error("mysql.CheckGTID.error[%v]", err)
+	}
 
 	// follower never generate events, should vote, but if some one execute reset master, this may be error
 	// if a normal restart the follower retrived_gtid_set will be "" can't setState(INVALID)
-	if fRetrivedGTID == "" {
+	if fGTID == "" {
 		return false
 	}
 
 	// candidate has none RetrivedGTID, may be none retrived_gtid_set
 	// this means the candidate or new leader has not written, shouldnt vote
-	if cRetrivedGTID == "" {
+	if cGTID == "" {
 		return false
 	}
 
 	// gtid_sub is not none, means the follower gtid is bigger than candidate gtid
-	// if viewdiff<=0 it must be localcommitted
-	gtid_sub, err := m.GetGtidSubtract(fRetrivedGTID, cRetrivedGTID)
+	// if viewdiff<=0 and gtid_sub is not null it must be localcommitted
+	gtid_sub, err := m.GetGtidSubtract(fGTID, cGTID)
 	if err != nil {
 		log.Error("mysql.CheckGTID.error[%v]", err)
 		return false
