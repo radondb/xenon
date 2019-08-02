@@ -62,7 +62,7 @@ func (r *Follower) Loop() {
 			// promotable cases:
 			// 1. MySQL is MYSQL_ALIVE
 			// 2. Slave_SQL_RNNNING is OK
-			if r.fUpgradeToC && r.mysql.Promotable() {
+			if !r.isBrainSplit && r.mysql.Promotable() {
 				r.WARNING("timeout.and.ping.almost.node.successed.promote.to.candidate")
 				r.upgradeToCandidate()
 			}
@@ -282,49 +282,55 @@ func (r *Follower) processPingRequest(req *model.RaftRPCRequest) *model.RaftRPCR
 	return rsp
 }
 
-func (r *Follower) startCheckUpgradeToC() {
-	r.WARNING("start.check.upgrade.to.candidate")
+// startCheckBrainSplit check for split brain
+func (r *Follower) startCheckBrainSplit() {
+	r.isBrainSplit = true
+	r.INFO("start.CheckBrainSplit")
 
-	var cnt int
+	cnt := 1
 	respChan := make(chan *model.RaftRPCResponse, r.getMembers())
-	r.resetCheckUpgradeToCTimeout()
+	r.resetCheckBrainSplitTimeout()
 	go func() {
 		for r.getState() == FOLLOWER {
 			select {
 			case <-r.fired:
-				r.WARNING("state.machine.exit.startCheckUpgradeToC.exit")
-			case <-r.checkUpgradeTick.C:
-				r.WARNING("timeout.to.do.new.check.upgrade.to.candidate")
-				cnt = 1
-				for {
-					if len(respChan) == 0 {
-						break
-					}
-					<-respChan
+				r.WARNING("check.brain.split.loop.got.fired")
+			case <-r.checkBrainSplitTick.C:
+				r.DEBUG("timeout.to.check.brain.split")
+
+				if r.isBrainSplit {
+					r.WARNING("ping.responses[%v].is.less.than.half.maybe.brain.split", cnt)
 				}
+
+				cnt = 1
+				respChan = make(chan *model.RaftRPCResponse, r.getMembers())
 				r.sendClusterPing(respChan)
-				r.resetCheckUpgradeToCTimeout()
+				r.resetCheckBrainSplitTimeout()
+
 			case rsp := <-respChan:
 				if rsp.RetCode == model.OK {
 					if rsp.Raft.State == "LEADER" {
-						r.WARNING("ping.responses.includes.leader.skip")
-						r.fUpgradeToC = false
+						r.DEBUG("receive.responses.of.leader.skip.check.brain.split")
 						continue
-					} else if strings.Contains("FOLLOWER, CANDIDATE, IDLE", rsp.Raft.State) {
+					}
+					if strings.Contains("FOLLOWER CANDIDATE IDLE", rsp.Raft.State) {
+						r.DEBUG("receive.responses.of.%v.skip.check.brain.split", rsp.Raft.State)
 						cnt++
 					}
 				}
 
 				if cnt < r.GetQuorums() {
-					r.fUpgradeToC = false
+					r.isBrainSplit = true
 					continue
 				}
-				r.WARNING("ping.responses[%v].more.than.half.upgrade.to.candidate", cnt)
-				r.fUpgradeToC = true
+
+				if r.isBrainSplit {
+					r.isBrainSplit = false
+					r.WARNING("ping.responses[%v].is.greater.than.half.again", cnt)
+				}
 			}
 		}
 	}()
-	r.INFO("start.checkUpgradeToC.can.UpgradeToC[%v]", r.fUpgradeToC)
 }
 
 func (r *Follower) sendClusterPing(respChan chan *model.RaftRPCResponse) {

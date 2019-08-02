@@ -71,7 +71,7 @@ func (r *Leader) Loop() {
 	r.stateInit()
 	defer r.stateExit()
 
-	incViewID := true
+	incViewID := false
 	mysqlDown := false
 	ackGranted := 1
 
@@ -107,12 +107,16 @@ func (r *Leader) Loop() {
 				}
 			} else {
 				lessHtAcks = 0
-				if incViewID {
-					if ackGranted != r.getMembers() {
-						r.updateView(r.getViewID()+2, r.GetLeader())
+
+				// for brain split
+				if ackGranted == r.getMembers() {
+					if incViewID {
+						r.WARNING("heartbeat.acks.granted[%v].equals.members[%v].again", ackGranted, r.getMembers())
 						incViewID = false
 					}
-				} else if ackGranted == r.getMembers() {
+				} else if !incViewID {
+					r.WARNING("heartbeat.acks.granted[%v].less.than.members[%v].for.the.first.time", ackGranted, r.getMembers())
+					r.updateView(r.getViewID()+2, r.GetLeader())
 					incViewID = true
 				}
 			}

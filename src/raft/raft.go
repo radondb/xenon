@@ -40,33 +40,33 @@ type RaftMeta struct {
 
 // Raft tuple.
 type Raft struct {
-	log              *xlog.Log
-	mysql            *mysql.Mysql
-	cmd              common.Command
-	conf             *config.RaftConfig
-	leader           string
-	votedFor         string
-	id               string
-	fired            chan bool
-	state            State
-	meta             *RaftMeta
-	mutex            sync.RWMutex
-	lock             sync.WaitGroup
-	heartbeatTick    *time.Timer
-	electionTick     *time.Timer
-	checkUpgradeTick *time.Timer
-	checkVotesTick   *time.Timer
-	stateBegin       time.Time
-	c                chan *ev
-	L                *Leader
-	C                *Candidate
-	F                *Follower
-	I                *Idle
-	IV               *Invalid
-	peers            map[string]*Peer
-	stats            model.RaftStats
-	skipPurgeBinlog  bool // if true, purge binlog will skipped
-	fUpgradeToC      bool // if true, follower can upgrade to candidate
+	log                 *xlog.Log
+	mysql               *mysql.Mysql
+	cmd                 common.Command
+	conf                *config.RaftConfig
+	leader              string
+	votedFor            string
+	id                  string
+	fired               chan bool
+	state               State
+	meta                *RaftMeta
+	mutex               sync.RWMutex
+	lock                sync.WaitGroup
+	heartbeatTick       *time.Timer
+	electionTick        *time.Timer
+	checkBrainSplitTick *time.Timer
+	checkVotesTick      *time.Timer
+	stateBegin          time.Time
+	c                   chan *ev
+	L                   *Leader
+	C                   *Candidate
+	F                   *Follower
+	I                   *Idle
+	IV                  *Invalid
+	peers               map[string]*Peer
+	stats               model.RaftStats
+	skipPurgeBinlog     bool // if true, purge binlog will skipped
+	isBrainSplit        bool // if true, follower can upgrade to candidate
 }
 
 // NewRaft creates the new raft.
@@ -224,7 +224,7 @@ func (r *Raft) stateLoop() {
 	for state != STOPPED {
 		switch state {
 		case FOLLOWER:
-			r.F.startCheckUpgradeToC()
+			r.F.startCheckBrainSplit()
 			r.F.Loop()
 		case CANDIDATE:
 			r.C.Loop()
@@ -310,9 +310,9 @@ func (r *Raft) resetElectionTimeout() {
 	r.electionTick = common.RandomTimeout(r.getElectionTimeout())
 }
 
-func (r *Raft) resetCheckUpgradeToCTimeout() {
-	common.NormalTimerRelaese(r.checkUpgradeTick)
-	r.checkUpgradeTick = common.RandomTimeout(r.getElectionTimeout() / 2)
+func (r *Raft) resetCheckBrainSplitTimeout() {
+	common.NormalTimerRelaese(r.checkBrainSplitTick)
+	r.checkBrainSplitTick = common.RandomTimeout(r.getElectionTimeout() / 2)
 }
 
 func (r *Raft) resetCheckVotesTimeout() {
