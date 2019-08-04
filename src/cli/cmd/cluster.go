@@ -474,6 +474,8 @@ func clusterRaftCommandFn(cmd *cobra.Command, args []string) {
 			if rsp, err := callx.GetRaftStatusRPC(node); err == nil {
 				raft = rsp.State
 				stats = rsp.Stats
+			} else {
+				stats = &model.RaftStats{}
 			}
 		}
 
