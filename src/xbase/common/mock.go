@@ -40,6 +40,11 @@ func (c *MockCommand) Scan(substr string, times int) error {
 	return nil
 }
 
+func (c *MockCommand) Await() error {
+	fmt.Println("mock.Await")
+	return nil
+}
+
 func (c *MockCommand) Kill() error {
 	fmt.Println("mock.Kill")
 	close(c.c)
@@ -64,6 +69,11 @@ func NewMockACommand() Command {
 
 func (c *MockACommand) Run(cmds string, args []string) error {
 	fmt.Println("mock.Run")
+	return nil
+}
+
+func (c *MockACommand) Await() error {
+	fmt.Println("mock.Await")
 	return nil
 }
 
@@ -96,6 +106,11 @@ func NewMockBCommand() Command {
 
 func (c *MockBCommand) Run(cmds string, args []string) error {
 	fmt.Println("mock.Run")
+	return nil
+}
+
+func (c *MockBCommand) Await() error {
+	fmt.Println("mock.Await")
 	return nil
 }
 

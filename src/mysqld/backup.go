@@ -12,6 +12,7 @@ import (
 	"config"
 	"fmt"
 	"model"
+	"os"
 	"strings"
 	"time"
 	"xbase/common"
@@ -99,16 +100,17 @@ func (b *Backup) backupCommands(iskey bool, req *model.BackupRPCRequest) []strin
 	var ssh string
 
 	if b.conf.Passwd == "" {
-		backup = fmt.Sprintf("%s/innobackupex --defaults-file=%s --host=%s --port=%d --user=%s --throttle=%d --parallel=%d --stream=xbstream ./",
+		backup = fmt.Sprintf("%s/innobackupex --defaults-file=%s --host=%s --port=%d --user=%s --throttle=%d --parallel=%d --stream=xbstream ./ 2> %s",
 			b.conf.XtrabackupBinDir,
 			b.conf.DefaultsFile,
 			b.conf.Host,
 			b.conf.Port,
 			b.conf.Admin,
 			req.IOPSLimits,
-			b.conf.Parallel)
+			b.conf.Parallel,
+			b.conf.XtrabakcupBackupLog)
 	} else {
-		backup = fmt.Sprintf("%s/innobackupex --defaults-file=%s --host=%s --port=%d --user=%s --password=%s --throttle=%d --parallel=%d --stream=xbstream ./",
+		backup = fmt.Sprintf("%s/innobackupex --defaults-file=%s --host=%s --port=%d --user=%s --password=%s --throttle=%d --parallel=%d --stream=xbstream ./ 2> %s",
 			b.conf.XtrabackupBinDir,
 			b.conf.DefaultsFile,
 			b.conf.Host,
@@ -116,7 +118,8 @@ func (b *Backup) backupCommands(iskey bool, req *model.BackupRPCRequest) []strin
 			b.conf.Admin,
 			b.conf.Passwd,
 			req.IOPSLimits,
-			b.conf.Parallel)
+			b.conf.Parallel,
+			b.conf.XtrabakcupBackupLog)
 	}
 
 	if iskey {
@@ -181,14 +184,16 @@ func (b *Backup) Backup(req *model.BackupRPCRequest) error {
 		return err
 	}
 
-	if err := b.cmd.Scan(backupOk, backupOkCheckTimes); err != nil {
+	if err := b.cmd.Await(); err != nil {
 		b.setLastError(err.Error())
 		b.setStatus(model.MYSQLD_BACKUPNONE)
 		b.IncBackupErrs()
-		log.Error("backup.cmd.scan.error[%+v]", err)
+		log.Error("backup.await.run.error[%+v]", err)
+		if mverr := os.Rename(b.conf.XtrabakcupBackupLog, b.conf.XtrabakcupBackupLog+".err"); mverr != nil {
+			return errors.WithStack(mverr)
+		}
 		return err
 	}
-
 	b.setStatus(model.MYSQLD_BACKUPNONE)
 	b.IncBackups()
 	log.Warning("backup.done")
@@ -204,7 +209,7 @@ func (b *Backup) Cancel() error {
 }
 
 func (b *Backup) applylogCommands(req *model.BackupRPCRequest) []string {
-	arg := fmt.Sprintf("%s/innobackupex --defaults-file=%s --use-memory=%s --apply-log %s", b.conf.XtrabackupBinDir, b.conf.DefaultsFile, b.conf.UseMemory, req.BackupDir)
+	arg := fmt.Sprintf("%s/innobackupex --defaults-file=%s --use-memory=%s --apply-log %s > %s 2>&1", b.conf.XtrabackupBinDir, b.conf.DefaultsFile, b.conf.UseMemory, req.BackupDir, b.conf.XtrabackupApplyLog)
 	return []string{
 		"-c",
 		arg,
@@ -233,14 +238,16 @@ func (b *Backup) ApplyLog(req *model.BackupRPCRequest) error {
 		return err
 	}
 
-	if err := b.cmd.Scan(backupOk, backupOkCheckTimes); err != nil {
+	if err := b.cmd.Await(); err != nil {
 		b.setLastError(err.Error())
-		log.Error("applylog.cmd.scan.error[%+v]", err)
+		log.Error("applylog.cmd.await.error[%+v]", err)
 		b.setStatus(model.MYSQLD_BACKUPNONE)
 		b.IncApplyLogErrs()
+		if mverr := os.Rename(b.conf.XtrabackupApplyLog, b.conf.XtrabackupApplyLog+".err"); mverr != nil {
+			return errors.WithStack(mverr)
+		}
 		return err
 	}
-
 	b.setStatus(model.MYSQLD_BACKUPNONE)
 	b.IncApplyLogs()
 	log.Warning("applylog.done")

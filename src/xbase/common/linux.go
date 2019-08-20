@@ -101,6 +101,15 @@ func (c *LinuxCommand) Run(cmds string, args []string) error {
 	return nil
 }
 
+// Wait cmd done
+
+func (c *LinuxCommand) Await() error {
+	if err := c.cmd.Wait(); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
 // scan the substr until times reached or io.EOF got
 func (c *LinuxCommand) Scan(substr string, times int) error {
 	var founds int32

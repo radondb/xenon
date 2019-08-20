@@ -12,6 +12,7 @@ type Command interface {
 	Run(string, []string) error
 	Scan(string, int) error
 	Kill() error
+	Await() error
 	RunCommand(string, []string) (string, error)
 	RunCommandWithTimeout(int, string, []string) (string, error)
 }

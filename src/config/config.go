@@ -206,6 +206,8 @@ type BackupConfig struct {
 	SSHPort               int    `json:"ssh-port"`
 	BackupDir             string `json:"backupdir"`
 	XtrabackupBinDir      string `json:"xtrabackup-bindir"`
+	XtrabakcupBackupLog   string `json:"backup-log"`
+	XtrabackupApplyLog    string `json:"apply-log"`
 	BackupIOPSLimits      int    `json:"backup-iops-limits"`
 	UseMemory             string `json:"backup-use-memory"`
 	Parallel              int    `json:"backup-parallel"`
@@ -235,6 +237,8 @@ func DefaultBackupConfig() *BackupConfig {
 		SSHPort:               22,
 		BackupDir:             "/u01/backup",
 		XtrabackupBinDir:      ".",
+		XtrabakcupBackupLog:   "/tmp/xenonbackup.log",
+		XtrabackupApplyLog:    "/tmp/xenonapply.log",
 		BackupIOPSLimits:      100000,
 		UseMemory:             "2GB",
 		Parallel:              2,
