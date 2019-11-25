@@ -85,7 +85,7 @@ type MysqlHandler interface {
 	DropUser(*sql.DB, string, string) error
 	ChangeUserPasswd(*sql.DB, string, string, string) error
 	CreateReplUserWithoutBinlog(*sql.DB, string, string) error
-	GrantAllPrivileges(*sql.DB, string) error
+	GrantAllPrivileges(*sql.DB, string, string, string) error
 	GrantNormalPrivileges(*sql.DB, string) error
 	CreateUserWithPrivileges(db *sql.DB, user, passwd, database, table, host, privs string, ssl string) error
 	GrantReplicationPrivileges(*sql.DB, string) error

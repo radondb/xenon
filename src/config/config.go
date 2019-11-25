@@ -57,7 +57,7 @@ type RaftConfig struct {
 	// purge binlog interval (ms)
 	PurgeBinlogInterval int `json:"purge-binlog-interval"`
 
-	// Super IDLE cant' change to FOLLOWER.
+	// Super IDLE can't change to FOLLOWER.
 	SuperIDLE bool `json:"super-idle"`
 
 	// MUST: set in init

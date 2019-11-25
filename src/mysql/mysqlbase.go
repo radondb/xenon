@@ -364,7 +364,7 @@ func (my *MysqlBase) CreateUserWithPrivileges(db *sql.DB, user, passwd, database
 	for _, priv := range privsList {
 		priv = strings.ToUpper(strings.TrimSpace(priv))
 		if _, ok := normal[priv]; !ok {
-			return errors.Errorf("cant' create user[%v] with privileges[%v]", user, priv)
+			return errors.Errorf("can't create user[%v] with privileges[%v]", user, priv)
 		}
 	}
 
@@ -377,7 +377,7 @@ func (my *MysqlBase) CreateUserWithPrivileges(db *sql.DB, user, passwd, database
 	// check ssl_type
 	ssltype := strings.TrimSpace(ssl)
 	if _, ok := standardSSL[ssltype]; !ok {
-		return errors.Errorf("cant' create user[%v] require ssl_type[%v]", user, ssltype)
+		return errors.Errorf("can't create user[%v] require ssl_type[%v]", user, ssltype)
 	}
 	if ssltype == "YES" {
 		query = fmt.Sprintf("GRANT %s ON %s.%s TO `%s`@'%s' IDENTIFIED BY '%s' REQUIRE X509", privs, database, table, user, host, passwd)
@@ -396,8 +396,25 @@ func (my *MysqlBase) GrantReplicationPrivileges(db *sql.DB, user string) error {
 }
 
 // GrantAllPrivileges used to grant all privis.
-func (my *MysqlBase) GrantAllPrivileges(db *sql.DB, user string) error {
-	query := fmt.Sprintf("GRANT %s ON *.* TO `%s` WITH GRANT OPTION", strings.Join(mysqlAllPrivileges, ","), user)
+func (my *MysqlBase) GrantAllPrivileges(db *sql.DB, user string, passwd string, ssl string) error {
+	var query string
+	// build standard ssl_type map
+	standardSSL := make(map[string]string)
+	for _, ssltype := range mysqlSSLType {
+		standardSSL[ssltype] = ssltype
+	}
+
+	// check ssl_type
+	ssltype := strings.TrimSpace(ssl)
+	if _, ok := standardSSL[ssltype]; !ok {
+		return errors.Errorf("can't create user[%v] require ssl_type[%v]", user, ssltype)
+	}
+	if ssltype == "YES" {
+		query = fmt.Sprintf("GRANT %s ON *.* TO `%s` IDENTIFIED BY '%s' REQUIRE X509 WITH GRANT OPTION", strings.Join(mysqlAllPrivileges, ","), user, passwd)
+	} else {
+		query = fmt.Sprintf("GRANT %s ON *.* TO `%s` IDENTIFIED BY '%s' WITH GRANT OPTION", strings.Join(mysqlAllPrivileges, ","), user, passwd)
+	}
+
 	return my.grantPrivileges(db, query)
 }
 
