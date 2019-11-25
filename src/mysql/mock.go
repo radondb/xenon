@@ -54,7 +54,7 @@ type MockGTID struct {
 	DropUserFn                    func(*sql.DB, string, string) error
 	ChangeUserPasswdFn            func(*sql.DB, string, string) error
 	CreateReplUserWithoutBinlogFn func(*sql.DB, string, string) error
-	GrantAllPrivilegesFn          func(*sql.DB, string) error
+	GrantAllPrivilegesFn          func(*sql.DB, string, string) error
 	GrantNormalPrivilegesFn       func(*sql.DB, string) error
 	CreateUserWithPrivilegesFn    func(*sql.DB, string, string, string, string, string, string, string) error
 	GrantReplicationPrivilegesFn  func(*sql.DB, string) error
@@ -375,12 +375,12 @@ func (mogtid *MockGTID) GrantReplicationPrivileges(db *sql.DB, user string) erro
 }
 
 // GrantAllPrivileges mock.
-func DefaultGrantAllPrivileges(db *sql.DB, user string) error {
+func DefaultGrantAllPrivileges(db *sql.DB, user string, passwd string) error {
 	return nil
 }
 
-func (mogtid *MockGTID) GrantAllPrivileges(db *sql.DB, user string) error {
-	return mogtid.GrantAllPrivilegesFn(db, user)
+func (mogtid *MockGTID) GrantAllPrivileges(db *sql.DB, user string, passwd, ssl string) error {
+	return mogtid.GrantAllPrivilegesFn(db, user, passwd)
 }
 
 func defaultMockGTID() *MockGTID {

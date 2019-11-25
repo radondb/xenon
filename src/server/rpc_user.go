@@ -62,19 +62,28 @@ func (u *UserRPC) CreateSuperUser(req *model.MysqlUserRPCRequest, rsp *model.Mys
 		return nil
 	}
 
-	// create
-	if err := u.server.mysql.CreateUser(req.User, req.Passwd); err != nil {
+	// check
+	ok, err := u.server.mysql.CheckUserExists(req.User)
+	if err != nil {
+		rsp.RetCode = err.Error()
+		log.Error("rpc[%v].create.super.user[%v].with.error[%v]", state.String(), req.User, err)
+		return nil
+	}
+
+	if ok {
+		msg := fmt.Sprintf("superuser[%v].is.exists.when.create", req.User)
+		rsp.RetCode = msg
+		u.server.log.Error("%v", msg)
+		return nil
+	}
+
+	// create & grants
+	if err := u.server.mysql.GrantAllPrivileges(req.User, req.Passwd, req.SSL); err != nil {
 		rsp.RetCode = err.Error()
 		log.Error("rpc[%v].create.user[%v].error[%v]", state.String(), req.User, err)
 		return nil
 	}
 
-	// grants
-	if err := u.server.mysql.GrantAllPrivileges(req.User); err != nil {
-		rsp.RetCode = err.Error()
-		log.Error("rpc[%v].create.user[%v].error[%v]", state.String(), req.User, err)
-		return nil
-	}
 	return nil
 }
 

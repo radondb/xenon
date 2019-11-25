@@ -545,16 +545,21 @@ func TestGrantAllPrivileges(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)
 	defer db.Close()
-
+	var query string
 	// log
 	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
 	conf := config.DefaultMysqlConfig()
 	mysql := NewMysql(conf, log)
 	mysql.db = db
 
-	query := "GRANT ALL ON *.* TO `xx` WITH GRANT OPTION"
+	query = "GRANT ALL ON *.* TO `xx` IDENTIFIED BY 'xx' WITH GRANT OPTION"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql.GrantAllPrivileges("xx")
+	err = mysql.GrantAllPrivileges("xx", "xx", "NO")
+	assert.Nil(t, err)
+
+	query = "GRANT ALL ON *.* TO `xx` IDENTIFIED BY 'xx' REQUIRE X509 WITH GRANT OPTION"
+	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
+	err = mysql.GrantAllPrivileges("xx", "xx", "YES")
 	assert.Nil(t, err)
 }
 
@@ -645,7 +650,7 @@ func TestGrantUserPrivileges(t *testing.T) {
 		query := "GRANT SELECT ON db.table1 TO `xx`@'192.168.0.1' IDENTIFIED BY 'pwd' REQUIRE X509"
 		mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
 		err = mysql.CreateUserWithPrivileges(user, passwd, database, table, host, privs, ssl)
-		want := "cant' create user[xx] with privileges[GRANT OPTION]"
+		want := "can't create user[xx] with privileges[GRANT OPTION]"
 		got := err.Error()
 		assert.Equal(t, want, got)
 	}

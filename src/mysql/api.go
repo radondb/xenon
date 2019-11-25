@@ -516,10 +516,10 @@ func (m *Mysql) GrantReplicationPrivileges(user string) error {
 }
 
 // GrantAllPrivileges used to grants all privs for the user.
-func (m *Mysql) GrantAllPrivileges(user string) error {
+func (m *Mysql) GrantAllPrivileges(user string, passwd string, ssl string) error {
 	db, err := m.getDB()
 	if err != nil {
 		return err
 	}
-	return m.mysqlHandler.GrantAllPrivileges(db, user)
+	return m.mysqlHandler.GrantAllPrivileges(db, user, passwd, ssl)
 }
