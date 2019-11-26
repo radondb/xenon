@@ -28,7 +28,7 @@ func (my *Mysql56) SetSemiWaitSlaveCount(db *sql.DB, count int) error {
 }
 
 // ChangeUserPasswd used to change the user password.
-func (my *Mysql56) ChangeUserPasswd(db *sql.DB, user string, passwd string) error {
-	query := fmt.Sprintf("SET PASSWORD FOR `%s` = PASSWORD('%s')", user, passwd)
+func (my *Mysql56) ChangeUserPasswd(db *sql.DB, user string, host string, passwd string) error {
+	query := fmt.Sprintf("SET PASSWORD FOR `%s`@'%s' = PASSWORD('%s')", user, host, passwd)
 	return Execute(db, query)
 }

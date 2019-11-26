@@ -51,11 +51,11 @@ func TestMysql56ChangeUserPassword(t *testing.T) {
 	defer db.Close()
 
 	queryList := []string{
-		"SET PASSWORD FOR `usr` = PASSWORD('pwd')",
+		"SET PASSWORD FOR `usr`@'127.0.0.1' = PASSWORD('pwd')",
 	}
 
 	mysql56 := new(Mysql56)
 	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql56.ChangeUserPasswd(db, "usr", "pwd")
+	err = mysql56.ChangeUserPasswd(db, "usr", "127.0.0.1", "pwd")
 	assert.Nil(t, err)
 }

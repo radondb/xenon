@@ -471,12 +471,12 @@ func (m *Mysql) DropUser(user string, host string) error {
 }
 
 // ChangeUserPasswd used to change the user's password.
-func (m *Mysql) ChangeUserPasswd(user string, passwd string) error {
+func (m *Mysql) ChangeUserPasswd(user string, host string, passwd string) error {
 	db, err := m.getDB()
 	if err != nil {
 		return err
 	}
-	return m.mysqlHandler.ChangeUserPasswd(db, user, passwd)
+	return m.mysqlHandler.ChangeUserPasswd(db, user, host, passwd)
 }
 
 // CreateReplUserWithoutBinlog used to create a repl user without binlog.

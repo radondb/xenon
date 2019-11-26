@@ -332,8 +332,8 @@ func (my *MysqlBase) CreateReplUserWithoutBinlog(db *sql.DB, user string, passwd
 }
 
 // ChangeUserPasswd used to change the user password.
-func (my *MysqlBase) ChangeUserPasswd(db *sql.DB, user string, passwd string) error {
-	query := fmt.Sprintf("ALTER USER `%s` IDENTIFIED BY '%s'", user, passwd)
+func (my *MysqlBase) ChangeUserPasswd(db *sql.DB, user string, host string, passwd string) error {
+	query := fmt.Sprintf("ALTER USER `%s`@'%s' IDENTIFIED BY '%s'", user, host, passwd)
 	return Execute(db, query)
 }
 

@@ -553,8 +553,8 @@ func mysqlDropUserCommandFn(cmd *cobra.Command, args []string) {
 // change normal user password
 func NewMysqlChangePasswordCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "changepassword <user> <password>",
-		Short: "update mysql normal user password",
+		Use:   "changepassword <user> <host> <password>",
+		Short: "update mysql user password",
 		Run:   mysqlChangePasswordCommandFn,
 	}
 
@@ -562,13 +562,14 @@ func NewMysqlChangePasswordCommand() *cobra.Command {
 }
 
 func mysqlChangePasswordCommandFn(cmd *cobra.Command, args []string) {
-	if len(args) != 2 {
-		ErrorOK(fmt.Errorf("args.count.error:should.be.2"))
+	if len(args) != 3 {
+		ErrorOK(fmt.Errorf("args.count.error:should.be.3"))
 	}
 
 	user := args[0]
-	passwd := args[1]
-	log.Warning("prepare.to.changepassword.normaluser[%v]", user)
+	host := args[1]
+	passwd := args[2]
+	log.Warning("prepare.to.changepassword.user[%v].host[%v]", user, host)
 	conf, err := GetConfig()
 	ErrorOK(err)
 
@@ -577,7 +578,7 @@ func mysqlChangePasswordCommandFn(cmd *cobra.Command, args []string) {
 		leader, err := callx.GetClusterLeader(self)
 		ErrorOK(err)
 
-		rsp, err := callx.ChangeUserPasswordRPC(leader, user, passwd)
+		rsp, err := callx.ChangeUserPasswordRPC(leader, user, host, passwd)
 		ErrorOK(err)
 		RspOK(rsp.RetCode)
 	}

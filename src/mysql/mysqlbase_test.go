@@ -535,9 +535,9 @@ func TestChangeUserPasswd(t *testing.T) {
 	mysql := NewMysql(conf, log)
 	mysql.db = db
 
-	query := "ALTER USER `xx` IDENTIFIED BY 'xxx'"
+	query := "ALTER USER `xx`@'localhost' IDENTIFIED BY 'xxx'"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql.ChangeUserPasswd("xx", "xxx")
+	err = mysql.ChangeUserPasswd("xx", "localhost", "xxx")
 	assert.Nil(t, err)
 }
 
