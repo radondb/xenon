@@ -777,7 +777,7 @@ func CreateUserWithPrivRPC(node, user, passwd, database, table, host, privs stri
 	return rsp, err
 }
 
-func ChangeUserPasswordRPC(node string, user string, passwd string) (*model.MysqlUserRPCResponse, error) {
+func ChangeUserPasswordRPC(node string, user string, host string, passwd string) (*model.MysqlUserRPCResponse, error) {
 	cli, cleanup, err := GetClient(node)
 
 	if err != nil {
@@ -788,6 +788,7 @@ func ChangeUserPasswordRPC(node string, user string, passwd string) (*model.Mysq
 	method := model.RPCMysqlChangePassword
 	req := model.NewMysqlUserRPCRequest()
 	req.User = user
+	req.Host = host
 	req.Passwd = passwd
 
 	rsp := model.NewMysqlUserRPCResponse(model.OK)

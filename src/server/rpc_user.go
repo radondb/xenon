@@ -128,7 +128,7 @@ func (u *UserRPC) ChangePasword(req *model.MysqlUserRPCRequest, rsp *model.Mysql
 	}
 
 	// change
-	if err := u.server.mysql.ChangeUserPasswd(req.User, req.Passwd); err != nil {
+	if err := u.server.mysql.ChangeUserPasswd(req.User, req.Host, req.Passwd); err != nil {
 		rsp.RetCode = err.Error()
 		log.Error("rpc[%v].change.pwd.[%v].error[%v]", state.String(), req.User, err)
 		return nil

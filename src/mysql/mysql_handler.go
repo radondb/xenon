@@ -83,7 +83,7 @@ type MysqlHandler interface {
 	CheckUserExists(*sql.DB, string) (bool, error)
 	CreateUser(*sql.DB, string, string) error
 	DropUser(*sql.DB, string, string) error
-	ChangeUserPasswd(*sql.DB, string, string) error
+	ChangeUserPasswd(*sql.DB, string, string, string) error
 	CreateReplUserWithoutBinlog(*sql.DB, string, string) error
 	GrantAllPrivileges(*sql.DB, string) error
 	GrantNormalPrivileges(*sql.DB, string) error
