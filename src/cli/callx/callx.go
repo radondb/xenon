@@ -553,6 +553,22 @@ func DisableRaftRPC(node string) (*model.HARPCResponse, error) {
 	return rsp, err
 }
 
+func SetLearnerRPC(node string) (*model.HARPCResponse, error) {
+	cli, cleanup, err := GetClient(node)
+
+	if err != nil {
+		return nil, err
+	}
+	defer cleanup()
+
+	method := model.RPCHASetLearner
+	req := model.NewHARPCRequest()
+	rsp := model.NewHARPCResponse(model.OK)
+	err = cli.Call(method, req, rsp)
+
+	return rsp, err
+}
+
 func TryToLeaderRPC(node string) (*model.HARPCResponse, error) {
 	cli, cleanup, err := GetClient(node)
 	if err != nil {

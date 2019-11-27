@@ -9,6 +9,7 @@
 package model
 
 const (
+	RPCHASetLearner  = "HARPC.HASetLearner"
 	RPCHADisable     = "HARPC.HADisable"
 	RPCHAEnable      = "HARPC.HAEnable"
 	RPCHATryToLeader = "HARPC.HATryToLeader"

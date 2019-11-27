@@ -1779,3 +1779,72 @@ func TestRaftLeaderChangeToMasterError(t *testing.T) {
 		assert.True(t, got < want)
 	}
 }
+
+// TEST EFFECTS:
+// test election under LEARNER in the minority
+//
+// TEST PROCESSES:
+// 1.  set rafts GTID
+//     1.0 rafts[0]  with MockGTID_X1{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
+//     1.1 rafts[1]  with MockGTID_X3{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
+//     1.2 rafts[2]  with MockGTID_X5{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123}
+// 2.  Start 3 rafts state as FOLLOWER
+// 3.  wait rafts[2] elected as leader
+// 4.  set rafts[0] to LEARNER
+// 5.  wait a few election cycles, the leader remains the same
+func TestRaftElectionUnderLearnerInMinority(t *testing.T) {
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	port := common.RandomPort(8000, 9000)
+	_, rafts, cleanup := MockRafts(log, port, 3)
+	defer cleanup()
+
+	// 1. set rafts GTID
+	//    1.0 rafts[0]  with MockGTIDB{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
+	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
+	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123}
+	{
+		rafts[0].mysql.SetMysqlHandler(mysql.NewMockGTIDX1())
+		rafts[1].mysql.SetMysqlHandler(mysql.NewMockGTIDX3())
+		rafts[2].mysql.SetMysqlHandler(mysql.NewMockGTIDX5())
+	}
+
+	// 2. start 3 rafts state as FOLLOWER
+	for _, raft := range rafts {
+		raft.Start()
+	}
+
+	// 3. check new leader is rafts[2]
+	var whoisleader int
+	{
+		var got State
+		MockWaitLeaderEggs(rafts, 1)
+		want := (LEADER + FOLLOWER + FOLLOWER)
+		for i, raft := range rafts {
+			got += raft.getState()
+			if raft.getState() == LEADER {
+				whoisleader = i
+			}
+		}
+		assert.Equal(t, want, got)
+		assert.Equal(t, whoisleader, 2)
+	}
+
+	// 4. set rafts[0] to LEARNER and set rafts[2] to FOLLOWER
+	MockStateTransition(rafts[whoisleader], FOLLOWER)
+	MockStateTransition(rafts[0], LEARNER)
+
+	// 5. wait a few election cycles, the leader remains the same
+	{
+		var got State
+		time.Sleep(time.Millisecond * 3000)
+		want := (LEADER + FOLLOWER + LEARNER)
+		for i, raft := range rafts {
+			got += raft.getState()
+			if raft.getState() == LEADER {
+				whoisleader = i
+			}
+		}
+		assert.Equal(t, want, got)
+		assert.Equal(t, whoisleader, 2)
+	}
+}

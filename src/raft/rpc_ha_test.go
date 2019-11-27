@@ -167,6 +167,286 @@ func TestRaftRPCHA(t *testing.T) {
 }
 
 // TEST EFFECTS:
+// test a hasetlearner command from follower by the client
+//
+// TEST PROCESSES:
+// 1. Start rpc server
+// 2. send command to rpc server
+// 3. check the response
+func TestRaftRPCHASetLearnerFromFollower(t *testing.T) {
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	port := common.RandomPort(8000, 9000)
+	names, rafts, scleanup := MockRafts(log, port, 3)
+	learner := 2
+	defer scleanup()
+
+	// 1. Start 3 rafts state as FOLLOWER
+	{
+		for _, raft := range rafts {
+			raft.Start()
+		}
+
+		var want, got State
+		got = 0
+		want = (FOLLOWER + FOLLOWER + FOLLOWER)
+		for _, raft := range rafts {
+			got += raft.getState()
+		}
+
+		// [FOLLOWER, FOLLOWER, FOLLOWER]
+		assert.Equal(t, want, got)
+	}
+
+	// 2. set rafts[2] to LEARNER
+	{
+		c, cleanup := MockGetClient(t, names[learner])
+		defer cleanup()
+
+		method := model.RPCHASetLearner
+		req := model.NewHARPCRequest()
+		rsp := model.NewHARPCResponse(model.OK)
+		err := c.Call(method, req, rsp)
+		assert.Nil(t, err)
+
+		want := model.OK
+		got := rsp.RetCode
+		assert.Equal(t, want, got)
+	}
+
+	// 3. check
+	{
+		MockWaitLeaderEggs(rafts, 1)
+
+		var want, got State
+		got = 0
+		want = (LEADER + FOLLOWER + LEARNER)
+		for _, raft := range rafts {
+			got += raft.getState()
+		}
+		// [LEADER, FOLLOWER, LEARNER]
+		assert.Equal(t, want, got)
+	}
+
+	// 4. enable ha for rafts[2]
+	{
+		c, cleanup := MockGetClient(t, names[learner])
+		defer cleanup()
+
+		method := model.RPCHAEnable
+		req := model.NewHARPCRequest()
+		rsp := model.NewHARPCResponse(model.OK)
+		err := c.Call(method, req, rsp)
+		assert.Nil(t, err)
+
+		want := model.OK
+		got := rsp.RetCode
+		assert.Equal(t, want, got)
+	}
+
+	// 5. check
+	{
+		MockWaitLeaderEggs(rafts, 1)
+
+		var want, got State
+		got = 0
+		want = (LEADER + FOLLOWER + FOLLOWER)
+		for _, raft := range rafts {
+			got += raft.getState()
+		}
+		// [LEADER, FOLLOWER, FOLLOWER]
+		assert.Equal(t, want, got)
+	}
+}
+
+// TEST EFFECTS:
+// test a hasetlearner command from invalid by the client
+//
+// TEST PROCESSES:
+// 1. Start rpc server
+// 2. send command to rpc server
+// 3. check the response
+func TestRaftRPCHASetLearnerFromInvalid(t *testing.T) {
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	port := common.RandomPort(8000, 9000)
+	names, rafts, scleanup := MockRafts(log, port, 3)
+	learner := 2
+	defer scleanup()
+
+	// 1. Start 3 rafts state as FOLLOWER and set rafts[2] to INVALID
+	{
+		for _, raft := range rafts {
+			raft.Start()
+		}
+
+		MockStateTransition(rafts[learner], INVALID)
+
+		var want, got State
+		got = 0
+		want = (FOLLOWER + FOLLOWER + INVALID)
+		for _, raft := range rafts {
+			got += raft.getState()
+		}
+
+		// [FOLLOWER, FOLLOWER, INVALID]
+		assert.Equal(t, want, got)
+	}
+
+	// 2. set rafts[2] to LEARNER
+	{
+		c, cleanup := MockGetClient(t, names[learner])
+		defer cleanup()
+
+		method := model.RPCHASetLearner
+		req := model.NewHARPCRequest()
+		rsp := model.NewHARPCResponse(model.OK)
+		err := c.Call(method, req, rsp)
+		assert.Nil(t, err)
+
+		want := model.OK
+		got := rsp.RetCode
+		assert.Equal(t, want, got)
+	}
+
+	// 3. check
+	{
+		MockWaitLeaderEggs(rafts, 1)
+
+		var want, got State
+		got = 0
+		want = (LEADER + FOLLOWER + LEARNER)
+		for _, raft := range rafts {
+			got += raft.getState()
+		}
+		// [LEADER, FOLLOWER, LEARNER]
+		assert.Equal(t, want, got)
+	}
+
+	// 4. enable ha for rafts[2]
+	{
+		c, cleanup := MockGetClient(t, names[learner])
+		defer cleanup()
+
+		method := model.RPCHAEnable
+		req := model.NewHARPCRequest()
+		rsp := model.NewHARPCResponse(model.OK)
+		err := c.Call(method, req, rsp)
+		assert.Nil(t, err)
+
+		want := model.OK
+		got := rsp.RetCode
+		assert.Equal(t, want, got)
+	}
+
+	// 5. check
+	{
+		MockWaitLeaderEggs(rafts, 1)
+
+		var want, got State
+		got = 0
+		want = (LEADER + FOLLOWER + FOLLOWER)
+		for _, raft := range rafts {
+			got += raft.getState()
+		}
+		// [LEADER, FOLLOWER, FOLLOWER]
+		assert.Equal(t, want, got)
+	}
+}
+
+// TEST EFFECTS:
+// test a hasetlearner command from idle by the client
+//
+// TEST PROCESSES:
+// 1. Start rpc server
+// 2. send command to rpc server
+// 3. check the response
+func TestRaftRPCHASetLearnerFromIdle(t *testing.T) {
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	port := common.RandomPort(8000, 9000)
+	names, rafts, scleanup := MockRafts(log, port, 3)
+	learner := 2
+	defer scleanup()
+
+	// 1. Start 3 rafts state as FOLLOWER and set rafts[2] to IDLE
+	{
+		for _, raft := range rafts {
+			raft.Start()
+		}
+
+		MockStateTransition(rafts[learner], IDLE)
+
+		var want, got State
+		got = 0
+		want = (FOLLOWER + FOLLOWER + IDLE)
+		for _, raft := range rafts {
+			got += raft.getState()
+		}
+
+		// [FOLLOWER, FOLLOWER, IDLE]
+		assert.Equal(t, want, got)
+	}
+
+	// 2. set rafts[2] to LEARNER
+	{
+		c, cleanup := MockGetClient(t, names[learner])
+		defer cleanup()
+
+		method := model.RPCHASetLearner
+		req := model.NewHARPCRequest()
+		rsp := model.NewHARPCResponse(model.OK)
+		err := c.Call(method, req, rsp)
+		assert.Nil(t, err)
+
+		want := model.OK
+		got := rsp.RetCode
+		assert.Equal(t, want, got)
+	}
+
+	// 3. check
+	{
+		MockWaitLeaderEggs(rafts, 1)
+
+		var want, got State
+		got = 0
+		want = (LEADER + FOLLOWER + LEARNER)
+		for _, raft := range rafts {
+			got += raft.getState()
+		}
+		// [LEADER, FOLLOWER, LEARNER]
+		assert.Equal(t, want, got)
+	}
+
+	// 4. enable ha for rafts[2]
+	{
+		c, cleanup := MockGetClient(t, names[learner])
+		defer cleanup()
+
+		method := model.RPCHAEnable
+		req := model.NewHARPCRequest()
+		rsp := model.NewHARPCResponse(model.OK)
+		err := c.Call(method, req, rsp)
+		assert.Nil(t, err)
+
+		want := model.OK
+		got := rsp.RetCode
+		assert.Equal(t, want, got)
+	}
+
+	// 5. check
+	{
+		MockWaitLeaderEggs(rafts, 1)
+
+		var want, got State
+		got = 0
+		want = (LEADER + FOLLOWER + FOLLOWER)
+		for _, raft := range rafts {
+			got += raft.getState()
+		}
+		// [LEADER, FOLLOWER, FOLLOWER]
+		assert.Equal(t, want, got)
+	}
+}
+
+// TEST EFFECTS:
 // test TryToLeader command from the client
 //
 // TEST PROCESSES:

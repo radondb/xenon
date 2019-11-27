@@ -63,6 +63,7 @@ type Raft struct {
 	F                   *Follower
 	I                   *Idle
 	IV                  *Invalid
+	LN                  *Learner
 	peers               map[string]*Peer
 	stats               model.RaftStats
 	skipPurgeBinlog     bool // if true, purge binlog will skipped
@@ -89,6 +90,7 @@ func NewRaft(id string, conf *config.RaftConfig, log *xlog.Log, mysql *mysql.Mys
 	r.F = NewFollower(r)
 	r.I = NewIdle(r)
 	r.IV = NewInvalid(r)
+	r.LN = NewLearner(r)
 
 	// setup raft timeout
 	r.resetHeartbeatTimeout()
@@ -234,6 +236,8 @@ func (r *Raft) stateLoop() {
 			r.I.Loop()
 		case INVALID:
 			r.IV.Loop()
+		case LEARNER:
+			r.LN.Loop()
 		}
 		state = r.getState()
 	}

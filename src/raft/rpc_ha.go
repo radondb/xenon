@@ -37,6 +37,23 @@ func (h *HARPC) HADisable(req *model.HARPCRequest, rsp *model.HARPCResponse) err
 	return nil
 }
 
+// HASetLearner rpc.
+func (h *HARPC) HASetLearner(req *model.HARPCRequest, rsp *model.HARPCResponse) error {
+	h.raft.WARNING("RPC.HASetLearner.call.from[%v]", req.GetFrom())
+
+	// except state STOPPED
+	state := h.raft.getState()
+	switch state {
+	case STOPPED:
+		rsp.RetCode = model.ErrorInvalidRequest
+		return nil
+	}
+	h.raft.setState(LEARNER)
+	h.raft.loopFired()
+	rsp.RetCode = model.OK
+	return nil
+}
+
 // HAEnable rpc.
 func (h *HARPC) HAEnable(req *model.HARPCRequest, rsp *model.HARPCResponse) error {
 	h.raft.WARNING("RPC.HAEnable.call.from[%v]", req.GetFrom())
@@ -52,6 +69,11 @@ func (h *HARPC) HAEnable(req *model.HARPCRequest, rsp *model.HARPCResponse) erro
 			h.raft.setState(FOLLOWER)
 			h.raft.loopFired()
 		}
+		rsp.RetCode = model.OK
+		return nil
+	case LEARNER:
+		h.raft.setState(FOLLOWER)
+		h.raft.loopFired()
 		rsp.RetCode = model.OK
 		return nil
 	case STOPPED:
