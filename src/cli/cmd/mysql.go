@@ -210,11 +210,11 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 		log.Warning("S3-->check.bestone[%v].is.OK....", bestone)
 	}
 
-	// 4. disable raft
+	// 4. set learner
 	{
-		log.Warning("S4-->disable.raft")
-		if _, err := callx.DisableRaftRPC(self); err != nil {
-			log.Error("disableRaftRPC.error[%v]", err)
+		log.Warning("S4-->set.learner")
+		if _, err := callx.SetLearnerRPC(self); err != nil {
+			log.Error("SetLearnerRPC.error[%v]", err)
 		}
 	}
 
@@ -328,11 +328,20 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 
 	// 16. enable raft
 	{
-		log.Warning("S16-->enable.raft.begin...")
-		if _, err := callx.EnableRaftRPC(self); err != nil {
-			log.Error("enbleRaftRPC.error[%v]", err)
+		// check whether the state is IDLE or not
+		if conf.Raft.SuperIDLE {
+			log.Warning("S16-->disable.raft.again...")
+			if _, err := callx.DisableRaftRPC(self); err != nil {
+				log.Error("enbleRaftRPC.error[%v]", err)
+			}
+			log.Warning("S16-->run.as.IDLE...")
+		} else {
+			log.Warning("S16-->enable.raft.begin...")
+			if _, err := callx.EnableRaftRPC(self); err != nil {
+				log.Error("enbleRaftRPC.error[%v]", err)
+			}
+			log.Warning("S16-->enable.raft.done...")
 		}
-		log.Warning("S16-->enable.raft.done...")
 	}
 
 	// 17. wait change to master
