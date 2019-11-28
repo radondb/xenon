@@ -106,9 +106,11 @@ func TestServerRPCUser(t *testing.T) {
 
 		want1 := []model.MysqlUser{
 			{User: "user1",
-				Host: "localhost"},
+				Host:      "localhost",
+				SuperPriv: "N"},
 			{User: "root",
-				Host: "localhost"},
+				Host:      "localhost",
+				SuperPriv: "Y"},
 		}
 		got1 := rsp.Users
 		assert.Equal(t, want1, got1)

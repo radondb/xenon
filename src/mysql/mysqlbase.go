@@ -292,17 +292,17 @@ func (my *MysqlBase) CheckUserExists(db *sql.DB, user string) (bool, error) {
 
 // GetUser used to get the mysql user list
 func (my *MysqlBase) GetUser(db *sql.DB) ([]model.MysqlUser, error) {
-	query := fmt.Sprintf("SELECT User, Host FROM mysql.user")
+	query := fmt.Sprintf("SELECT User, Host, Super_priv FROM mysql.user")
 	rows, err := Query(db, query)
 	if err != nil {
 		return nil, err
 	}
 
 	var Users = make([]model.MysqlUser, len(rows))
-
 	for i, v := range rows {
 		Users[i].User = v["User"]
 		Users[i].Host = v["Host"]
+		Users[i].SuperPriv = v["Super_priv"]
 	}
 	return Users, nil
 }

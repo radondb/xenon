@@ -181,8 +181,9 @@ type MysqlUserRPCRequest struct {
 }
 
 type MysqlUser struct {
-	User string
-	Host string
+	User      string
+	Host      string
+	SuperPriv string
 }
 
 type MysqlUserRPCResponse struct {

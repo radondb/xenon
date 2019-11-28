@@ -436,15 +436,18 @@ func TestGetUser(t *testing.T) {
 	mysql := NewMysql(conf, log)
 	mysql.db = db
 
-	query := "SELECT User, Host FROM mysql.user"
-	columns := []string{"User", "Host"}
+	query := "SELECT User, Host, Super_priv FROM mysql.user"
+	columns := []string{"User", "Host", "Super_priv"}
 	want := []model.MysqlUser{
 		{User: "user1",
-			Host: "localhost"},
+			Host:      "localhost",
+			SuperPriv: "N"},
 		{User: "root",
-			Host: "localhost"},
+			Host:      "localhost",
+			SuperPriv: "Y"},
 	}
-	mockRows := sqlmock.NewRows(columns).AddRow("user1", "localhost").AddRow("root", "localhost")
+
+	mockRows := sqlmock.NewRows(columns).AddRow("user1", "localhost", "N").AddRow("root", "localhost", "Y")
 	mock.ExpectQuery(query).WillReturnRows(mockRows)
 
 	got, err := mysql.GetUser()
