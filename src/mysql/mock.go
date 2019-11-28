@@ -310,9 +310,11 @@ func (mogtid *MockGTID) CreateUser(db *sql.DB, user string, passwd string) error
 func DefaultGetUser(db *sql.DB) ([]model.MysqlUser, error) {
 	return []model.MysqlUser{
 		{User: "user1",
-			Host: "localhost"},
+			Host:      "localhost",
+			SuperPriv: "N"},
 		{User: "root",
-			Host: "localhost"},
+			Host:      "localhost",
+			SuperPriv: "Y"},
 	}, nil
 }
 
