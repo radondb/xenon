@@ -31,7 +31,7 @@ type Candidate struct {
 	sendRequestVoteHandler func(chan *model.RaftRPCResponse)
 
 	// candiadte process requestvote response
-	processRequestVoteResponseHandler func(*int, *int, *model.RaftRPCResponse, *bool)
+	processRequestVoteResponseHandler func(*int, *model.RaftRPCResponse, *bool)
 
 	// candidate process ping request handler
 	processPingRequestHandler func(*model.RaftRPCRequest) *model.RaftRPCResponse
@@ -67,8 +67,7 @@ func (r *Candidate) Loop() {
 
 	// broadcast voterequest
 	voteGranted := 1
-	idleVoted := 0
-	respChan := make(chan *model.RaftRPCResponse, r.getMembers())
+	respChan := make(chan *model.RaftRPCResponse, r.getAllMembers())
 	r.sendRequestVoteHandler(respChan)
 
 	switchMaster := false
@@ -80,8 +79,8 @@ func (r *Candidate) Loop() {
 		case <-r.checkVotesTick.C:
 			// in one checkvotes timeout,
 			// if we granted majority votes and no **DENY**, we are the winner
-			if voteGranted >= r.getQuorumsExpectIDLE(idleVoted) {
-				r.WARNING("get.enough.votes[%v]/members[%v].become.leader", voteGranted, r.getMembersExpectIDLE(idleVoted))
+			if voteGranted >= r.getQuorums() {
+				r.WARNING("get.enough.votes[%v]/members[%v].become.leader", voteGranted, r.getMembers())
 
 				// upgrade to LEADER
 				r.upgradeToLeader()
@@ -90,15 +89,15 @@ func (r *Candidate) Loop() {
 		case <-r.electionTick.C:
 			voteGranted = 1
 			// broadcast voterequest
-			respChan = make(chan *model.RaftRPCResponse, r.getMembers())
+			respChan = make(chan *model.RaftRPCResponse, r.getAllMembers())
 			r.sendRequestVoteHandler(respChan)
 
 			// reset timeout
 			r.resetCheckVotesTimeout()
 			r.resetElectionTimeout()
 		case rsp := <-respChan:
-			r.processRequestVoteResponseHandler(&voteGranted, &idleVoted, rsp, &switchMaster)
-			members := (r.getMembers() - idleVoted)
+			r.processRequestVoteResponseHandler(&voteGranted, rsp, &switchMaster)
+			members := r.getMembers()
 			if voteGranted == members {
 				r.WARNING("grants.unanimous.votes[%v]/members[%v].become.leader", voteGranted, members)
 
@@ -117,6 +116,8 @@ func (r *Candidate) Loop() {
 				req := e.request.(*model.RaftRPCRequest)
 				rsp := r.processRequestVoteRequestHandler(req)
 				e.response <- rsp
+
+			// 3) Ping
 			case MsgRaftPing:
 				req := e.request.(*model.RaftRPCRequest)
 				rsp := r.processPingRequestHandler(req)
@@ -265,16 +266,15 @@ func (r *Candidate) sendRequestVote(respChan chan *model.RaftRPCResponse) {
 }
 
 // Votes who comes from IDLE machine will be filitered out.
-func (r *Candidate) processRequestVoteResponse(voteGranted *int, idleVoted *int, rsp *model.RaftRPCResponse, switchMaster *bool) {
-	r.WARNING("get.vote.response.from[%+v].rsp.gtid[%v].retcode[%v]", rsp.GetFrom(), rsp.GetGTID(), rsp.RetCode)
+func (r *Candidate) processRequestVoteResponse(voteGranted *int, rsp *model.RaftRPCResponse, switchMaster *bool) {
+	r.WARNING("get.vote.response.from[N:%+v, R:%v].rsp.gtid[%v].retcode[%v]", rsp.GetFrom(), rsp.Raft.State, rsp.GetGTID(), rsp.RetCode)
 	switch rsp.RetCode {
 	case model.OK:
 		if rsp.Raft.State == IDLE.String() {
-			*idleVoted++
-		} else {
-			*voteGranted++
+			return
 		}
-		r.INFO("get.vote.response.from[N:%v, V:%v].ok.votegranted[%v].majoyrity[%v]", rsp.GetFrom(), rsp.GetViewID(), *voteGranted, r.getQuorumsExpectIDLE(*idleVoted))
+		*voteGranted++
+		r.INFO("get.vote.response.from[N:%v, V:%v].ok.votegranted[%v].majoyrity[%v]", rsp.GetFrom(), rsp.GetViewID(), *voteGranted, r.getQuorums())
 	case model.ErrorInvalidViewID:
 		r.WARNING("get.vote.response.from[N:%v, V:%v].fail[ErrorInvalidViewID].downgrade.to.follower", rsp.GetFrom(), rsp.GetViewID())
 		r.updateView(rsp.GetViewID(), noLeader)
@@ -307,7 +307,6 @@ func (r *Candidate) processRequestVoteResponse(voteGranted *int, idleVoted *int,
 func (r *Candidate) processPingRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
 	rsp := model.NewRaftRPCResponse(model.OK)
 	rsp.Raft.State = r.state.String()
-
 	return rsp
 }
 
@@ -360,7 +359,7 @@ func (r *Candidate) setSendRequestVoteHandler(f func(chan *model.RaftRPCResponse
 	r.sendRequestVoteHandler = f
 }
 
-func (r *Candidate) setProcessRequestVoteResponseHandler(f func(*int, *int, *model.RaftRPCResponse, *bool)) {
+func (r *Candidate) setProcessRequestVoteResponseHandler(f func(*int, *model.RaftRPCResponse, *bool)) {
 	r.processRequestVoteResponseHandler = f
 }
 

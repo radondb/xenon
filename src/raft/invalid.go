@@ -64,11 +64,13 @@ func (r *Invalid) Loop() {
 				rsp := r.processHeartbeatRequestHandler(req)
 				e.response <- rsp
 
-				// 2) RequestVote
+			// 2) RequestVote
 			case MsgRaftRequestVote:
 				req := e.request.(*model.RaftRPCRequest)
 				rsp := r.processRequestVoteRequest(req)
 				e.response <- rsp
+
+			// 3) Ping
 			case MsgRaftPing:
 				req := e.request.(*model.RaftRPCRequest)
 				rsp := r.processPingRequestHandler(req)
@@ -138,7 +140,7 @@ func (r *Invalid) processHeartbeatRequest(req *model.RaftRPCRequest) *model.Raft
 		// epoch change
 		if epochdiff != 0 {
 			r.WARNING("get.heartbeat.from[N:%v, V:%v, E:%v].update.epoch", req.GetFrom(), req.GetViewID(), req.GetEpochID())
-			r.updateEpoch(req.GetEpochID(), req.GetPeers())
+			r.updateEpoch(req.GetEpochID(), req.GetPeers(), req.GetIdlePeers())
 		}
 	}
 	return rsp

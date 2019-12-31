@@ -477,6 +477,23 @@ func AddNodeRPC(node string, nodes []string) error {
 	return err
 }
 
+func AddIdleNodeRPC(node string, nodes []string) error {
+	cli, cleanup, err := GetClient(node)
+
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
+	method := model.RPCIdleNodesAdd
+	req := model.NewNodeRPCRequest()
+	req.Nodes = nodes
+	rsp := model.NewNodeRPCResponse(model.OK)
+	err = cli.Call(method, req, rsp)
+
+	return err
+}
+
 func RemoveNodeRPC(node string, nodes []string) error {
 	cli, cleanup, err := GetClient(node)
 	if err != nil {
@@ -485,6 +502,21 @@ func RemoveNodeRPC(node string, nodes []string) error {
 	defer cleanup()
 
 	method := model.RPCNodesRemove
+	req := model.NewNodeRPCRequest()
+	req.Nodes = nodes
+	rsp := model.NewNodeRPCResponse(model.OK)
+	err = cli.Call(method, req, rsp)
+	return err
+}
+
+func RemoveIdleNodeRPC(node string, nodes []string) error {
+	cli, cleanup, err := GetClient(node)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
+	method := model.RPCIdleNodesRemove
 	req := model.NewNodeRPCRequest()
 	req.Nodes = nodes
 	rsp := model.NewNodeRPCResponse(model.OK)

@@ -40,7 +40,9 @@ func NewClusterCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(NewClusterAddCommand())
+	cmd.AddCommand(NewClusterIdleAddCommand())
 	cmd.AddCommand(NewClusterRemoveCommand())
+	cmd.AddCommand(NewClusterIdleRemoveCommand())
 	cmd.AddCommand(NewClusterStatusCommand())
 	cmd.AddCommand(NewClusterMysqlCommand())
 	cmd.AddCommand(NewClusterGTIDCommand())
@@ -90,6 +92,45 @@ func clusterAddCommandFn(cmd *cobra.Command, args []string) {
 	}
 }
 
+func NewClusterIdleAddCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "addidle nodename1,nodename2",
+		Short: "add idle peers to leader(if there is no leader, add to local)",
+		Run:   clusterIdleAddCommandFn,
+	}
+
+	return cmd
+}
+
+func clusterIdleAddCommandFn(cmd *cobra.Command, args []string) {
+	if len(args) != 1 {
+		ErrorOK(fmt.Errorf("node.name.is.nil"))
+	}
+
+	// send add node rpc to leader
+	{
+		conf, err := GetConfig()
+		ErrorOK(err)
+		self := conf.Server.Endpoint
+		nodes := strings.Split(strings.Trim(args[0], ","), ",")
+
+		leader, err := callx.GetClusterLeader(self)
+		if err != nil {
+			log.Warning("%v", err)
+		}
+		log.Warning("cluster.prepare.to.add.idle.nodes[%v].to.leader[%v]", args[0], leader)
+		if leader != "" {
+			err := callx.AddIdleNodeRPC(leader, nodes)
+			ErrorOK(err)
+		} else {
+			log.Warning("cluster.canot.found.leader.forward.to[%v]", self)
+			err := callx.AddIdleNodeRPC(self, nodes)
+			ErrorOK(err)
+		}
+		log.Warning("cluster.add.idle.nodes.to.leader[%v].done", leader)
+	}
+}
+
 func NewClusterRemoveCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove nodename1,nodename2",
@@ -125,6 +166,44 @@ func clusterRemoveCommandFn(cmd *cobra.Command, args []string) {
 			ErrorOK(err)
 		}
 		log.Warning("cluster.remove.nodes.from.leader[%v].done", leader)
+	}
+}
+
+func NewClusterIdleRemoveCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "removeidle nodename1,nodename2",
+		Short: "remove idle peers from leader(if there is no leader, remove from local)",
+		Run:   clusterIdleRemoveCommandFn,
+	}
+
+	return cmd
+}
+
+func clusterIdleRemoveCommandFn(cmd *cobra.Command, args []string) {
+	if len(args) != 1 {
+		ErrorOK(fmt.Errorf("node.name.is.nil"))
+	}
+
+	// send remove node rpc to leader
+	{
+		conf, err := GetConfig()
+		ErrorOK(err)
+		self := conf.Server.Endpoint
+		nodes := strings.Split(strings.Trim(args[0], ","), ",")
+		leader, err := callx.GetClusterLeader(self)
+		if err != nil {
+			log.Warning("%v", err)
+		}
+		log.Warning("cluster.prepare.to.remove.idle.nodes[%v].from.leader[%v]", args[0], leader)
+		if leader != "" {
+			err := callx.RemoveIdleNodeRPC(leader, nodes)
+			ErrorOK(err)
+		} else {
+			log.Warning("cluster.remove.canot.found.leader.forward.to[%v]", self)
+			err := callx.RemoveIdleNodeRPC(self, nodes)
+			ErrorOK(err)
+		}
+		log.Warning("cluster.remove.idle.nodes.from.leader[%v].done", leader)
 	}
 }
 
@@ -484,11 +563,13 @@ func clusterRaftCommandFn(cmd *cobra.Command, args []string) {
 
 	for _, node := range nodes {
 		raft := "UNKNOW"
+		var idleCount uint64
 
 		// raft
 		{
 			if rsp, err := callx.GetRaftStatusRPC(node); err == nil {
 				raft = rsp.State
+				idleCount = rsp.IdleCount
 				stats = rsp.Stats
 			} else {
 				stats = &model.RaftStats{}
@@ -498,6 +579,7 @@ func clusterRaftCommandFn(cmd *cobra.Command, args []string) {
 		row := []string{
 			node,
 			raft,
+			fmt.Sprintf("%v", idleCount),
 			fmt.Sprintf("%v", stats.LeaderPromotes),
 			fmt.Sprintf("%v", stats.LeaderDegrades),
 			fmt.Sprintf("%v", stats.LeaderGetHeartbeatRequests),
@@ -513,6 +595,7 @@ func clusterRaftCommandFn(cmd *cobra.Command, args []string) {
 	columns := []string{
 		"ID",
 		"Raft",
+		"IdleCnt",
 		"LPromotes",
 		"LDegrades",
 		"LGetHeartbeats",

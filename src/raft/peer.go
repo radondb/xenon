@@ -45,6 +45,7 @@ func (p *Peer) sendHeartbeat(c chan *model.RaftRPCResponse) {
 	req.Raft.To = p.getID()
 	req.Raft.Leader = p.raft.getLeader()
 	req.Peers = p.raft.getPeers()
+	req.IdlePeers = p.raft.getIdlePeers()
 	req.Repl = p.raft.mysql.GetRepl()
 	req.GTID, _ = p.raft.mysql.GetGTID()
 
@@ -122,7 +123,7 @@ func (p *Peer) SendPing(c chan *model.RaftRPCResponse) {
 
 	client, cleanup, err := p.NewClient()
 	if err != nil {
-		p.raft.ERROR("ping.peer[%v].new.client.error[%v]", p.getID(), err)
+		p.raft.ERROR("send.ping.to.peer[%v].new.client.error[%v]", p.getID(), err)
 		rsp.RetCode = model.ErrorRPCCall
 		c <- rsp
 		return
@@ -132,7 +133,7 @@ func (p *Peer) SendPing(c chan *model.RaftRPCResponse) {
 	method := model.RPCRaftPing
 	err = client.CallTimeout(p.requestTimeout, method, req, rsp)
 	if err != nil {
-		p.raft.ERROR("ping.peer.[%v].client.call.error[%v]", p.getID(), err)
+		p.raft.ERROR("send.ping.to.peer[%v].client.call.error[%v]", p.getID(), err)
 		rsp.RetCode = model.ErrorRPCCall
 		c <- rsp
 		return

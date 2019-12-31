@@ -21,7 +21,7 @@ import (
 func TestRaftRPCStatus(t *testing.T) {
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
-	names, rafts, scleanup := MockRafts(log, port, 3)
+	names, rafts, scleanup := MockRafts(log, port, 3, -1)
 	defer scleanup()
 	var whoisleader int
 
@@ -60,7 +60,7 @@ func TestRaftRPCs(t *testing.T) {
 	mockHost := ":6666"
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
-	names, rafts, scleanup := MockRafts(log, port, 1)
+	names, rafts, scleanup := MockRafts(log, port, 1, -1)
 	defer scleanup()
 
 	// start
@@ -115,7 +115,7 @@ func TestRaftRPCs(t *testing.T) {
 func TestRaftRPCPurgeBinlog(t *testing.T) {
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
-	names, rafts, scleanup := MockRafts(log, port, 3)
+	names, rafts, scleanup := MockRafts(log, port, 3, -1)
 	defer scleanup()
 	whoisleader := 2
 

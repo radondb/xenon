@@ -19,16 +19,17 @@ import (
 func TestPeersJson(t *testing.T) {
 	path := "/tmp/test.peersjson"
 	peers := []string{":0101", ":0202"}
+	idlePeers := []string{":0303", ":0404"}
 
 	{
-		err := writePeersJSON(path, peers)
+		err := writePeersJSON(path, peers, idlePeers)
 		assert.Nil(t, err)
 		os.Remove(path)
 	}
 
 	// read error
 	{
-		_, err := readPeersJSON(path)
+		_, _, err := readPeersJSON(path)
 		want := fmt.Sprintf("open %s: no such file or directory", path)
 		got := err.Error()
 		assert.Equal(t, want, got)
@@ -36,17 +37,16 @@ func TestPeersJson(t *testing.T) {
 
 	// write json
 	{
-		err := writePeersJSON(path, peers)
+		err := writePeersJSON(path, peers, idlePeers)
 		assert.Nil(t, err)
 	}
 
 	// read json OK
 	{
-		ps, err := readPeersJSON(path)
+		ps, ips, err := readPeersJSON(path)
 		assert.Nil(t, err)
-		want := peers
-		got := ps
-		assert.Equal(t, want, got)
+		assert.Equal(t, peers, ps)
+		assert.Equal(t, idlePeers, ips)
 	}
 
 	// json broken
@@ -61,7 +61,7 @@ func TestPeersJson(t *testing.T) {
 
 	// read error
 	{
-		_, err := readPeersJSON(path)
+		_, _, err := readPeersJSON(path)
 		want := "invalid character 'i' looking for beginning of value"
 		got := err.Error()
 		assert.Equal(t, want, got)
