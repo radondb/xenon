@@ -142,7 +142,7 @@ func (r *Learner) processHeartbeatRequest(req *model.RaftRPCRequest) *model.Raft
 		// epoch change
 		if epochdiff != 0 {
 			r.WARNING("get.heartbeat.from[N:%v, V:%v, E:%v].update.epoch", req.GetFrom(), req.GetViewID(), req.GetEpochID())
-			r.updateEpoch(req.GetEpochID(), req.GetPeers())
+			r.updateEpoch(req.GetEpochID(), req.GetPeers(), req.GetIdlePeers())
 		}
 	}
 	return rsp

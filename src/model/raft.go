@@ -60,12 +60,11 @@ type Repl struct {
 }
 
 type RaftRPCRequest struct {
-	Raft Raft
-	Repl Repl
-	GTID GTID
-
-	// The Peers(endpoint) of this raft stored
-	Peers []string
+	Raft      Raft
+	Repl      Repl
+	GTID      GTID
+	Peers     []string
+	IdlePeers []string
 }
 
 type RaftRPCResponse struct {
@@ -97,6 +96,10 @@ func (req *RaftRPCRequest) GetRepl() Repl {
 
 func (req *RaftRPCRequest) GetPeers() []string {
 	return req.Peers
+}
+
+func (req *RaftRPCRequest) GetIdlePeers() []string {
+	return req.IdlePeers
 }
 
 func (req *RaftRPCRequest) GetFrom() string {
@@ -181,7 +184,8 @@ type RaftStatusRPCRequest struct {
 }
 
 type RaftStatusRPCResponse struct {
-	Stats *RaftStats
+	Stats     *RaftStats
+	IdleCount uint64
 
 	// The state info of this raft
 	// FOLLOWER/CANDIDATE/LEADER/IDLE

@@ -39,30 +39,31 @@ func setupRPC(rpc *xrpc.Service, raft *Raft) {
 }
 
 // MockRaftsWithConfig mock.
-func MockRaftsWithConfig(log *xlog.Log, conf *config.RaftConfig, port int, count int) ([]string, []*Raft, func()) {
-	return mockRafts(log, conf, port, count, false)
+func MockRaftsWithConfig(log *xlog.Log, conf *config.RaftConfig, port int, count int, idleStart int) ([]string, []*Raft, func()) {
+	return mockRafts(log, conf, port, count, idleStart, false)
 }
 
 // MockRafts mock.
-func MockRafts(log *xlog.Log, port int, count int) ([]string, []*Raft, func()) {
+// If no idle nodes, set idleStart to -1
+func MockRafts(log *xlog.Log, port int, count int, idleStart int) ([]string, []*Raft, func()) {
 	conf := config.DefaultRaftConfig()
 	conf.PurgeBinlogInterval = 1
 	conf.CandidateWaitFor2Nodes = 1000
 	conf.MetaDatadir = "/tmp/"
 
-	return mockRafts(log, conf, port, count, false)
+	return mockRafts(log, conf, port, count, idleStart, false)
 }
 
 // MockRaftsWithLong mock.
-func MockRaftsWithLong(log *xlog.Log, port int, count int) ([]string, []*Raft, func()) {
+func MockRaftsWithLong(log *xlog.Log, port int, count int, idleStart int) ([]string, []*Raft, func()) {
 	conf := config.DefaultRaftConfig()
 	conf.PurgeBinlogInterval = 1
 	conf.MetaDatadir = "/tmp/"
 
-	return mockRafts(log, conf, port, count, true)
+	return mockRafts(log, conf, port, count, idleStart, true)
 }
 
-func mockRafts(log *xlog.Log, conf *config.RaftConfig, port int, count int, islong bool) ([]string, []*Raft, func()) {
+func mockRafts(log *xlog.Log, conf *config.RaftConfig, port int, count int, idleStart int, islong bool) ([]string, []*Raft, func()) {
 	ids := []string{}
 	rafts := []*Raft{}
 	rpcs := []*xrpc.Service{}
@@ -102,8 +103,12 @@ func mockRafts(log *xlog.Log, conf *config.RaftConfig, port int, count int, islo
 	}
 
 	for _, raft := range rafts {
-		for _, id := range ids {
-			raft.AddPeer(id)
+		for i, id := range ids {
+			if idleStart != -1 && i >= idleStart {
+				raft.AddIdlePeer(id)
+			} else {
+				raft.AddPeer(id)
+			}
 		}
 	}
 

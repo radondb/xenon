@@ -28,7 +28,7 @@ import (
 func TestRaftRPCHA(t *testing.T) {
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
-	names, rafts, scleanup := MockRafts(log, port, 3)
+	names, rafts, scleanup := MockRafts(log, port, 3, -1)
 	defer scleanup()
 
 	// 1. Start 3 rafts state as FOLLOWER
@@ -176,7 +176,7 @@ func TestRaftRPCHA(t *testing.T) {
 func TestRaftRPCHASetLearnerFromFollower(t *testing.T) {
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
-	names, rafts, scleanup := MockRafts(log, port, 3)
+	names, rafts, scleanup := MockRafts(log, port, 3, -1)
 	learner := 2
 	defer scleanup()
 
@@ -268,7 +268,7 @@ func TestRaftRPCHASetLearnerFromFollower(t *testing.T) {
 func TestRaftRPCHASetLearnerFromInvalid(t *testing.T) {
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
-	names, rafts, scleanup := MockRafts(log, port, 3)
+	names, rafts, scleanup := MockRafts(log, port, 3, -1)
 	learner := 2
 	defer scleanup()
 
@@ -362,7 +362,7 @@ func TestRaftRPCHASetLearnerFromInvalid(t *testing.T) {
 func TestRaftRPCHASetLearnerFromIdle(t *testing.T) {
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
-	names, rafts, scleanup := MockRafts(log, port, 3)
+	names, rafts, scleanup := MockRafts(log, port, 3, -1)
 	learner := 2
 	defer scleanup()
 
@@ -457,7 +457,7 @@ func TestRaftRPCHATryToLeader(t *testing.T) {
 	var whoisleader, whoisleadernow int
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
-	names, rafts, scleanup := MockRafts(log, port, 3)
+	names, rafts, scleanup := MockRafts(log, port, 3, -1)
 	defer scleanup()
 
 	// 1. Start 3 rafts state as FOLLOWER
@@ -548,7 +548,7 @@ func TestRaftRPCHATryToLeaderFail_GTID(t *testing.T) {
 
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
-	names, rafts, cleanup := MockRafts(log, port, 3)
+	names, rafts, cleanup := MockRafts(log, port, 3, -1)
 	defer cleanup()
 
 	GTIDBIDX := 1
@@ -658,7 +658,7 @@ func TestRaftRPCHATryToLeaderFail_MySQLUnpromotble(t *testing.T) {
 
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
-	names, rafts, cleanup := MockRafts(log, port, 3)
+	names, rafts, cleanup := MockRafts(log, port, 3, -1)
 	defer cleanup()
 
 	GTIDERRIDX := 0
@@ -775,7 +775,7 @@ func TestRaftSuperIDLEEnableHA(t *testing.T) {
 
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
-	names, rafts, cleanup := MockRafts(log, port, 3)
+	names, rafts, cleanup := MockRafts(log, port, 3, -1)
 	defer cleanup()
 
 	// 1.  Start 3 rafts.
@@ -822,7 +822,7 @@ func TestRaftSuperIDLEEnableHA(t *testing.T) {
 
 	// 5.  Wait new leader.
 	{
-		MockWaitLeaderEggs(rafts, 2)
+		MockWaitLeaderEggs(rafts, 1)
 	}
 
 	{

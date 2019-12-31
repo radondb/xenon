@@ -187,7 +187,7 @@ func (r *Follower) processHeartbeatRequest(req *model.RaftRPCRequest) *model.Raf
 		// epoch change
 		if epochdiff != 0 {
 			r.WARNING("get.heartbeat.from[N:%v, V:%v, E:%v].update.epoch", req.GetFrom(), req.GetViewID(), req.GetEpochID())
-			r.updateEpoch(req.GetEpochID(), req.GetPeers())
+			r.updateEpoch(req.GetEpochID(), req.GetPeers(), req.GetIdlePeers())
 		}
 	}
 	return rsp
@@ -278,7 +278,6 @@ func (r *Follower) processRequestVoteRequest(req *model.RaftRPCRequest) *model.R
 func (r *Follower) processPingRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
 	rsp := model.NewRaftRPCResponse(model.OK)
 	rsp.Raft.State = r.state.String()
-
 	return rsp
 }
 
@@ -313,7 +312,7 @@ func (r *Follower) startCheckBrainSplit() {
 						r.DEBUG("receive.responses.of.leader.skip.check.brain.split")
 						continue
 					}
-					if strings.Contains("FOLLOWER CANDIDATE IDLE", rsp.Raft.State) {
+					if strings.Contains("FOLLOWER CANDIDATE LEARNER", rsp.Raft.State) {
 						r.DEBUG("receive.responses.of.%v.skip.check.brain.split", rsp.Raft.State)
 						cnt++
 					}

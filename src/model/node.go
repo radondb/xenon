@@ -9,9 +9,11 @@
 package model
 
 const (
-	RPCNodesAdd    = "NodeRPC.AddNodes"
-	RPCNodesRemove = "NodeRPC.RemoveNodes"
-	RPCNodes       = "NodeRPC.GetNodes"
+	RPCNodesAdd        = "NodeRPC.AddNodes"
+	RPCIdleNodesAdd    = "NodeRPC.AddIdleNodes"
+	RPCNodesRemove     = "NodeRPC.RemoveNodes"
+	RPCIdleNodesRemove = "NodeRPC.RemoveIdleNodes"
+	RPCNodes           = "NodeRPC.GetNodes"
 )
 
 type NodeRPCRequest struct {

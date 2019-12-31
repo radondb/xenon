@@ -19,7 +19,7 @@ import (
 //
 // Because of we bring IDLE state in RaftRPCResponse as vote-request response,
 // the IDLE vote will be filtered out by other CANDIDATEs.
-// IDLE is one member of a RAFT cluster but without the rights to vote.
+// IDLE is not one member of a RAFT cluster and without the rights to vote.
 
 // Idle tuple.
 type Idle struct {
@@ -70,12 +70,15 @@ func (r *Idle) Loop() {
 				req := e.request.(*model.RaftRPCRequest)
 				rsp := r.processRequestVoteRequest(req)
 				e.response <- rsp
+
+			// 3) Ping
 			case MsgRaftPing:
 				req := e.request.(*model.RaftRPCRequest)
 				rsp := r.processPingRequestHandler(req)
 				e.response <- rsp
+
 			default:
-				r.ERROR("get.unknow.request[%v].[%v]", r.getID(), e.Type)
+				r.ERROR("get.unknown.request[%v]", e.Type)
 			}
 		}
 	}
@@ -139,7 +142,7 @@ func (r *Idle) processHeartbeatRequest(req *model.RaftRPCRequest) *model.RaftRPC
 		// epoch change
 		if epochdiff != 0 {
 			r.WARNING("get.heartbeat.from[N:%v, V:%v, E:%v].update.epoch", req.GetFrom(), req.GetViewID(), req.GetEpochID())
-			r.updateEpoch(req.GetEpochID(), req.GetPeers())
+			r.updateEpoch(req.GetEpochID(), req.GetPeers(), req.GetIdlePeers())
 		}
 	}
 	return rsp
@@ -151,7 +154,7 @@ func (r *Idle) processHeartbeatRequest(req *model.RaftRPCRequest) *model.RaftRPC
 // IDLE is special, it returns OK expect Request Denied
 //
 // RETURN
-// 1. OK: give a vote
+// 1. OK: give a vote, but the Candidate will abandon the Idle's vote.
 func (r *Idle) processRequestVoteRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
 	rsp := model.NewRaftRPCResponse(model.OK)
 	rsp.Raft.From = r.getID()

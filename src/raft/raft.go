@@ -35,7 +35,12 @@ type ev struct {
 type RaftMeta struct {
 	ViewID  uint64
 	EpochID uint64
-	Peers   []string
+
+	// The Peers(endpoint) expect SuperIDLE
+	Peers []string
+
+	// The SuperIDLE Peers(endpoint)
+	IdlePeers []string
 }
 
 // Raft tuple.
@@ -64,7 +69,8 @@ type Raft struct {
 	I                   *Idle
 	IV                  *Invalid
 	LN                  *Learner
-	peers               map[string]*Peer
+	peers               map[string]*Peer // all peers expect SuperIDLE
+	idlePeers           map[string]*Peer // all SuperIDLE peers
 	stats               model.RaftStats
 	skipPurgeBinlog     bool // if true, purge binlog will skipped
 	isBrainSplit        bool // if true, follower can upgrade to candidate
@@ -73,15 +79,16 @@ type Raft struct {
 // NewRaft creates the new raft.
 func NewRaft(id string, conf *config.RaftConfig, log *xlog.Log, mysql *mysql.Mysql) *Raft {
 	r := &Raft{
-		id:     id,
-		conf:   conf,
-		log:    log,
-		cmd:    common.NewLinuxCommand(log),
-		mysql:  mysql,
-		leader: noLeader,
-		state:  FOLLOWER,
-		meta:   &RaftMeta{},
-		peers:  make(map[string]*Peer),
+		id:        id,
+		conf:      conf,
+		log:       log,
+		cmd:       common.NewLinuxCommand(log),
+		mysql:     mysql,
+		leader:    noLeader,
+		state:     FOLLOWER,
+		meta:      &RaftMeta{},
+		peers:     make(map[string]*Peer),
+		idlePeers: make(map[string]*Peer),
 	}
 
 	// state handler
@@ -153,7 +160,7 @@ func (r *Raft) Stop() error {
 	return nil
 }
 
-// init all peers for raft.Peers from RaftConfig.Peers
+// init all peers for raft.Peers(from RaftConfig.Peers) and raft.IdlePeers(from RaftConfig.IdlePeers)
 func (r *Raft) initPeers() {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
@@ -162,9 +169,10 @@ func (r *Raft) initPeers() {
 	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
 		r.WARNING("peers.json.file[%v].does.not.exist", metaPath)
 	} else {
-		peers, _ := readPeersJSON(filepath.Join(r.conf.MetaDatadir, metaFile))
+		peers, idlePeers, _ := readPeersJSON(filepath.Join(r.conf.MetaDatadir, metaFile))
 		r.meta.Peers = append(r.meta.Peers, peers...)
-		r.WARNING("prepare.to.recovery.peers.from.[%v].[%v]", r.conf.MetaDatadir, r.meta.Peers)
+		r.meta.IdlePeers = append(r.meta.IdlePeers, idlePeers...)
+		r.WARNING("prepare.to.recovery.peers.from.[%v].peers[%v].idlePeers[%v]", r.conf.MetaDatadir, r.meta.Peers, r.meta.IdlePeers)
 	}
 
 	// create peers
@@ -176,8 +184,21 @@ func (r *Raft) initPeers() {
 	}
 
 	// if peers is empty, append this peer
-	if len(r.meta.Peers) == 0 {
+	if len(r.meta.Peers) == 0 && !r.conf.SuperIDLE {
 		r.meta.Peers = append(r.meta.Peers, r.getID())
+	}
+
+	// create idle peers
+	for _, connStr := range r.meta.IdlePeers {
+		if connStr != r.getID() {
+			p := NewPeer(r, connStr, r.conf.RequestTimeout, r.conf.HeartbeatTimeout)
+			r.idlePeers[connStr] = p
+		}
+	}
+
+	// if peers is empty, append this peer
+	if len(r.meta.IdlePeers) == 0 && r.conf.SuperIDLE {
+		r.meta.IdlePeers = append(r.meta.IdlePeers, r.getID())
 	}
 }
 
@@ -259,11 +280,12 @@ func (r *Raft) updateView(viewid uint64, leader string) {
 	r.meta.ViewID = viewid
 }
 
-func (r *Raft) updateEpoch(epochid uint64, peers []string) {
+func (r *Raft) updateEpoch(epochid uint64, peers []string, idlePeers []string) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-
 	mark := make(map[string]bool)
+
+	// update peers
 	for _, name := range peers {
 		if r.peers[name] == nil {
 			if name != r.getID() {
@@ -280,15 +302,34 @@ func (r *Raft) updateEpoch(epochid uint64, peers []string) {
 			delete(r.peers, name)
 		}
 	}
+	r.meta.Peers = peers
+
+	// update idle peers
+	for _, name := range idlePeers {
+		if r.idlePeers[name] == nil {
+			if name != r.getID() {
+				p := NewPeer(r, name, r.conf.RequestTimeout, r.conf.HeartbeatTimeout)
+				r.idlePeers[name] = p
+			}
+		}
+		mark[name] = true
+	}
+
+	for name, peer := range r.idlePeers {
+		if _, ok := mark[name]; !ok {
+			peer.freePeer()
+			delete(r.idlePeers, name)
+		}
+	}
+	r.meta.IdlePeers = idlePeers
 
 	r.meta.EpochID = epochid
-	r.meta.Peers = peers
 	r.writePeersJSON()
 }
 
 func (r *Raft) writePeersJSON() {
 	metaPath := filepath.Join(r.conf.MetaDatadir, metaFile)
-	if err := writePeersJSON(metaPath, r.meta.Peers); err != nil {
+	if err := writePeersJSON(metaPath, r.meta.Peers, r.meta.IdlePeers); err != nil {
 		r.PANIC("writePeers[%v].to[%v].error[%+v]", metaPath, r.meta.Peers, err)
 	}
 
@@ -316,7 +357,7 @@ func (r *Raft) resetElectionTimeout() {
 
 func (r *Raft) resetCheckBrainSplitTimeout() {
 	common.NormalTimerRelaese(r.checkBrainSplitTick)
-	r.checkBrainSplitTick = common.RandomTimeout(r.getElectionTimeout() / 2)
+	r.checkBrainSplitTick = common.NormalTimeout(r.getElectionTimeout() / 2)
 }
 
 func (r *Raft) resetCheckVotesTimeout() {

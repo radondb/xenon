@@ -79,7 +79,7 @@ func (r *Leader) Loop() {
 	maxLessHtAcks := r.Raft.conf.AdmitDefeatHtCnt
 
 	// send heartbeat
-	respChan := make(chan *model.RaftRPCResponse, r.getMembers())
+	respChan := make(chan *model.RaftRPCResponse, r.getAllMembers())
 	r.sendHeartbeatHandler(&mysqlDown, respChan)
 	r.resetHeartbeatTimeout()
 
@@ -95,7 +95,7 @@ func (r *Leader) Loop() {
 			r.WARNING("state.machine.loop.got.fired")
 		case <-r.heartbeatTick.C:
 			if ackGranted < r.getQuorums() {
-				if r.GetMembers() > 2 {
+				if r.getMembers() > 2 {
 					lessHtAcks++
 				}
 				r.IncLessHeartbeatAcks()
@@ -122,7 +122,7 @@ func (r *Leader) Loop() {
 			}
 
 			ackGranted = 1
-			respChan = make(chan *model.RaftRPCResponse, r.getMembers())
+			respChan = make(chan *model.RaftRPCResponse, r.getAllMembers())
 			r.sendHeartbeatHandler(&mysqlDown, respChan)
 			r.resetHeartbeatTimeout()
 		case rsp := <-respChan:
@@ -139,6 +139,7 @@ func (r *Leader) Loop() {
 				req := e.request.(*model.RaftRPCRequest)
 				rsp := r.processRequestVoteRequestHandler(req)
 				e.response <- rsp
+			// 3) Ping
 			case MsgRaftPing:
 				req := e.request.(*model.RaftRPCRequest)
 				rsp := r.processPingRequestHandler(req)
@@ -289,14 +290,18 @@ func (r *Leader) sendHeartbeat(mysqlDown *bool, c chan *model.RaftRPCResponse) {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 
-	for _, peer := range r.peers {
+	allPeers := r.peers
+	for k, peer := range r.idlePeers {
+		allPeers[k] = peer
+	}
+
+	for _, peer := range allPeers {
 		r.wg.Add(1)
 		go func(peer *Peer) {
 			defer r.wg.Done()
 			peer.sendHeartbeat(c)
 		}(peer)
 	}
-
 }
 
 // leaderProcessHeartbeatResponseHandler
@@ -311,7 +316,9 @@ func (r *Leader) processHeartbeatResponse(ackGranted *int, rsp *model.RaftRPCRes
 			r.degradeToFollower()
 		}
 	} else {
-		*ackGranted++
+		if rsp.Raft.State != IDLE.String() {
+			*ackGranted++
+		}
 		// find the smallest binlog
 		if r.relayMasterLogFile == "" {
 			r.relayMasterLogFile = rsp.Relay_Master_Log_File
@@ -320,7 +327,7 @@ func (r *Leader) processHeartbeatResponse(ackGranted *int, rsp *model.RaftRPCRes
 		}
 
 		// to reset nextPuregeBinlog:
-		// we must get all responses from the follower(s)
+		// we must get all responses from the follower(s) and idle(s)
 		// imagine that:
 		// Master is doing backup for Slave2 restore
 		// Master purged to Slave1-Relay_Master_Log_File
@@ -329,13 +336,11 @@ func (r *Leader) processHeartbeatResponse(ackGranted *int, rsp *model.RaftRPCRes
 			r.nextPuregeBinlog = r.relayMasterLogFile
 		}
 	}
-
 }
 
 func (r *Leader) processPingRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
 	rsp := model.NewRaftRPCResponse(model.OK)
 	rsp.Raft.State = r.state.String()
-
 	return rsp
 }
 

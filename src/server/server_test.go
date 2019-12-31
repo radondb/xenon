@@ -32,41 +32,75 @@ func TestServer(t *testing.T) {
 
 	server := servers[0]
 	newpeer := "127.0.0.1:8081"
+	newidlepeer := "127.0.0.1:8082"
 
 	member := server.raft.GetMembers()
 	quorums := server.raft.GetQuorums()
 	assert.Equal(t, member, 1)
-
 	assert.Equal(t, quorums, 1)
 
 	peers := server.raft.GetPeers()
 	assert.Equal(t, len(peers), 1)
+	idlePeers := server.raft.GetIdlePeers()
+	assert.Equal(t, len(idlePeers), 0)
 
 	// add peer test
 	err := server.raft.AddPeer(newpeer)
 	assert.Nil(t, err)
-
 	peers = server.raft.GetPeers()
 	assert.Equal(t, len(peers), 2)
 
-	// add same peer test
+	// add idle peer test
+	err = server.raft.AddIdlePeer(newidlepeer)
+	assert.Nil(t, err)
+	idlePeers = server.raft.GetIdlePeers()
+	assert.Equal(t, len(idlePeers), 1)
+
+	// add same peer to peers test
 	err = server.raft.AddPeer(newpeer)
 	assert.Nil(t, err)
-
 	peers = server.raft.GetPeers()
 	assert.Equal(t, len(peers), 2)
 
-	// remove peer test
+	// add same idle peer to peers test
+	err = server.raft.AddPeer(newidlepeer)
+	assert.Nil(t, err)
+	peers = server.raft.GetPeers()
+	assert.Equal(t, len(peers), 2)
+
+	// add same peer to idle peers test
+	err = server.raft.AddIdlePeer(newpeer)
+	assert.Nil(t, err)
+	idlePeers = server.raft.GetIdlePeers()
+	assert.Equal(t, len(idlePeers), 1)
+
+	// add same idle peer to idle peers test
+	err = server.raft.AddIdlePeer(newidlepeer)
+	assert.Nil(t, err)
+	idlePeers = server.raft.GetIdlePeers()
+	assert.Equal(t, len(idlePeers), 1)
+
+	// remove peer from peers test
 	err = server.raft.RemovePeer(newpeer)
 	assert.Nil(t, err)
-
 	peers = server.raft.GetPeers()
 	assert.Equal(t, len(peers), 1)
+
+	// remove idle peer from idle peers test
+	err = server.raft.RemoveIdlePeer(newidlepeer)
+	assert.Nil(t, err)
+	idlePeers = server.raft.GetIdlePeers()
+	assert.Equal(t, len(idlePeers), 0)
 
 	// remove peer again
 	err = server.raft.RemovePeer(newpeer)
 	assert.Nil(t, err)
-
 	peers = server.raft.GetPeers()
 	assert.Equal(t, len(peers), 1)
+
+	// remove idle peer again
+	err = server.raft.RemoveIdlePeer(newidlepeer)
+	assert.Nil(t, err)
+	idlePeers = server.raft.GetIdlePeers()
+	assert.Equal(t, len(idlePeers), 0)
 }

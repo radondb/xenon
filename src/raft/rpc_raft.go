@@ -10,6 +10,7 @@ package raft
 
 import (
 	"model"
+	"strconv"
 )
 
 // RaftRPC tuple.
@@ -53,6 +54,7 @@ func (r *RaftRPC) Status(req *model.RaftStatusRPCRequest, rsp *model.RaftStatusR
 	rsp.RetCode = model.OK
 	rsp.State = r.raft.GetState().String()
 	rsp.Stats = r.raft.getStats()
+	rsp.IdleCount, _ = strconv.ParseUint(strconv.Itoa(len(r.raft.getIdlePeers())), 10, 64)
 	return nil
 }
 

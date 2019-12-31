@@ -106,21 +106,28 @@ func (r *Raft) getQuorums() int {
 	return (len(r.meta.Peers) / 2) + 1
 }
 
-func (r *Raft) getQuorumsExpectIDLE(idles int) int {
-	return ((len(r.meta.Peers) - idles) / 2) + 1
-}
-
-// all members include me
+// all members include me and exclude idle nodes
 func (r *Raft) getMembers() int {
 	return len(r.meta.Peers)
 }
 
-func (r *Raft) getMembersExpectIDLE(idles int) int {
-	return len(r.meta.Peers) - idles
+// all members include me and idle nodes
+func (r *Raft) getAllMembers() int {
+	return len(r.meta.Peers) + len(r.meta.IdlePeers)
 }
 
 func (r *Raft) getPeers() []string {
 	return r.meta.Peers
+}
+
+func (r *Raft) getIdlePeers() []string {
+	return r.meta.IdlePeers
+}
+
+func (r *Raft) getAllPeers() []string {
+	allPeers := r.meta.Peers
+	allPeers = append(allPeers, r.meta.IdlePeers...)
+	return allPeers
 }
 
 func (r *Raft) getElectionTimeout() int {
