@@ -1849,3 +1849,71 @@ func TestRaftElectionUnderLearnerInMinority(t *testing.T) {
 		assert.Equal(t, whoisleader, 2)
 	}
 }
+
+// TEST EFFECTS:
+// test election under Follower and Candidate alternate
+//
+// TEST PROCESSES:
+// 1.  set rafts GTID
+//     1.0 rafts[0]  with MockGTID_X1{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
+//     1.1 rafts[1]  with MockGTID_X3{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
+//     1.2 rafts[2]  with MockGTID_X3{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
+// 2.  start rafts[0] state as CANDIDATE
+// 3.  wait 20 times the election timeout
+// 4.  start rafts[1] as FOLLOWER and rafts[2] as IDLE
+//                   InvalidGITD
+//     rafts[0]: C --------------> F --------------> C -> ... -> F
+//                                    InvalidViewID
+//     rafts[1]: F --------------> C --------------> F -> ... -> C
+
+// 5.  wait 4 times the election timeout
+// 6.  check if rafts[1] is the leader
+func TestRaftElectionUnderFollowerAndCandidateAlternate(t *testing.T) {
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	port := common.RandomPort(8000, 9000)
+	_, rafts, cleanup := MockRafts(log, port, 3, -1)
+	defer cleanup()
+
+	// 1. set rafts GTID
+	{
+		rafts[0].mysql.SetMysqlHandler(mysql.NewMockGTIDX1())
+		rafts[1].mysql.SetMysqlHandler(mysql.NewMockGTIDX3())
+		rafts[2].mysql.SetMysqlHandler(mysql.NewMockGTIDX3())
+	}
+
+	// 2. start rafts[0] state as CANDIDATE
+	{
+		rafts[0].Start()
+		MockStateTransition(rafts[0], CANDIDATE)
+	}
+
+	// 3. wait 20 times the election timeout
+	time.Sleep(time.Millisecond * time.Duration(rafts[0].getElectionTimeout()*20))
+
+	// 4. start rafts[1] as FOLLOWER and rafts[2] as IDLE
+	{
+		rafts[1].Start()
+		MockStateTransition(rafts[1], FOLLOWER)
+		MockStateTransition(rafts[0], CANDIDATE)
+		rafts[2].Start()
+		MockStateTransition(rafts[2], IDLE)
+	}
+
+	// 5. wait 4 times the election timeout
+	time.Sleep(time.Millisecond * time.Duration(rafts[0].getElectionTimeout()*4))
+
+	//6. check if rafts[1] is the leader
+	{
+		var got State
+		var whoisleader int
+		want := (FOLLOWER + LEADER + IDLE)
+		for i, raft := range rafts {
+			got += raft.getState()
+			if raft.getState() == LEADER {
+				whoisleader = i
+			}
+		}
+		assert.Equal(t, want, got)
+		assert.Equal(t, whoisleader, 1)
+	}
+}

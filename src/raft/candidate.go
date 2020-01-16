@@ -212,6 +212,11 @@ func (r *Candidate) processRequestVoteRequest(req *model.RaftRPCRequest) *model.
 		rsp.GTID = thisGTID
 
 		if greater {
+			// keep up with the latest viewid to get the latest nodes of data elected faster
+			if req.GetViewID() > r.getViewID() {
+				r.updateView(req.GetViewID(), noLeader)
+			}
+
 			// reject cases:
 			// 1. I am promotable: I am alive and GTID greater than you
 			if r.mysql.Promotable() {
