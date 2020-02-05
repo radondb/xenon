@@ -380,7 +380,7 @@ func NewMysqlDoBackupCommand() *cobra.Command {
 }
 
 func mysqlDoBackupCommandFn(cmd *cobra.Command, args []string) {
-	if len(args) != 1 {
+	if len(args) != 0 || len(toStr) == 0 {
 		cmd.Usage()
 		ErrorOK(fmt.Errorf("args.must.be: --to=backupdir"))
 	}
@@ -393,23 +393,24 @@ func mysqlDoBackupCommandFn(cmd *cobra.Command, args []string) {
 
 	// 1. find the best to backup
 	{
-		bestone, err := callx.FindBestoneForBackup(self)
+		node, err := callx.FindBestoneForBackup(self)
 		ErrorOK(err)
+		bestone = node
 		log.Warning("S1-->found.the.best.backup.host[%v]....", bestone)
 	}
 
-	backupdir := args[0]
-	// 2. remove backupdir files
+	backupdir := toStr
+	// 2. remove and make backupdir files
 	{
 		cmds := "bash"
 		args := []string{
 			"-c",
-			fmt.Sprintf("rm -rf %s/*", backupdir),
+			fmt.Sprintf("rm -rf %s ; mkdir %s", backupdir, backupdir),
 		}
 
 		_, err := common.RunCommand(cmds, args...)
 		ErrorOK(err)
-		log.Warning("S2-->rm.backupdir[%v]", backupdir)
+		log.Warning("S2-->rm.and.mkdir.backupdir[%v]", backupdir)
 	}
 
 	// 3. do backup from bestone
