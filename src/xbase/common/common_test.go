@@ -9,15 +9,17 @@
 package common
 
 import (
-	"github.com/stretchr/testify/assert"
+	"fmt"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRandomProt(t *testing.T) {
 	for i := 0; i < 10; i++ {
-		t.Logf("%v", RandomPort(8000, 9000))
+		fmt.Printf("%v\n", RandomPort(8000, 9000))
 	}
 }
 

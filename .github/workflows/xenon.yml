@@ -58,4 +58,4 @@ jobs:
       run: |
         export PATH=$PATH:$(go env GOPATH)/bin
         make coverage
-        bash <(curl -s https://codecov.io/bash) -f "!mock.go"
+        bash <(curl -s https://codecov.io/bash) -f "!mock.go" -t f05df45a-c970-448b-b4ac-79a628014441
