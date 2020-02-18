@@ -74,7 +74,7 @@ func TestMonitor(t *testing.T) {
 	conf := config.DefaultBackupConfig()
 	// 100ms
 	conf.MysqldMonitorInterval = 100
-	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
 	mysqld := NewMysqld(conf, log)
 
 	{
@@ -82,9 +82,9 @@ func TestMonitor(t *testing.T) {
 		got := mysqld.getStatus()
 		assert.Equal(t, want, got)
 		mysqld.MonitorStart()
-		time.Sleep(300 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 
-		want = model.MYSQLD_ISRUNNING
+		want = model.MYSQLD_NOTRUNNING
 		got = mysqld.getStatus()
 		assert.Equal(t, want, got)
 	}
@@ -106,9 +106,9 @@ func TestMonitor(t *testing.T) {
 		got := mysqld.monitorRunning
 		assert.Equal(t, want, got)
 		mysqld.MonitorStart()
-		time.Sleep(300 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 
-		wantstatus := model.MYSQLD_ISRUNNING
+		wantstatus := model.MYSQLD_NOTRUNNING
 		gotstatus := mysqld.getStatus()
 		assert.Equal(t, wantstatus, gotstatus)
 	}
