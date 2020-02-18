@@ -1,0 +1,23 @@
+name: Xenon Coverage
+on: [push, pull_request]
+jobs:
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+      id: go
+
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Coverage
+      run: |
+        export PATH=$PATH:$(go env GOPATH)/bin
+        make coverage
+        bash <(curl -s https://codecov.io/bash) -f "!mock.go" -t f05df45a-c970-448b-b4ac-79a628014441
