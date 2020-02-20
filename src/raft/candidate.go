@@ -203,7 +203,7 @@ func (r *Candidate) processRequestVoteRequest(req *model.RaftRPCRequest) *model.
 
 	// 2. check GTID
 	{
-		greater, thisGTID, err := r.mysql.GTIDGreaterThan(&req.GTID)
+		greater, thisGTID, err := r.mysql.GTIDGreaterThan(&req.GTID, nil)
 		if err != nil {
 			r.ERROR("process.requestvote.get.gtid.error[%v].ret.ErrorMySQLDown", err)
 			rsp.RetCode = model.ErrorMySQLDown

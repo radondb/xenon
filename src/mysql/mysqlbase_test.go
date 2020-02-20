@@ -67,7 +67,7 @@ func TestMysqlBaseGetSlaveGTIDGotZeroRow(t *testing.T) {
 	want := model.GTID{}
 	mockRows := sqlmock.NewRows(columns).AddRow("", "", "", "", "", "", "", "", "")
 	mock.ExpectQuery(query).WillReturnRows(mockRows)
-	got, err := mysqlbase.GetSlaveGTID(db)
+	got, err := mysqlbase.GetSlaveGTID(db, 5000)
 	assert.Nil(t, err)
 	assert.Equal(t, want, *got)
 }
@@ -114,7 +114,7 @@ func TestMysqlBaseGetSlaveGTID(t *testing.T) {
 	)
 
 	mock.ExpectQuery(query).WillReturnRows(mockRows)
-	got, err := mysqlbase.GetSlaveGTID(db)
+	got, err := mysqlbase.GetSlaveGTID(db, 5000)
 	assert.Nil(t, err)
 	assert.Equal(t, want, *got)
 }
@@ -153,7 +153,7 @@ func TestMysqlBaseGetMasterGTID(t *testing.T) {
 		)
 
 		mock.ExpectQuery(query).WillReturnRows(mockRows)
-		got, err := mysqlbase.GetMasterGTID(db)
+		got, err := mysqlbase.GetMasterGTID(db, 5000)
 		assert.Nil(t, err)
 		assert.Equal(t, want, *got)
 	}

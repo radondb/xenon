@@ -39,7 +39,7 @@ type Leader struct {
 	processHeartbeatRequestHandler func(*model.RaftRPCRequest) *model.RaftRPCResponse
 
 	// leader process voterequest request handler
-	processRequestVoteRequestHandler func(*model.RaftRPCRequest) *model.RaftRPCResponse
+	processRequestVoteRequestHandler func(*int, *model.RaftRPCRequest) *model.RaftRPCResponse
 
 	// leader send heartbeat request to other followers
 	sendHeartbeatHandler func(*bool, chan *model.RaftRPCResponse)
@@ -74,6 +74,8 @@ func (r *Leader) Loop() {
 	incViewID := false
 	mysqlDown := false
 	ackGranted := 1
+
+	raftReqVoteCnt := 0
 
 	lessHtAcks := 0
 	maxLessHtAcks := r.Raft.conf.AdmitDefeatHtCnt
@@ -137,7 +139,7 @@ func (r *Leader) Loop() {
 			// 2) RequestVote
 			case MsgRaftRequestVote:
 				req := e.request.(*model.RaftRPCRequest)
-				rsp := r.processRequestVoteRequestHandler(req)
+				rsp := r.processRequestVoteRequestHandler(&raftReqVoteCnt, req)
 				e.response <- rsp
 			// 3) Ping
 			case MsgRaftPing:
@@ -214,7 +216,7 @@ func (r *Leader) processHeartbeatRequest(req *model.RaftRPCRequest) *model.RaftR
 // 2. ErrorInvalidViewID: request viewid is old
 // 3. ErrorInvalidGTID: the CANDIDATE has the smaller Read_Master_Log_Pos
 // 4. OK: give a vote
-func (r *Leader) processRequestVoteRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
+func (r *Leader) processRequestVoteRequest(raftReqVoteCnt *int, req *model.RaftRPCRequest) *model.RaftRPCResponse {
 	rsp := model.NewRaftRPCResponse(model.OK)
 	rsp.Raft.From = r.getID()
 	rsp.Raft.ViewID = r.getViewID()
@@ -241,7 +243,7 @@ func (r *Leader) processRequestVoteRequest(req *model.RaftRPCRequest) *model.Raf
 
 	// 2. check master GTID
 	{
-		greater, thisGTID, err := r.mysql.GTIDGreaterThan(&req.GTID)
+		greater, thisGTID, err := r.mysql.GTIDGreaterThan(&req.GTID, raftReqVoteCnt)
 		if err != nil {
 			r.ERROR("process.requestvote.get.gtid.error[%v].ret.ErrorMySQLDown", err)
 			rsp.RetCode = model.ErrorMySQLDown
@@ -367,7 +369,7 @@ func (r *Leader) prepareSettingsAsync() {
 	r.wg.Add(1)
 	go func() {
 		defer r.wg.Done()
-		gtid, err := r.mysql.GetGTID()
+		gtid, err := r.mysql.GetGTID(0)
 		if err != nil {
 			r.ERROR("mysql.get.gtid.error[%v]", err)
 		} else {
@@ -548,7 +550,7 @@ func (r *Leader) setProcessHeartbeatRequestHandler(f func(*model.RaftRPCRequest)
 	r.processHeartbeatRequestHandler = f
 }
 
-func (r *Leader) setProcessRequestVoteRequestHandler(f func(*model.RaftRPCRequest) *model.RaftRPCResponse) {
+func (r *Leader) setProcessRequestVoteRequestHandler(f func(*int, *model.RaftRPCRequest) *model.RaftRPCResponse) {
 	r.processRequestVoteRequestHandler = f
 }
 

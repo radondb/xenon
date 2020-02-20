@@ -145,7 +145,7 @@ func (m *Mysql) GetUUID() (string, error) {
 }
 
 // GetMasterGTID used to get master binlog info.
-func (m *Mysql) GetMasterGTID() (*model.GTID, error) {
+func (m *Mysql) GetMasterGTID(incTimeout int) (*model.GTID, error) {
 	var err error
 	var db *sql.DB
 	var gtid *model.GTID
@@ -154,14 +154,14 @@ func (m *Mysql) GetMasterGTID() (*model.GTID, error) {
 		return nil, err
 	}
 
-	if gtid, err = m.mysqlHandler.GetMasterGTID(db); err != nil {
+	if gtid, err = m.mysqlHandler.GetMasterGTID(db, incTimeout); err != nil {
 		return nil, err
 	}
 	return gtid, nil
 }
 
 // GetSlaveGTID used to get Relay_Master_Log_File and read_master_binlog_pos.
-func (m *Mysql) GetSlaveGTID() (*model.GTID, error) {
+func (m *Mysql) GetSlaveGTID(reqTimeout int) (*model.GTID, error) {
 	var err error
 	var db *sql.DB
 	var gtid *model.GTID
@@ -170,7 +170,7 @@ func (m *Mysql) GetSlaveGTID() (*model.GTID, error) {
 		return nil, err
 	}
 
-	if gtid, err = m.mysqlHandler.GetSlaveGTID(db); err != nil {
+	if gtid, err = m.mysqlHandler.GetSlaveGTID(db, reqTimeout); err != nil {
 		return nil, err
 	}
 	return gtid, nil

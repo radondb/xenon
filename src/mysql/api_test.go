@@ -397,7 +397,7 @@ func TestGTIDGreaterThan(t *testing.T) {
 
 		mock.ExpectQuery(query).WillReturnRows(mockRows)
 		want := true
-		got, _, err := mysql.GTIDGreaterThan(&GTID)
+		got, _, err := mysql.GTIDGreaterThan(&GTID, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, want, got)
 	}
@@ -431,13 +431,14 @@ func TestGTIDGreaterThan(t *testing.T) {
 
 		mock.ExpectQuery(query).WillReturnRows(mockRows)
 		want := true
-		got, _, err := mysql.GTIDGreaterThan(&GTID)
+		got, _, err := mysql.GTIDGreaterThan(&GTID, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, want, got)
 	}
 
 	// 3. Seconds_Behind_Master error
 	{
+		raftReqVoteCnt := 2
 		query := "SHOW SLAVE STATUS"
 		columns := []string{"Master_Log_File",
 			"Read_Master_Log_Pos",
@@ -465,13 +466,14 @@ func TestGTIDGreaterThan(t *testing.T) {
 
 		mock.ExpectQuery(query).WillReturnRows(mockRows)
 		want := false
-		got, _, err := mysql.GTIDGreaterThan(&GTID)
+		got, _, err := mysql.GTIDGreaterThan(&GTID, &raftReqVoteCnt)
 		assert.Nil(t, err)
 		assert.Equal(t, want, got)
 	}
 
 	// 4. Seconds_Behind_Master error too
 	{
+		raftReqVoteCnt := 1
 		query := "SHOW SLAVE STATUS"
 		columns := []string{"Master_Log_File",
 			"Read_Master_Log_Pos",
@@ -499,7 +501,7 @@ func TestGTIDGreaterThan(t *testing.T) {
 
 		mock.ExpectQuery(query).WillReturnRows(mockRows)
 		want := false
-		got, _, err := mysql.GTIDGreaterThan(&GTID)
+		got, _, err := mysql.GTIDGreaterThan(&GTID, &raftReqVoteCnt)
 		assert.Nil(t, err)
 		assert.Equal(t, want, got)
 	}
@@ -544,7 +546,7 @@ func TestGetGTID(t *testing.T) {
 			"Yes")
 
 		mock.ExpectQuery(query).WillReturnRows(mockRows)
-		got, _ := mysql.GetGTID()
+		got, _ := mysql.GetGTID(0)
 		assert.Equal(t, want, got)
 	}
 
@@ -593,7 +595,7 @@ func TestGetGTID(t *testing.T) {
 			Slave_SQL_Running_State: "",
 		}
 
-		got, _ := mysql.GetGTID()
+		got, _ := mysql.GetGTID(0)
 		assert.Equal(t, want, got)
 	}
 
@@ -621,7 +623,7 @@ func TestGetGTID(t *testing.T) {
 			Slave_SQL_Running_Str: "No",
 		}
 
-		got, _ := mysql.GetGTID()
+		got, _ := mysql.GetGTID(0)
 		assert.Equal(t, want, got)
 	}
 }

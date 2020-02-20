@@ -22,10 +22,10 @@ type MysqlHandler interface {
 	SetReadOnly(*sql.DB, bool) error
 
 	// get GTID from traversal binlog folder and find the newest one
-	GetMasterGTID(*sql.DB) (*model.GTID, error)
+	GetMasterGTID(*sql.DB, int) (*model.GTID, error)
 
 	// get GTID from SHOW SLAVE STATUS
-	GetSlaveGTID(*sql.DB) (*model.GTID, error)
+	GetSlaveGTID(*sql.DB, int) (*model.GTID, error)
 
 	// start slave io_thread
 	StartSlaveIOThread(*sql.DB) error

@@ -47,7 +47,7 @@ func (p *Peer) sendHeartbeat(c chan *model.RaftRPCResponse) {
 	req.Peers = p.raft.getPeers()
 	req.IdlePeers = p.raft.getIdlePeers()
 	req.Repl = p.raft.mysql.GetRepl()
-	req.GTID, _ = p.raft.mysql.GetGTID()
+	req.GTID, _ = p.raft.mysql.GetGTID(0)
 
 	client, cleanup, err := p.NewClient()
 	if err != nil {

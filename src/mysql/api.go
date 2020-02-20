@@ -46,7 +46,7 @@ func (m *Mysql) Promotable() bool {
 	log := m.log
 	promotable := (m.GetState() == MysqlAlive)
 	if promotable {
-		gtid, err := m.GetGTID()
+		gtid, err := m.GetGTID(0)
 		if err != nil {
 			log.Error("can't.promotable.GetGTID.error:%v", err)
 			return false
@@ -92,9 +92,14 @@ func (m *Mysql) SetReadWrite() (err error) {
 }
 
 // GTIDGreaterThan used to compare the master_log_file and read_master_log_pos between from and this.
-func (m *Mysql) GTIDGreaterThan(gtid *model.GTID) (bool, model.GTID, error) {
+func (m *Mysql) GTIDGreaterThan(gtid *model.GTID, raftReqVoteCnt *int) (bool, model.GTID, error) {
 	log := m.log
-	this, err := m.GetGTID()
+	var incTimeout int
+	if raftReqVoteCnt != nil {
+		incTimeout = *raftReqVoteCnt * 1000
+	}
+
+	this, err := m.GetGTID(incTimeout)
 	if err != nil {
 		return false, this, err
 	}
@@ -269,10 +274,10 @@ func (m *Mysql) GetOption() Option {
 // GetGTID returns the mysql master_binlog and read_master_log_pos.
 // 1. first try GetSlaveGTID
 // 2. if STEP1) fails, try GetMasterGTID
-func (m *Mysql) GetGTID() (model.GTID, error) {
+func (m *Mysql) GetGTID(incTimeout int) (model.GTID, error) {
 	log := m.log
 	gtid := model.GTID{}
-	gotGTID, err := m.GetSlaveGTID()
+	gotGTID, err := m.GetSlaveGTID(incTimeout)
 	if err != nil {
 		m.log.Error("mysql.get.slave.gtid.error[%v]", err)
 		return gtid, err
@@ -282,7 +287,7 @@ func (m *Mysql) GetGTID() (model.GTID, error) {
 	// we are not slave(maybe a former master)
 	// try to get master binary log status
 	if gotGTID.Slave_IO_Running_Str == "" && gotGTID.Slave_SQL_Running_Str == "" {
-		gotGTID, err = m.GetMasterGTID()
+		gotGTID, err = m.GetMasterGTID(incTimeout)
 		if err != nil {
 			m.log.Error("mysql.get.master.gtid.error[%v]", err)
 			return gtid, err

@@ -88,7 +88,7 @@ func (s *Server) setupMysql() {
 		return
 	}
 
-	gtid, _ := s.mysql.GetGTID()
+	gtid, _ := s.mysql.GetGTID(0)
 	log.Info("server.mysql.gtid:%+v", gtid)
 
 	log.Info("server.mysql.set.to.READONLY")

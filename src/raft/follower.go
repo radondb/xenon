@@ -153,7 +153,7 @@ func (r *Follower) processHeartbeatRequest(req *model.RaftRPCRequest) *model.Raf
 
 		// MySQL4: change master
 		if r.getLeader() != req.GetFrom() {
-			gtid, err := r.mysql.GetGTID()
+			gtid, err := r.mysql.GetGTID(0)
 			if err == nil {
 				r.WARNING("get.heartbeat.my.gtid.is:%v", gtid)
 			}
@@ -235,7 +235,7 @@ func (r *Follower) processRequestVoteRequest(req *model.RaftRPCRequest) *model.R
 			r.ERROR("mysql.StopSlaveIOThread.error[%+v]", err)
 		}
 
-		greater, thisGTID, err := r.mysql.GTIDGreaterThan(&req.GTID)
+		greater, thisGTID, err := r.mysql.GTIDGreaterThan(&req.GTID, nil)
 		if err != nil {
 			r.ERROR("process.requestvote.get.gtid.error[%v].ret.ErrorMySQLDown", err)
 			rsp.RetCode = model.ErrorMySQLDown
@@ -406,7 +406,7 @@ func (r *Follower) setMySQLAsync() {
 		r.WARNING("prepareAsync.done")
 
 		// Log the gtid info.
-		if gtid, err := r.mysql.GetGTID(); err != nil {
+		if gtid, err := r.mysql.GetGTID(0); err != nil {
 			r.ERROR("init.get.mysql.gtid.error:%v", err)
 		} else {
 			r.WARNING("init.my.gtid.is:%v", gtid)

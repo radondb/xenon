@@ -97,7 +97,7 @@ func (m *MysqlRPC) Status(req *model.MysqlStatusRPCRequest, rsp *model.MysqlStat
 	var err error
 
 	rsp.RetCode = model.OK
-	if rsp.GTID, err = m.mysql.GetGTID(); err != nil {
+	if rsp.GTID, err = m.mysql.GetGTID(0); err != nil {
 		rsp.RetCode = err.Error()
 		return nil
 	}

@@ -85,11 +85,11 @@ func (my *MysqlBase) SetReadOnly(db *sql.DB, readonly bool) error {
 
 // GetSlaveGTID gets the gtid from the default channel.
 // Here, We just show the default slave channel.
-func (my *MysqlBase) GetSlaveGTID(db *sql.DB) (*model.GTID, error) {
+func (my *MysqlBase) GetSlaveGTID(db *sql.DB, incTimeout int) (*model.GTID, error) {
 	gtid := &model.GTID{}
 
 	query := "SHOW SLAVE STATUS"
-	rows, err := QueryWithTimeout(db, reqTimeout, query)
+	rows, err := QueryWithTimeout(db, reqTimeout+incTimeout, query)
 	if err != nil {
 		return gtid, err
 	}
@@ -113,11 +113,11 @@ func (my *MysqlBase) GetSlaveGTID(db *sql.DB) (*model.GTID, error) {
 }
 
 // GetMasterGTID used to get binlog info from master.
-func (my *MysqlBase) GetMasterGTID(db *sql.DB) (*model.GTID, error) {
+func (my *MysqlBase) GetMasterGTID(db *sql.DB, incTimeout int) (*model.GTID, error) {
 	gtid := &model.GTID{}
 
 	query := "SHOW MASTER STATUS"
-	rows, err := QueryWithTimeout(db, reqTimeout, query)
+	rows, err := QueryWithTimeout(db, reqTimeout+incTimeout, query)
 	if err != nil {
 		return nil, err
 	}

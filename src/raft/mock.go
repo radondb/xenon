@@ -207,7 +207,7 @@ func (r *Raft) mockLeaderProcessHeartbeatRequest(req *model.RaftRPCRequest) *mod
 
 // mock leader process requestvote request from other candidate
 // nop here, so our leader state won't be changed(degrade)
-func (r *Raft) mockLeaderProcessRequestVoteRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
+func (r *Raft) mockLeaderProcessRequestVoteRequest(raftReqVoteCnt *int, req *model.RaftRPCRequest) *model.RaftRPCResponse {
 	rsp := model.NewRaftRPCResponse(model.ErrorInvalidRequest)
 	rsp.Raft.From = r.getID()
 	rsp.Raft.ViewID = r.getViewID()

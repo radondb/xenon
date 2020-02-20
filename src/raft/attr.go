@@ -155,7 +155,7 @@ func (r *Raft) getEpochID() uint64 {
 }
 
 func (r *Raft) getGTID() (model.GTID, error) {
-	return r.mysql.GetGTID()
+	return r.mysql.GetGTID(0)
 }
 
 func (r *Raft) getLeader() string {

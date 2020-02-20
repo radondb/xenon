@@ -74,7 +74,8 @@ func TestMonitor(t *testing.T) {
 	conf := config.DefaultBackupConfig()
 	// 100ms
 	conf.MysqldMonitorInterval = 100
-	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
+	conf.DefaultsFile = "/etc/my.cnf"
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	mysqld := NewMysqld(conf, log)
 
 	{
