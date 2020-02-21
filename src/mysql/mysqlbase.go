@@ -43,8 +43,8 @@ var (
 	}
 
 	_ MysqlHandler = &MysqlBase{}
-	// timeout is 5s
-	reqTimeout = 1000 * 5
+	// timeout is 10s
+	reqTimeout = 10000
 )
 
 // MysqlBase tuple.
