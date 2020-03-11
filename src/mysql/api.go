@@ -425,13 +425,13 @@ func (m *Mysql) DisableSemiSyncMaster() error {
 	return m.mysqlHandler.DisableSemiSyncMaster(db)
 }
 
-// SetSemiSyncMasterDefault useed to set semi-sync master timeout = default.
-func (m *Mysql) SetSemiSyncMasterDefault() error {
+// SetSemiSyncMasterTimeout used to set semi-sync master timeout.
+func (m *Mysql) SetSemiSyncMasterTimeout(timeout uint64) error {
 	db, err := m.getDB()
 	if err != nil {
 		return err
 	}
-	return m.mysqlHandler.SetSemiSyncMasterDefault(db)
+	return m.mysqlHandler.SetSemiSyncMasterTimeout(db, timeout)
 }
 
 // CheckUserExists used to check the user exists or not.

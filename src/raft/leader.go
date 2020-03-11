@@ -51,6 +51,11 @@ type Leader struct {
 	processPingRequestHandler func(*model.RaftRPCRequest) *model.RaftRPCResponse
 }
 
+const (
+	semisyncTimeoutFor2Nodes = 300000              // 5 minutes
+	semisyncTimeout          = 1000000000000000000 // for 3 or more nodes
+)
+
 // NewLeader creates new Leader.
 func NewLeader(r *Raft) *Leader {
 	L := &Leader{
@@ -488,8 +493,8 @@ func (r *Leader) checkSemiSync() {
 	min := 3
 	cur := r.getMembers()
 	if cur < min {
-		if err := r.mysql.SetSemiSyncMasterDefault(); err != nil {
-			r.ERROR("mysql.set.semi-sync.master.timeout.default.error[%v]", err)
+		if err := r.mysql.SetSemiSyncMasterTimeout(semisyncTimeoutFor2Nodes); err != nil {
+			r.ERROR("mysql.set.semi-sync.master.timeout.to.default.error[%v]", err)
 		}
 	} else {
 		if err := r.mysql.EnableSemiSyncMaster(); err != nil {
@@ -497,6 +502,9 @@ func (r *Leader) checkSemiSync() {
 		}
 		if err := r.mysql.SetSemiWaitSlaveCount((cur - 1) / 2); err != nil {
 			r.ERROR("mysql.set.semi.wait.slave.count.error[%v]", err)
+		}
+		if err := r.mysql.SetSemiSyncMasterTimeout(semisyncTimeout); err != nil {
+			r.ERROR("mysql.set.semi.sync.master.timeout.to.infinite.error[%v]", err)
 		}
 	}
 }
