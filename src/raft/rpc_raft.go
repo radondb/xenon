@@ -69,3 +69,15 @@ func (r *RaftRPC) DisablePurgeBinlog(req *model.RaftStatusRPCRequest, rsp *model
 	r.raft.SetSkipPurgeBinlog(true)
 	return nil
 }
+
+// EnableCheckSemiSync rpc.
+func (r *RaftRPC) EnableCheckSemiSync(req *model.RaftStatusRPCRequest, rsp *model.RaftStatusRPCResponse) error {
+	r.raft.SetSkipCheckSemiSync(false)
+	return nil
+}
+
+// DisableCheckSemiSync rpc.
+func (r *RaftRPC) DisableCheckSemiSync(req *model.RaftStatusRPCRequest, rsp *model.RaftStatusRPCResponse) error {
+	r.raft.SetSkipCheckSemiSync(true)
+	return nil
+}

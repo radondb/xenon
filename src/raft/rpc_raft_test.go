@@ -185,3 +185,75 @@ func TestRaftRPCPurgeBinlog(t *testing.T) {
 		assert.NotEqual(t, want, got)
 	}
 }
+
+func TestRaftRPCCheckSemiSync(t *testing.T) {
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	port := common.RandomPort(8000, 9000)
+	names, rafts, scleanup := MockRafts(log, port, 3, -1)
+	defer scleanup()
+	whoisleader := 2
+
+	// 1. set rafts GTID
+	//    1.0 rafts[0]  with MockGTIDB{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
+	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
+	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123}
+	{
+		rafts[0].mysql.SetMysqlHandler(mysql.NewMockGTIDX1())
+		rafts[1].mysql.SetMysqlHandler(mysql.NewMockGTIDX3())
+		rafts[2].mysql.SetMysqlHandler(mysql.NewMockGTIDX5())
+	}
+
+	// 2. Start 3 rafts state as FOLLOWER
+	for _, raft := range rafts {
+		raft.Start()
+	}
+
+	// wait leader eggs
+	{
+		MockWaitLeaderEggs(rafts, 1)
+	}
+	// check(default is enable)
+	{
+		MockWaitLeaderEggs(rafts, 0)
+		MockWaitLeaderEggs(rafts, 0)
+		check := rafts[whoisleader].skipCheckSemiSync
+		assert.Equal(t, false, check)
+	}
+
+	// disable check semi-sync
+	{
+		c, cleanup := MockGetClient(t, names[whoisleader])
+		defer cleanup()
+
+		method := model.RPCRaftDisableCheckSemiSync
+		req := model.NewRaftStatusRPCRequest()
+		rsp := model.NewRaftStatusRPCResponse(model.OK)
+		err := c.Call(method, req, rsp)
+		assert.Nil(t, err)
+
+		// check
+		MockWaitLeaderEggs(rafts, 0)
+		MockWaitLeaderEggs(rafts, 0)
+		got := rafts[whoisleader].skipCheckSemiSync
+		assert.Equal(t, true, got)
+	}
+
+	// enable check semi-sync
+	{
+		MockWaitLeaderEggs(rafts, 1)
+		c, cleanup := MockGetClient(t, names[whoisleader])
+		defer cleanup()
+
+		method := model.RPCRaftEnableCheckSemiSync
+		req := model.NewRaftStatusRPCRequest()
+		rsp := model.NewRaftStatusRPCResponse(model.OK)
+		err := c.Call(method, req, rsp)
+		assert.Nil(t, err)
+
+		// check
+		MockWaitLeaderEggs(rafts, 0)
+		MockWaitLeaderEggs(rafts, 0)
+		got := rafts[whoisleader].skipCheckSemiSync
+		assert.Equal(t, false, got)
+	}
+}

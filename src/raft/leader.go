@@ -490,6 +490,11 @@ func (r *Leader) checkSemiSyncStop() {
 
 // Disable the semi-sync if the nodes number less than 3.
 func (r *Leader) checkSemiSync() {
+	if r.skipCheckSemiSync {
+		r.WARNING("check.semi-sync.skipped[skipCheckSemiSync is true]")
+		return
+	}
+
 	min := 3
 	cur := r.getMembers()
 	if cur < min {

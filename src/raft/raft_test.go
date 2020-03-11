@@ -1407,8 +1407,26 @@ func TestRaftLeaderCheckSemiSync(t *testing.T) {
 		assert.Equal(t, want, got)
 		assert.Equal(t, 2, whoisleader)
 
-		// wait for check semi-sync to be invoked
+		// wait for check semi-sync to be invoked and skipCheckSemiSync changed
 		time.Sleep(time.Millisecond * time.Duration(rafts[0].getElectionTimeout()*16))
+		assert.Equal(t, false, rafts[2].skipCheckSemiSync)
+	}
+
+	// disable check semi-sync
+	{
+		rafts[2].SetSkipCheckSemiSync(true)
+		time.Sleep(time.Millisecond * time.Duration(rafts[0].getElectionTimeout()*16))
+		assert.Equal(t, true, rafts[2].skipCheckSemiSync)
+	}
+
+	// enable check semi-sync
+	{
+		rafts[2].SetSkipCheckSemiSync(false)
+
+		MockWaitLeaderEggs(rafts, 0)
+		MockWaitLeaderEggs(rafts, 0)
+
+		assert.Equal(t, false, rafts[2].skipCheckSemiSync)
 	}
 }
 
@@ -1918,14 +1936,14 @@ func TestRaftElectionUnderLearnerInMinority(t *testing.T) {
 //     1.1 rafts[1]  with MockGTID_X3{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
 //     1.2 rafts[2]  with MockGTID_X3{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
 // 2.  start rafts[0] state as CANDIDATE
-// 3.  wait 20 times the election timeout
+// 3.  wait 30 times the election timeout
 // 4.  start rafts[1] as FOLLOWER and rafts[2] as IDLE
 //                   InvalidGITD
 //     rafts[0]: C --------------> F --------------> C -> ... -> F
 //                                    InvalidViewID
 //     rafts[1]: F --------------> C --------------> F -> ... -> C
 
-// 5.  wait 4 times the election timeout
+// 5.  wait 8 times the election timeout
 // 6.  check if rafts[1] is the leader
 func TestRaftElectionUnderFollowerAndCandidateAlternate(t *testing.T) {
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
@@ -1946,8 +1964,8 @@ func TestRaftElectionUnderFollowerAndCandidateAlternate(t *testing.T) {
 		MockStateTransition(rafts[0], CANDIDATE)
 	}
 
-	// 3. wait 20 times the election timeout
-	time.Sleep(time.Millisecond * time.Duration(rafts[0].getElectionTimeout()*20))
+	// 3. wait 30 times the election timeout
+	time.Sleep(time.Millisecond * time.Duration(rafts[0].getElectionTimeout()*30))
 
 	// 4. start rafts[1] as FOLLOWER and rafts[2] as IDLE
 	{
@@ -1958,8 +1976,8 @@ func TestRaftElectionUnderFollowerAndCandidateAlternate(t *testing.T) {
 		MockStateTransition(rafts[2], IDLE)
 	}
 
-	// 5. wait 4 times the election timeout
-	time.Sleep(time.Millisecond * time.Duration(rafts[0].getElectionTimeout()*4))
+	// 5. wait 8 times the election timeout
+	time.Sleep(time.Millisecond * time.Duration(rafts[0].getElectionTimeout()*8))
 
 	//6. check if rafts[1] is the leader
 	{

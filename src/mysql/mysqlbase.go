@@ -271,7 +271,7 @@ func (my *MysqlBase) DisableSemiSyncMaster(db *sql.DB) error {
 	return ExecuteWithTimeout(db, reqTimeout, cmds)
 }
 
-// SetSemiSyncMasterTimeout useed to set semi-sync master timeout
+// SetSemiSyncMasterTimeout used to set semi-sync master timeout
 func (my *MysqlBase) SetSemiSyncMasterTimeout(db *sql.DB, timeout uint64) error {
 	cmds := fmt.Sprintf("SET GLOBAL rpl_semi_sync_master_timeout=%d", timeout)
 	return ExecuteWithTimeout(db, reqTimeout, cmds)

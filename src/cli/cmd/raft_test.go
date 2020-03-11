@@ -153,5 +153,19 @@ func TestCLIRaftCommand(t *testing.T) {
 			_, err := executeCommand(cmd, "enablepurgebinlog")
 			assert.Nil(t, err)
 		}
+
+		// disable check semi-sync
+		{
+			cmd := NewRaftCommand()
+			_, err := executeCommand(cmd, "disablechecksemisync")
+			assert.Nil(t, err)
+		}
+
+		// enable check semi-sync
+		{
+			cmd := NewRaftCommand()
+			_, err := executeCommand(cmd, "enablechecksemisync")
+			assert.Nil(t, err)
+		}
 	}
 }

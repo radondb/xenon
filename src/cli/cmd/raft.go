@@ -32,6 +32,8 @@ func NewRaftCommand() *cobra.Command {
 	cmd.AddCommand(NewRaftStatusCommand())
 	cmd.AddCommand(NewRaftEnablePurgeBinlogCommand())
 	cmd.AddCommand(NewRaftDisablePurgeBinlogCommand())
+	cmd.AddCommand(NewRaftEnableCheckSemiSyncCommand())
+	cmd.AddCommand(NewRaftDisableCheckSemiSyncCommand())
 
 	return cmd
 }
@@ -298,5 +300,59 @@ func raftDisablePurgeBinlogCommandFn(cmd *cobra.Command, args []string) {
 		err = callx.RaftDisablePurgeBinlogRPC(self)
 		ErrorOK(err)
 		log.Warning("[%v].disable.purge.binlog.done", self)
+	}
+}
+
+func NewRaftEnableCheckSemiSyncCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "enablechecksemisync",
+		Short: "enable leader to check semi-sync(default)",
+		Run:   raftEnableCheckSemiSyncCommandFn,
+	}
+
+	return cmd
+}
+
+func raftEnableCheckSemiSyncCommandFn(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		ErrorOK(fmt.Errorf("too.many.args"))
+	}
+
+	// send enable
+	{
+		conf, err := GetConfig()
+		ErrorOK(err)
+		self := conf.Server.Endpoint
+		log.Warning("[%v].prepare.to.enable.check.semi-sync", self)
+		err = callx.RaftEnableCheckSemiSyncRPC(self)
+		ErrorOK(err)
+		log.Warning("[%v].enable.check.semi-sync.done", self)
+	}
+}
+
+func NewRaftDisableCheckSemiSyncCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "disablechecksemisync",
+		Short: "disable leader to check semi-sync",
+		Run:   raftDisableCheckSemiSyncCommandFn,
+	}
+
+	return cmd
+}
+
+func raftDisableCheckSemiSyncCommandFn(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		ErrorOK(fmt.Errorf("too.many.args"))
+	}
+
+	// send enable
+	{
+		conf, err := GetConfig()
+		ErrorOK(err)
+		self := conf.Server.Endpoint
+		log.Warning("[%v].prepare.to.disable.check.semi-sync", self)
+		err = callx.RaftDisableCheckSemiSyncRPC(self)
+		ErrorOK(err)
+		log.Warning("[%v].disable.check.semi-sync.done", self)
 	}
 }
