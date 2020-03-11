@@ -15,12 +15,14 @@ const (
 	RAFTMYSQL_WAITUNTILAFTERGTID RAFTMYSQL_STATUS = "WaitUntilAfterGTID"
 )
 const (
-	RPCRaftPing               = "RaftRPC.Ping"
-	RPCRaftHeartbeat          = "RaftRPC.Heartbeat"
-	RPCRaftRequestVote        = "RaftRPC.RequestVote"
-	RPCRaftStatus             = "RaftRPC.Status"
-	RPCRaftEnablePurgeBinlog  = "RaftRPC.EnablePurgeBinlog"
-	RPCRaftDisablePurgeBinlog = "RaftRPC.DisablePurgeBinlog"
+	RPCRaftPing                 = "RaftRPC.Ping"
+	RPCRaftHeartbeat            = "RaftRPC.Heartbeat"
+	RPCRaftRequestVote          = "RaftRPC.RequestVote"
+	RPCRaftStatus               = "RaftRPC.Status"
+	RPCRaftEnablePurgeBinlog    = "RaftRPC.EnablePurgeBinlog"
+	RPCRaftDisablePurgeBinlog   = "RaftRPC.DisablePurgeBinlog"
+	RPCRaftEnableCheckSemiSync  = "RaftRPC.EnableCheckSemiSync"
+	RPCRaftDisableCheckSemiSync = "RaftRPC.DisableCheckSemiSync"
 )
 
 // raft

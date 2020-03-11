@@ -73,22 +73,24 @@ type Raft struct {
 	idlePeers           map[string]*Peer // all SuperIDLE peers
 	stats               model.RaftStats
 	skipPurgeBinlog     bool // if true, purge binlog will skipped
+	skipCheckSemiSync   bool // if true, check semi-sync will skipped
 	isBrainSplit        bool // if true, follower can upgrade to candidate
 }
 
 // NewRaft creates the new raft.
 func NewRaft(id string, conf *config.RaftConfig, log *xlog.Log, mysql *mysql.Mysql) *Raft {
 	r := &Raft{
-		id:        id,
-		conf:      conf,
-		log:       log,
-		cmd:       common.NewLinuxCommand(log),
-		mysql:     mysql,
-		leader:    noLeader,
-		state:     FOLLOWER,
-		meta:      &RaftMeta{},
-		peers:     make(map[string]*Peer),
-		idlePeers: make(map[string]*Peer),
+		id:                id,
+		conf:              conf,
+		log:               log,
+		cmd:               common.NewLinuxCommand(log),
+		mysql:             mysql,
+		leader:            noLeader,
+		state:             FOLLOWER,
+		meta:              &RaftMeta{},
+		peers:             make(map[string]*Peer),
+		idlePeers:         make(map[string]*Peer),
+		skipCheckSemiSync: false,
 	}
 
 	// state handler
@@ -369,4 +371,9 @@ func (r *Raft) resetCheckVotesTimeout() {
 // SetSkipPurgeBinlog used to set purge binlog or not.
 func (r *Raft) SetSkipPurgeBinlog(v bool) {
 	r.skipPurgeBinlog = v
+}
+
+// SetSkipCheckSemiSync used to set check semi-sync or not.
+func (r *Raft) SetSkipCheckSemiSync(v bool) {
+	r.skipCheckSemiSync = v
 }

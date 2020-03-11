@@ -645,6 +645,36 @@ func RaftDisablePurgeBinlogRPC(node string) error {
 	return err
 }
 
+func RaftEnableCheckSemiSyncRPC(node string) error {
+	cli, cleanup, err := GetClient(node)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
+	method := model.RPCRaftEnableCheckSemiSync
+	req := model.NewRaftStatusRPCRequest()
+	rsp := model.NewRaftStatusRPCResponse(model.OK)
+	err = cli.Call(method, req, rsp)
+
+	return err
+}
+
+func RaftDisableCheckSemiSyncRPC(node string) error {
+	cli, cleanup, err := GetClient(node)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
+	method := model.RPCRaftDisableCheckSemiSync
+	req := model.NewRaftStatusRPCRequest()
+	rsp := model.NewRaftStatusRPCResponse(model.OK)
+	err = cli.Call(method, req, rsp)
+
+	return err
+}
+
 // mysql
 func WaitMysqlWorkingRPC(node string) error {
 	cli, cleanup, err := GetClient(node)
