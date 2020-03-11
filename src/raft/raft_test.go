@@ -1354,6 +1354,65 @@ func TestRaftLeaderPurgeBinlog(t *testing.T) {
 }
 
 // TEST EFFECTS:
+// test the leader check semi-sync
+//
+// TEST PROCESSES:
+// 1. set rafts GTID
+//    1.0 rafts[0]  with MockGTID_X1{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
+//    1.1 rafts[1]  with MockGTID_X3{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
+//    1.2 rafts[2]  with MockGTID_X5{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123}
+// 2. Start 3 rafts state as FOLLOWER
+// 3. wait rafts[2] elected as leader
+// 4. check rafts[2] skipCheckSemiSync
+// 5. Stop all rafts
+func TestRaftLeaderCheckSemiSync(t *testing.T) {
+	conf := config.DefaultRaftConfig()
+	conf.MetaDatadir = "/tmp/"
+
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	port := common.RandomPort(8000, 9000)
+	_, rafts, cleanup := MockRaftsWithConfig(log, conf, port, 3, -1)
+	defer cleanup()
+
+	// 1. set rafts GTID
+	//    1.0 rafts[0]  with MockGTIDB{Master_Log_File = "mysql-bin.000001", Read_Master_Log_Pos = 123}
+	//    1.1 rafts[1]  with MockGTIDB{Master_Log_File = "mysql-bin.000003", Read_Master_Log_Pos = 123}
+	//    1.2 rafts[2]  with MockGTIDC{Master_Log_File = "mysql-bin.000005", Read_Master_Log_Pos = 123}
+	{
+		rafts[0].mysql.SetMysqlHandler(mysql.NewMockGTIDX1())
+		rafts[1].mysql.SetMysqlHandler(mysql.NewMockGTIDX3())
+		rafts[2].mysql.SetMysqlHandler(mysql.NewMockGTIDX5())
+	}
+
+	// 2. Start 3 rafts state as FOLLOWER
+	for _, raft := range rafts {
+		raft.Start()
+	}
+
+	// leader
+	{
+		var got State
+		var whoisleader int
+
+		MockWaitLeaderEggs(rafts, 1)
+		MockWaitLeaderEggs(rafts, 0)
+		want := (LEADER + FOLLOWER + FOLLOWER)
+		for i, raft := range rafts {
+			got += raft.getState()
+			if raft.getState() == LEADER {
+				whoisleader = i
+			}
+		}
+
+		assert.Equal(t, want, got)
+		assert.Equal(t, 2, whoisleader)
+
+		// wait for check semi-sync to be invoked
+		time.Sleep(time.Millisecond * time.Duration(rafts[0].getElectionTimeout()*16))
+	}
+}
+
+// TEST EFFECTS:
 // test the follower change master to failed
 //
 // TEST PROCESSES:

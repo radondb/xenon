@@ -45,7 +45,7 @@ type MockGTID struct {
 	DisableSemiSyncMasterFn    func(*sql.DB) error
 	SelectSysVarFn             func(*sql.DB, string) (string, error)
 	SetSemiWaitSlaveCountFn    func(*sql.DB, int) error
-	SetSemiSyncMasterDefaultFn func(*sql.DB) error
+	SetSemiSyncMasterTimeoutFn func(*sql.DB, uint64) error
 
 	// Users
 	GetUserFn                     func(*sql.DB) ([]model.MysqlUser, error)
@@ -256,9 +256,9 @@ func (mogtid *MockGTID) DisableSemiSyncMaster(db *sql.DB) error {
 	return mogtid.DisableSemiSyncMasterFn(db)
 }
 
-// SetSemiSyncMasterDefault mock.
-func (mogtid *MockGTID) SetSemiSyncMasterDefault(db *sql.DB) error {
-	return mogtid.SetSemiSyncMasterDefaultFn(db)
+// SetSemiSyncMasterTimeout mock.
+func (mogtid *MockGTID) SetSemiSyncMasterTimeout(db *sql.DB, timeout uint64) error {
+	return mogtid.SetSemiSyncMasterTimeoutFn(db, timeout)
 }
 
 // DefaultSelectSysVar mock.
@@ -281,8 +281,8 @@ func (mogtid *MockGTID) SetSemiWaitSlaveCount(db *sql.DB, count int) error {
 	return mogtid.SetSemiWaitSlaveCountFn(db, count)
 }
 
-// SetSemiSyncMasterDefault mock
-func SetSemiSyncMasterDefault(db *sql.DB) error {
+// SetSemiSyncMasterTimeout mock
+func SetSemiSyncMasterTimeout(db *sql.DB, timeout uint64) error {
 	return nil
 }
 
@@ -409,7 +409,7 @@ func defaultMockGTID() *MockGTID {
 	mock.DisableSemiSyncMasterFn = DefaultDisableSemiSyncMaster
 	mock.SelectSysVarFn = DefaultSelectSysVar
 	mock.SetSemiWaitSlaveCountFn = DefaultSetSemiWaitSlaveCount
-	mock.SetSemiSyncMasterDefaultFn = SetSemiSyncMasterDefault
+	mock.SetSemiSyncMasterTimeoutFn = SetSemiSyncMasterTimeout
 
 	// Users.
 	mock.CheckUserExistsFn = DefaultCheckUserExists
