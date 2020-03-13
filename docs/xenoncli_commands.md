@@ -9,6 +9,8 @@ Table of Contents
          * [1.3 Check cluster raft status](#13-check-cluster-raft-status)
          * [1.4 Check cluster mysql status](#14-check-cluster-mysql-status)
          * [1.5 Check cluster gtid status](#15-check-cluster-gtid-status)
+         * [1.6 Add cluster idle node](#16-add-cluster-idle-node)
+         * [1.7 Check cluster status again](#17-check-cluster-status-again)
       * [2 MySQL Operation](#2-mysql-operation)
       * [3 MySQL Stack Info](#3-mysql-stack-info)
       * [4 Raft  Operation](#4-raft-operation)
@@ -51,11 +53,13 @@ Usage:
 
 Available Commands:
   add         add peers to leader(if there is no leader, add to local)
+  addidle     add idle peers to leader(if there is no leader, add to local)
   gtid        show cluster gtid status
   log         merge cluster xenon.log from logdir
   mysql       show cluster mysql status
   raft        show cluster raft status
   remove      remove peers from leader(if there is no leader, remove from local)
+  removeidle  remove idle peers from leader(if there is no leader, remove from local)
   status      show cluster status
   xenon       show cluster xenon status
 ```
@@ -138,6 +142,50 @@ $./xenoncli cluster gtid
 (3 rows)
 ```
 
+### 1.6. Add cluster idle node
+
+Assuming cluster has 2 idle nodes which are only used for replication and do not participate in the election:
+```
+xenon-4: 192.168.0.6:8801
+xenon-5: 192.168.0.7:8801
+```
+
+You need add `"super-idle":true` in xenon.json for xenon-4 and xenon-5:
+```json
+"raft": {
+"super-idle": true,
+}
+```
+
+Then executing follow command:
+```
+./xenoncli cluster addidle 192.168.0.6:8801,192.168.0.7:8801
+```
+
+### 1.7. Check cluster status again
+```
+$ ./xenoncli cluster status
++------------------+-------------------------------+---------+---------+----------------------------+---------------------+----------------+------------------+
+|        ID        |             Raft              | Mysqld  | Monitor |           Backup           |        Mysql        | IO/SQL_RUNNING |     MyLeader     |
++------------------+-------------------------------+---------+---------+----------------------------+---------------------+----------------+------------------+
+| 192.168.0.2:8801 | [ViewID:1 EpochID:0]@FOLLOWER | RUNNING | ON      | state:[NONE]␤              | [ALIVE] [READONLY]  | [true/true]    | 192.168.0.5:8801 |
+|                  |                               |         |         | LastError:␤                |                     |                |                  |
++------------------+-------------------------------+---------+---------+----------------------------+---------------------+----------------+------------------+
+| 192.168.0.3:8801 | [ViewID:1 EpochID:0]@FOLLOWER | RUNNING | ON      | state:[NONE]␤              | [ALIVE] [READONLY]  | [true/true]    | 192.168.0.5:8801 |
+|                  |                               |         |         | LastError:␤                |                     |                |                  |
++------------------+-------------------------------+---------+---------+----------------------------+---------------------+----------------+------------------+
+| 192.168.0.5:8801 | [ViewID:1 EpochID:0]@LEADER   | RUNNING | ON      | state:[NONE]␤              | [ALIVE] [READWRITE] | [true/true]    | 192.168.0.5:8801 |
+|                  |                               |         |         | LastError:␤                |                     |                |                  |
++------------------+-------------------------------+---------+---------+----------------------------+---------------------+----------------+------------------+
+| 192.168.0.6:8801 | [ViewID:1 EpochID:0]@IDLE     | RUNNING | ON      | state:[NONE]␤              | [ALIVE] [READONLY]  | [true/true]    | 192.168.0.5:8801 |
+|                  |                               |         |         | LastError:␤                |                     |                |                  |
++------------------+-------------------------------+---------+---------+----------------------------+---------------------+----------------+------------------+
+| 192.168.0.7:8801 | [ViewID:1 EpochID:0]@IDLE     | RUNNING | ON      | state:[NONE]␤              | [ALIVE] [READONLY]  | [true/true]    | 192.168.0.5:8801 |
+|                  |                               |         |         | LastError:␤                |                     |                |                  |
++------------------+-------------------------------+---------+---------+----------------------------+---------------------+----------------+------------------+
+(5 rows)
+```
+
 ## 2 MySQL Operation
 
 ```
@@ -212,15 +260,18 @@ Usage:
   xenoncli raft [command]
 
 Available Commands:
-  add                add peers to local
-  disable            enable the node out control of raft
-  disablepurgebinlog disable leader to purge binlog
-  enable             enable the node in control of raft
-  enablepurgebinlog  enable leader to purge binlog(default)
-  nodes              show raft nodes
-  remove             remove peers from local
-  status             status in JSON(state(LEADER/CANDIDATE/FOLLOWER/IDLE))
-  trytoleader        propose this raft as leader
+  add                  add peers to local
+  disable              enable the node out control of raft
+  disablechecksemisync disable leader to check semi-sync
+  disablepurgebinlog   disable leader to purge binlog
+  enable               enable the node in control of raft
+  enablechecksemisync  enable leader to check semi-sync(default)
+  enablepurgebinlog    enable leader to purge binlog(default)
+  nodes                show raft nodes
+  remove               remove peers from local
+  status               status in JSON(state(LEADER/CANDIDATE/FOLLOWER/IDLE/INVALID))
+  trytoleader          propose this raft as leader
+
 ```
 
 
