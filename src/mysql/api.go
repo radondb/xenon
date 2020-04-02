@@ -52,7 +52,7 @@ func (m *Mysql) Promotable() bool {
 			return false
 		}
 		//Slave_IO_Running = Yes, So master is alive
-		if (gtid.Slave_SQL_Running) {
+		if (gtid.Slave_IO_Running) {
 			log.Warning("Maybe Master is alive. Slave IO_thread not timeout (slave_net_timeout)")
 			return false
 		}
