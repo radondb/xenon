@@ -283,7 +283,7 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 		cmds :="bash"
 		args := []string{
 			"-c",
-			fmt.Sprintf("chown -R mysql:mysql %s", datadir)
+			fmt.Sprintf("chown -R mysql:mysql %s", datadir),
 		}
 		_, err := common.RunCommand(cmds, args...)
 		ErrorOK(err)
