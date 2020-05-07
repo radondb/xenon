@@ -39,7 +39,7 @@ func TestBackupCommand(t *testing.T) {
 		got := backup.backupCommands(true, req)
 		want := []string{
 			"-c",
-			"./innobackupex --defaults-file=/etc/my3306.cnf --host=localhost --port=3306 --user=root --throttle=100 --parallel=2 --stream=xbstream ./ | ssh -o 'StrictHostKeyChecking=no' user@127.0.0.1 -p 22 \"/u01/xtrabackup_20161216/xbstream -x -C /u01/backup\"",
+			"./xtrabackup --defaults-file=/etc/my3306.cnf --host=localhost --port=3306 --user=root --backup --throttle=100 --parallel=2 --stream=xbstream --target-dir=./ | ssh -o 'StrictHostKeyChecking=no' user@127.0.0.1 -p 22 \"/u01/xtrabackup_20161216/xbstream -x -C /u01/backup\"",
 		}
 		assert.Equal(t, want, got)
 
@@ -47,7 +47,7 @@ func TestBackupCommand(t *testing.T) {
 		got = backup.backupCommands(false, req)
 		want = []string{
 			"-c",
-			"./innobackupex --defaults-file=/etc/my3306.cnf --host=localhost --port=3306 --user=root --throttle=100 --parallel=2 --stream=xbstream ./ | sshpass -p sshpasswd ssh -o 'StrictHostKeyChecking=no' user@127.0.0.1 -p 22 \"/u01/xtrabackup_20161216/xbstream -x -C /u01/backup\"",
+			"./xtrabackup --defaults-file=/etc/my3306.cnf --host=localhost --port=3306 --user=root --backup --throttle=100 --parallel=2 --stream=xbstream --target-dir=./ | sshpass -p sshpasswd ssh -o 'StrictHostKeyChecking=no' user@127.0.0.1 -p 22 \"/u01/xtrabackup_20161216/xbstream -x -C /u01/backup\"",
 		}
 		assert.Equal(t, want, got)
 	}
@@ -58,14 +58,14 @@ func TestBackupCommand(t *testing.T) {
 		got := backup.backupCommands(true, req)
 		want := []string{
 			"-c",
-			"./innobackupex --defaults-file=/etc/my3306.cnf --host=localhost --port=3306 --user=root --password=123 --throttle=100 --parallel=2 --stream=xbstream ./ | ssh -o 'StrictHostKeyChecking=no' user@127.0.0.1 -p 22 \"/u01/xtrabackup_20161216/xbstream -x -C /u01/backup\"",
+			"./xtrabackup --defaults-file=/etc/my3306.cnf --host=localhost --port=3306 --user=root --password=123 --backup --throttle=100 --parallel=2 --stream=xbstream --target-dir=./ | ssh -o 'StrictHostKeyChecking=no' user@127.0.0.1 -p 22 \"/u01/xtrabackup_20161216/xbstream -x -C /u01/backup\"",
 		}
 		assert.Equal(t, want, got)
 
 		got = backup.backupCommands(false, req)
 		want = []string{
 			"-c",
-			"./innobackupex --defaults-file=/etc/my3306.cnf --host=localhost --port=3306 --user=root --password=123 --throttle=100 --parallel=2 --stream=xbstream ./ | sshpass -p sshpasswd ssh -o 'StrictHostKeyChecking=no' user@127.0.0.1 -p 22 \"/u01/xtrabackup_20161216/xbstream -x -C /u01/backup\"",
+			"./xtrabackup --defaults-file=/etc/my3306.cnf --host=localhost --port=3306 --user=root --password=123 --backup --throttle=100 --parallel=2 --stream=xbstream --target-dir=./ | sshpass -p sshpasswd ssh -o 'StrictHostKeyChecking=no' user@127.0.0.1 -p 22 \"/u01/xtrabackup_20161216/xbstream -x -C /u01/backup\"",
 		}
 		assert.Equal(t, want, got)
 
@@ -100,7 +100,7 @@ func TestApplyLog(t *testing.T) {
 		got := backup.applylogCommands(req)
 		want := []string{
 			"-c",
-			"./innobackupex --defaults-file=/etc/my3306.cnf --use-memory=2GB --apply-log /tmp/xtrabackup_test",
+			"./xtrabackup --defaults-file=/etc/my3306.cnf --use-memory=2GB --prepare --target-dir=/tmp/xtrabackup_test",
 		}
 		assert.Equal(t, want, got)
 	}
@@ -115,7 +115,7 @@ func TestApplyLog(t *testing.T) {
 	// test applylog
 	{
 		got := backup.getLastError()
-		want := "cmd.outs.[completed OK!].found[0]!=expects[2]"
+		want := "cmd.outs.[completed OK!].found[0]!=expects[1]"
 		assert.Equal(t, want, got)
 	}
 }
