@@ -159,7 +159,9 @@ func (r *Follower) processHeartbeatRequest(req *model.RaftRPCRequest) *model.Raf
 			}
 
 			// before change master need check gtid, if local gtid bigger than remote gtid degrade to INVALID
-			r.degradeToInvalid(&gtid, &req.GTID)
+			if r.getMembers() > 2 {
+				r.degradeToInvalid(&gtid, &req.GTID)
+			}
 
 			r.WARNING("get.heartbeat.from[N:%v, V:%v, E:%v].change.mysql.master", req.GetFrom(), req.GetViewID(), req.GetEpochID())
 

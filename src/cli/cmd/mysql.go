@@ -465,7 +465,7 @@ func mysqlCancelBackupCommandFn(cmd *cobra.Command, args []string) {
 // create normal user
 func NewMysqlCreateUserCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "createuser <user> <password>",
+		Use:   "createuser <user> <password> <YES/NO>",
 		Short: "create mysql normal user",
 		Run:   mysqlCreateUserCommandFn,
 	}
@@ -474,12 +474,13 @@ func NewMysqlCreateUserCommand() *cobra.Command {
 }
 
 func mysqlCreateUserCommandFn(cmd *cobra.Command, args []string) {
-	if len(args) != 2 {
-		ErrorOK(fmt.Errorf("args.count.error:should.be.2"))
+	if len(args) != 3 {
+		ErrorOK(fmt.Errorf("args.count.error:should.be.3"))
 	}
 
 	user := args[0]
 	passwd := args[1]
+	ssl := args[2]
 	log.Warning("prepare.to.create.normaluser[%v]", user)
 	conf, err := GetConfig()
 	ErrorOK(err)
@@ -488,7 +489,7 @@ func mysqlCreateUserCommandFn(cmd *cobra.Command, args []string) {
 	{
 		leader, err := callx.GetClusterLeader(self)
 		ErrorOK(err)
-		rsp, err := callx.CreateNormalUserRPC(leader, user, passwd)
+		rsp, err := callx.CreateNormalUserRPC(leader, user, passwd, ssl)
 		ErrorOK(err)
 		RspOK(rsp.RetCode)
 	}

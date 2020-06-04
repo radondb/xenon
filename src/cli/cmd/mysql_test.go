@@ -53,7 +53,7 @@ func TestCLIMysqlCommand(t *testing.T) {
 	// create normal user.
 	{
 		cmd := NewMysqlCommand()
-		_, err := executeCommand(cmd, "createuser", "userxx", "passwdxx")
+		_, err := executeCommand(cmd, "createuser", "userxx", "passwdxx", "NO")
 		assert.Nil(t, err)
 	}
 
