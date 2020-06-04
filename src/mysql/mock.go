@@ -50,7 +50,7 @@ type MockGTID struct {
 	// Users
 	GetUserFn                     func(*sql.DB) ([]model.MysqlUser, error)
 	CheckUserExistsFn             func(*sql.DB, string) (bool, error)
-	CreateUserFn                  func(*sql.DB, string, string) error
+	CreateUserFn                  func(*sql.DB, string, string, string) error
 	DropUserFn                    func(*sql.DB, string, string) error
 	ChangeUserPasswdFn            func(*sql.DB, string, string, string) error
 	CreateReplUserWithoutBinlogFn func(*sql.DB, string, string) error
@@ -298,12 +298,12 @@ func (mogtid *MockGTID) CheckUserExists(db *sql.DB, query string) (bool, error) 
 }
 
 // CreateUser mock.
-func DefaultCreateUser(db *sql.DB, user string, passwd string) error {
+func DefaultCreateUser(db *sql.DB, user string, passwd string, ssltype string) error {
 	return nil
 }
 
-func (mogtid *MockGTID) CreateUser(db *sql.DB, user string, passwd string) error {
-	return mogtid.CreateUserFn(db, user, passwd)
+func (mogtid *MockGTID) CreateUser(db *sql.DB, user string, passwd string, ssltype string) error {
+	return mogtid.CreateUserFn(db, user, passwd, ssltype)
 }
 
 // GetUser mock.

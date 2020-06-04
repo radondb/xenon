@@ -35,7 +35,7 @@ func (u *UserRPC) CreateNormalUser(req *model.MysqlUserRPCRequest, rsp *model.My
 	}
 
 	// create
-	if err := u.server.mysql.CreateUser(req.User, req.Passwd); err != nil {
+	if err := u.server.mysql.CreateUser(req.User, req.Passwd, req.SSL); err != nil {
 		rsp.RetCode = err.Error()
 		log.Error("rpc[%v].create.user[%v].error[%v]", state.String(), req.User, err)
 		return nil

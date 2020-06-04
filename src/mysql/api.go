@@ -453,12 +453,12 @@ func (m *Mysql) GetUser() ([]model.MysqlUser, error) {
 }
 
 // CreateUser used to create the new user.
-func (m *Mysql) CreateUser(user string, passwd string) error {
+func (m *Mysql) CreateUser(user string, passwd string, ssltype string) error {
 	db, err := m.getDB()
 	if err != nil {
 		return err
 	}
-	return m.mysqlHandler.CreateUser(db, user, passwd)
+	return m.mysqlHandler.CreateUser(db, user, passwd, ssltype)
 }
 
 // DropUser used to drop a user.

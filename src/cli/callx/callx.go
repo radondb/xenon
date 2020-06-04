@@ -769,7 +769,7 @@ func GetMysqlUserRPC(node string) (*model.MysqlUserRPCResponse, error) {
 	return rsp, err
 }
 
-func CreateNormalUserRPC(node string, user string, passwd string) (*model.MysqlUserRPCResponse, error) {
+func CreateNormalUserRPC(node string, user string, passwd string, ssl string) (*model.MysqlUserRPCResponse, error) {
 	cli, cleanup, err := GetClient(node)
 	if err != nil {
 		return nil, err
@@ -780,6 +780,7 @@ func CreateNormalUserRPC(node string, user string, passwd string) (*model.MysqlU
 	req := model.NewMysqlUserRPCRequest()
 	req.User = user
 	req.Passwd = passwd
+	req.SSL = ssl
 	rsp := model.NewMysqlUserRPCResponse(model.OK)
 	err = cli.Call(method, req, rsp)
 

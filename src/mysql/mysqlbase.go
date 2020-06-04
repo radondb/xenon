@@ -309,8 +309,11 @@ func (my *MysqlBase) GetUser(db *sql.DB) ([]model.MysqlUser, error) {
 
 // CreateUser use to create new user.
 // see http://dev.mysql.com/doc/refman/5.7/en/string-literals.html
-func (my *MysqlBase) CreateUser(db *sql.DB, user string, passwd string) error {
+func (my *MysqlBase) CreateUser(db *sql.DB, user string, passwd string, ssltype string) error {
 	query := fmt.Sprintf("CREATE USER `%s` IDENTIFIED BY '%s'", user, passwd)
+	if ssltype == "YES" {
+		query = fmt.Sprintf("%s REQUIRE X509", query)
+	}
 	return Execute(db, query)
 }
 
@@ -334,12 +337,6 @@ func (my *MysqlBase) CreateReplUserWithoutBinlog(db *sql.DB, user string, passwd
 // ChangeUserPasswd used to change the user password.
 func (my *MysqlBase) ChangeUserPasswd(db *sql.DB, user string, host string, passwd string) error {
 	query := fmt.Sprintf("ALTER USER `%s`@'%s' IDENTIFIED BY '%s'", user, host, passwd)
-	return Execute(db, query)
-}
-
-// Change56UserPasswd used to change the mysql56 user password.
-func (my *MysqlBase) Change56UserPasswd(db *sql.DB, user string, passwd string) error {
-	query := fmt.Sprintf("SET PASSWORD FOR `%s` = PASSWORD('%s')", user, passwd)
 	return Execute(db, query)
 }
 
@@ -379,13 +376,12 @@ func (my *MysqlBase) CreateUserWithPrivileges(db *sql.DB, user, passwd, database
 	if _, ok := standardSSL[ssltype]; !ok {
 		return errors.Errorf("can't create user[%v] require ssl_type[%v]", user, ssltype)
 	}
-	if ssltype == "YES" {
-		query = fmt.Sprintf("GRANT %s ON %s.%s TO `%s`@'%s' IDENTIFIED BY '%s' REQUIRE X509", privs, database, table, user, host, passwd)
 
-	} else {
-		query = fmt.Sprintf("GRANT %s ON %s.%s TO `%s`@'%s' IDENTIFIED BY '%s'", privs, database, table, user, host, passwd)
+	if err := my.CreateUser(db, user, passwd, ssltype); err != nil {
+		return errors.Errorf("create user[%v] with privileges[%v] require ssl_type[%v] failed: [%v]", user, privs, ssltype, err)
 	}
 
+	query = fmt.Sprintf("GRANT %s ON %s.%s TO `%s`@'%s'", privs, database, table, user, host)
 	return my.grantPrivileges(db, query)
 }
 
@@ -409,12 +405,12 @@ func (my *MysqlBase) GrantAllPrivileges(db *sql.DB, user string, passwd string, 
 	if _, ok := standardSSL[ssltype]; !ok {
 		return errors.Errorf("can't create user[%v] require ssl_type[%v]", user, ssltype)
 	}
-	if ssltype == "YES" {
-		query = fmt.Sprintf("GRANT %s ON *.* TO `%s` IDENTIFIED BY '%s' REQUIRE X509 WITH GRANT OPTION", strings.Join(mysqlAllPrivileges, ","), user, passwd)
-	} else {
-		query = fmt.Sprintf("GRANT %s ON *.* TO `%s` IDENTIFIED BY '%s' WITH GRANT OPTION", strings.Join(mysqlAllPrivileges, ","), user, passwd)
+
+	if err := my.CreateUser(db, user, passwd, ssltype); err != nil {
+		return errors.Errorf("create user[%v] with all privileges require ssl_type[%v] failed: [%v]", user, ssltype, err)
 	}
 
+	query = fmt.Sprintf("GRANT %s ON *.* TO `%s` WITH GRANT OPTION", strings.Join(mysqlAllPrivileges, ","), user)
 	return my.grantPrivileges(db, query)
 }
 

@@ -35,13 +35,19 @@ func TestMysql56SetSemiWaitSlaveCount(t *testing.T) {
 	assert.Nil(t, err)
 	defer db.Close()
 
+	// log
+	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
+	conf := config.DefaultMysqlConfig()
+	conf.Version = "mysql56"
+	mysql56 := NewMysql(conf, log)
+	mysql56.db = db
+
 	queryList := []string{
 		"SET GLOBAL rpl_semi_sync_master_wait_for_slave_count = 2",
 	}
 
-	mysql56 := new(Mysql56)
 	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql56.SetSemiWaitSlaveCount(db, 2)
+	err = mysql56.SetSemiWaitSlaveCount(2)
 	assert.Nil(t, err)
 }
 
@@ -50,12 +56,105 @@ func TestMysql56ChangeUserPassword(t *testing.T) {
 	assert.Nil(t, err)
 	defer db.Close()
 
+	// log
+	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
+	conf := config.DefaultMysqlConfig()
+	conf.Version = "mysql56"
+	mysql56 := NewMysql(conf, log)
+	mysql56.db = db
+
 	queryList := []string{
 		"SET PASSWORD FOR `usr`@'127.0.0.1' = PASSWORD('pwd')",
 	}
 
-	mysql56 := new(Mysql56)
 	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql56.ChangeUserPasswd(db, "usr", "127.0.0.1", "pwd")
+	err = mysql56.ChangeUserPasswd("usr", "127.0.0.1", "pwd")
+	assert.Nil(t, err)
+}
+
+func TestMysql56CreateUser(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.Nil(t, err)
+	defer db.Close()
+
+	// log
+	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
+	conf := config.DefaultMysqlConfig()
+	conf.Version = "mysql56"
+	mysql56 := NewMysql(conf, log)
+	mysql56.db = db
+
+	// ssl is NO
+	query := "GRANT USAGE ON *.* TO `xx` IDENTIFIED BY 'xxx'"
+	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
+	err = mysql56.CreateUser("xx", "xxx", "NO")
+	assert.Nil(t, err)
+
+	// ssl is YES
+	query = "GRANT USAGE ON *.* TO `xx` IDENTIFIED BY 'xxx' REQUIRE SSL"
+	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
+	err = mysql56.CreateUser("xx", "xxx", "YES")
+	assert.Nil(t, err)
+}
+
+func TestMysql56CreateUserWithPrivileges(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.Nil(t, err)
+	defer db.Close()
+
+	// log
+	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
+	conf := config.DefaultMysqlConfig()
+	conf.Version = "mysql56"
+	mysql56 := NewMysql(conf, log)
+	mysql56.db = db
+
+	queryList := []string{
+		"GRANT USAGE ON *.* TO `xx` IDENTIFIED BY 'pwd'",
+		"GRANT USAGE ON *.* TO `xx` IDENTIFIED BY 'pwd' REQUIRE SSL",
+		"GRANT ALTER , ALTER ROUTINE ON test.* TO `xx`@'127.0.0.1'",
+	}
+
+	// ssl is NO
+	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(queryList[2]).WillReturnResult(sqlmock.NewResult(1, 1))
+	err = mysql56.CreateUserWithPrivileges("xx", "pwd", "test", "*", "127.0.0.1", "ALTER , ALTER ROUTINE", "NO")
+	assert.Nil(t, err)
+
+	// ssl is YES
+	mock.ExpectExec(queryList[1]).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(queryList[2]).WillReturnResult(sqlmock.NewResult(1, 1))
+	err = mysql56.CreateUserWithPrivileges("xx", "pwd", "test", "*", "127.0.0.1", "ALTER , ALTER ROUTINE", "YES")
+	assert.Nil(t, err)
+}
+
+func TestMysql56GrantAllPrivileges(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.Nil(t, err)
+	defer db.Close()
+
+	// log
+	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
+	conf := config.DefaultMysqlConfig()
+	conf.Version = "mysql56"
+	mysql56 := NewMysql(conf, log)
+	mysql56.db = db
+
+	queryList := []string{
+		"GRANT USAGE ON *.* TO `xx` IDENTIFIED BY 'pwd'",
+		"GRANT USAGE ON *.* TO `xx` IDENTIFIED BY 'pwd' REQUIRE SSL",
+		"GRANT ALL ON *.* TO `xx` WITH GRANT OPTION",
+	}
+
+	// ssl is NO
+	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(queryList[2]).WillReturnResult(sqlmock.NewResult(1, 1))
+	err = mysql56.GrantAllPrivileges("xx", "pwd", "NO")
+	assert.Nil(t, err)
+
+	// ssl is YES
+	mock.ExpectExec(queryList[1]).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(queryList[2]).WillReturnResult(sqlmock.NewResult(1, 1))
+	err = mysql56.GrantAllPrivileges("xx", "pwd", "YES")
 	assert.Nil(t, err)
 }
