@@ -769,7 +769,7 @@ func GetMysqlUserRPC(node string) (*model.MysqlUserRPCResponse, error) {
 	return rsp, err
 }
 
-func CreateNormalUserRPC(node string, user string, passwd string, ssl string) (*model.MysqlUserRPCResponse, error) {
+func CreateNormalUserRPC(node string, user string, host string, passwd string, ssl string) (*model.MysqlUserRPCResponse, error) {
 	cli, cleanup, err := GetClient(node)
 	if err != nil {
 		return nil, err
@@ -779,6 +779,7 @@ func CreateNormalUserRPC(node string, user string, passwd string, ssl string) (*
 	method := model.RPCMysqlCreateNormalUser
 	req := model.NewMysqlUserRPCRequest()
 	req.User = user
+	req.Host = host
 	req.Passwd = passwd
 	req.SSL = ssl
 	rsp := model.NewMysqlUserRPCResponse(model.OK)
@@ -787,7 +788,7 @@ func CreateNormalUserRPC(node string, user string, passwd string, ssl string) (*
 	return rsp, err
 }
 
-func CreateSuperUserRPC(node string, user string, passwd string, ssl string) (*model.MysqlUserRPCResponse, error) {
+func CreateSuperUserRPC(node string, user string, host string, passwd string, ssl string) (*model.MysqlUserRPCResponse, error) {
 	cli, cleanup, err := GetClient(node)
 	if err != nil {
 		return nil, err
@@ -797,6 +798,7 @@ func CreateSuperUserRPC(node string, user string, passwd string, ssl string) (*m
 	method := model.RPCMysqlCreateSuperUser
 	req := model.NewMysqlUserRPCRequest()
 	req.User = user
+	req.Host = host
 	req.Passwd = passwd
 	req.SSL = ssl
 	rsp := model.NewMysqlUserRPCResponse(model.OK)

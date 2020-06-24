@@ -81,12 +81,12 @@ type MysqlHandler interface {
 	// User handlers.
 	GetUser(*sql.DB) ([]model.MysqlUser, error)
 	CheckUserExists(*sql.DB, string) (bool, error)
-	CreateUser(*sql.DB, string, string, string) error
+	CreateUser(*sql.DB, string, string, string, string) error
 	DropUser(*sql.DB, string, string) error
 	ChangeUserPasswd(*sql.DB, string, string, string) error
 	CreateReplUserWithoutBinlog(*sql.DB, string, string) error
-	GrantAllPrivileges(*sql.DB, string, string, string) error
-	GrantNormalPrivileges(*sql.DB, string) error
+	GrantAllPrivileges(*sql.DB, string, string, string, string) error
+	GrantNormalPrivileges(*sql.DB, string, string) error
 	CreateUserWithPrivileges(db *sql.DB, user, passwd, database, table, host, privs string, ssl string) error
 	GrantReplicationPrivileges(*sql.DB, string) error
 }

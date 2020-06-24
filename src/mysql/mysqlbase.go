@@ -309,8 +309,8 @@ func (my *MysqlBase) GetUser(db *sql.DB) ([]model.MysqlUser, error) {
 
 // CreateUser use to create new user.
 // see http://dev.mysql.com/doc/refman/5.7/en/string-literals.html
-func (my *MysqlBase) CreateUser(db *sql.DB, user string, passwd string, ssltype string) error {
-	query := fmt.Sprintf("CREATE USER `%s` IDENTIFIED BY '%s'", user, passwd)
+func (my *MysqlBase) CreateUser(db *sql.DB, user string, host string, passwd string, ssltype string) error {
+	query := fmt.Sprintf("CREATE USER `%s`@`%s` IDENTIFIED BY '%s'", user, host, passwd)
 	if ssltype == "YES" {
 		query = fmt.Sprintf("%s REQUIRE X509", query)
 	}
@@ -319,7 +319,7 @@ func (my *MysqlBase) CreateUser(db *sql.DB, user string, passwd string, ssltype 
 
 // DropUser used to drop the user.
 func (my *MysqlBase) DropUser(db *sql.DB, user string, host string) error {
-	query := fmt.Sprintf("DROP USER `%s`@'%s'", user, host)
+	query := fmt.Sprintf("DROP USER `%s`@`%s`", user, host)
 	return Execute(db, query)
 }
 
@@ -336,13 +336,13 @@ func (my *MysqlBase) CreateReplUserWithoutBinlog(db *sql.DB, user string, passwd
 
 // ChangeUserPasswd used to change the user password.
 func (my *MysqlBase) ChangeUserPasswd(db *sql.DB, user string, host string, passwd string) error {
-	query := fmt.Sprintf("ALTER USER `%s`@'%s' IDENTIFIED BY '%s'", user, host, passwd)
+	query := fmt.Sprintf("ALTER USER `%s`@`%s` IDENTIFIED BY '%s'", user, host, passwd)
 	return Execute(db, query)
 }
 
 // GrantNormalPrivileges used to grants normal privileges.
-func (my *MysqlBase) GrantNormalPrivileges(db *sql.DB, user string) error {
-	query := fmt.Sprintf("GRANT %s ON *.* TO `%s`", strings.Join(mysqlNormalPrivileges, ","), user)
+func (my *MysqlBase) GrantNormalPrivileges(db *sql.DB, user string, host string) error {
+	query := fmt.Sprintf("GRANT %s ON *.* TO `%s`@`%s`", strings.Join(mysqlNormalPrivileges, ","), user, host)
 	return my.grantPrivileges(db, query)
 }
 
@@ -377,11 +377,11 @@ func (my *MysqlBase) CreateUserWithPrivileges(db *sql.DB, user, passwd, database
 		return errors.Errorf("can't create user[%v] require ssl_type[%v]", user, ssltype)
 	}
 
-	if err := my.CreateUser(db, user, passwd, ssltype); err != nil {
+	if err := my.CreateUser(db, user, host, passwd, ssltype); err != nil {
 		return errors.Errorf("create user[%v] with privileges[%v] require ssl_type[%v] failed: [%v]", user, privs, ssltype, err)
 	}
 
-	query = fmt.Sprintf("GRANT %s ON %s.%s TO `%s`@'%s'", privs, database, table, user, host)
+	query = fmt.Sprintf("GRANT %s ON %s.%s TO `%s`@`%s`", privs, database, table, user, host)
 	return my.grantPrivileges(db, query)
 }
 
@@ -392,7 +392,7 @@ func (my *MysqlBase) GrantReplicationPrivileges(db *sql.DB, user string) error {
 }
 
 // GrantAllPrivileges used to grant all privis.
-func (my *MysqlBase) GrantAllPrivileges(db *sql.DB, user string, passwd string, ssl string) error {
+func (my *MysqlBase) GrantAllPrivileges(db *sql.DB, user string, host string, passwd string, ssl string) error {
 	var query string
 	// build standard ssl_type map
 	standardSSL := make(map[string]string)
@@ -403,14 +403,14 @@ func (my *MysqlBase) GrantAllPrivileges(db *sql.DB, user string, passwd string, 
 	// check ssl_type
 	ssltype := strings.TrimSpace(ssl)
 	if _, ok := standardSSL[ssltype]; !ok {
-		return errors.Errorf("can't create user[%v] require ssl_type[%v]", user, ssltype)
+		return errors.Errorf("can't create user[%v]@[%v] require ssl_type[%v]", user, host, ssltype)
 	}
 
-	if err := my.CreateUser(db, user, passwd, ssltype); err != nil {
-		return errors.Errorf("create user[%v] with all privileges require ssl_type[%v] failed: [%v]", user, ssltype, err)
+	if err := my.CreateUser(db, user, host, passwd, ssltype); err != nil {
+		return errors.Errorf("create user[%v]@[%v] with all privileges require ssl_type[%v] failed: [%v]", user, host, ssltype, err)
 	}
 
-	query = fmt.Sprintf("GRANT %s ON *.* TO `%s` WITH GRANT OPTION", strings.Join(mysqlAllPrivileges, ","), user)
+	query = fmt.Sprintf("GRANT %s ON *.* TO `%s`@`%s` WITH GRANT OPTION", strings.Join(mysqlAllPrivileges, ","), user, host)
 	return my.grantPrivileges(db, query)
 }
 

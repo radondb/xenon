@@ -64,7 +64,7 @@ func TestMysql56ChangeUserPassword(t *testing.T) {
 	mysql56.db = db
 
 	queryList := []string{
-		"SET PASSWORD FOR `usr`@'127.0.0.1' = PASSWORD('pwd')",
+		"SET PASSWORD FOR `usr`@`127.0.0.1` = PASSWORD('pwd')",
 	}
 
 	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -85,15 +85,15 @@ func TestMysql56CreateUser(t *testing.T) {
 	mysql56.db = db
 
 	// ssl is NO
-	query := "GRANT USAGE ON *.* TO `xx` IDENTIFIED BY 'xxx'"
+	query := "GRANT USAGE ON *.* TO `xx`@`192.168.0.%` IDENTIFIED BY 'xxx'"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql56.CreateUser("xx", "xxx", "NO")
+	err = mysql56.CreateUser("xx", "192.168.0.%", "xxx", "NO")
 	assert.Nil(t, err)
 
 	// ssl is YES
-	query = "GRANT USAGE ON *.* TO `xx` IDENTIFIED BY 'xxx' REQUIRE SSL"
+	query = "GRANT USAGE ON *.* TO `xx`@`192.168.0.%` IDENTIFIED BY 'xxx' REQUIRE SSL"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql56.CreateUser("xx", "xxx", "YES")
+	err = mysql56.CreateUser("xx", "192.168.0.%", "xxx", "YES")
 	assert.Nil(t, err)
 }
 
@@ -110,9 +110,9 @@ func TestMysql56CreateUserWithPrivileges(t *testing.T) {
 	mysql56.db = db
 
 	queryList := []string{
-		"GRANT USAGE ON *.* TO `xx` IDENTIFIED BY 'pwd'",
-		"GRANT USAGE ON *.* TO `xx` IDENTIFIED BY 'pwd' REQUIRE SSL",
-		"GRANT ALTER , ALTER ROUTINE ON test.* TO `xx`@'127.0.0.1'",
+		"GRANT USAGE ON *.* TO `xx`@`127.0.0.1` IDENTIFIED BY 'pwd'",
+		"GRANT USAGE ON *.* TO `xx`@`127.0.0.1` IDENTIFIED BY 'pwd' REQUIRE SSL",
+		"GRANT ALTER , ALTER ROUTINE ON test.* TO `xx`@`127.0.0.1`",
 	}
 
 	// ssl is NO
@@ -141,20 +141,20 @@ func TestMysql56GrantAllPrivileges(t *testing.T) {
 	mysql56.db = db
 
 	queryList := []string{
-		"GRANT USAGE ON *.* TO `xx` IDENTIFIED BY 'pwd'",
-		"GRANT USAGE ON *.* TO `xx` IDENTIFIED BY 'pwd' REQUIRE SSL",
-		"GRANT ALL ON *.* TO `xx` WITH GRANT OPTION",
+		"GRANT USAGE ON *.* TO `xx`@`192.168.0.%` IDENTIFIED BY 'pwd'",
+		"GRANT USAGE ON *.* TO `xx`@`192.168.0.%` IDENTIFIED BY 'pwd' REQUIRE SSL",
+		"GRANT ALL ON *.* TO `xx`@`192.168.0.%` WITH GRANT OPTION",
 	}
 
 	// ssl is NO
 	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec(queryList[2]).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql56.GrantAllPrivileges("xx", "pwd", "NO")
+	err = mysql56.GrantAllPrivileges("xx", "192.168.0.%", "pwd", "NO")
 	assert.Nil(t, err)
 
 	// ssl is YES
 	mock.ExpectExec(queryList[1]).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec(queryList[2]).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql56.GrantAllPrivileges("xx", "pwd", "YES")
+	err = mysql56.GrantAllPrivileges("xx", "192.168.0.%", "pwd", "YES")
 	assert.Nil(t, err)
 }

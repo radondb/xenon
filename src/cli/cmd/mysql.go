@@ -465,7 +465,7 @@ func mysqlCancelBackupCommandFn(cmd *cobra.Command, args []string) {
 // create normal user
 func NewMysqlCreateUserCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "createuser <user> <password> <YES/NO>",
+		Use:   "createuser <user> <host> <password> <YES/NO>",
 		Short: "create mysql normal user",
 		Run:   mysqlCreateUserCommandFn,
 	}
@@ -474,14 +474,15 @@ func NewMysqlCreateUserCommand() *cobra.Command {
 }
 
 func mysqlCreateUserCommandFn(cmd *cobra.Command, args []string) {
-	if len(args) != 3 {
-		ErrorOK(fmt.Errorf("args.count.error:should.be.3"))
+	if len(args) != 4 {
+		ErrorOK(fmt.Errorf("args.count.error:should.be.4"))
 	}
 
 	user := args[0]
-	passwd := args[1]
-	ssl := args[2]
-	log.Warning("prepare.to.create.normaluser[%v]", user)
+	host := args[1]
+	passwd := args[2]
+	ssl := args[3]
+	log.Warning("prepare.to.create.normaluser[%v]@[%v]", user, host)
 	conf, err := GetConfig()
 	ErrorOK(err)
 
@@ -489,7 +490,7 @@ func mysqlCreateUserCommandFn(cmd *cobra.Command, args []string) {
 	{
 		leader, err := callx.GetClusterLeader(self)
 		ErrorOK(err)
-		rsp, err := callx.CreateNormalUserRPC(leader, user, passwd, ssl)
+		rsp, err := callx.CreateNormalUserRPC(leader, user, host, passwd, ssl)
 		ErrorOK(err)
 		RspOK(rsp.RetCode)
 	}
@@ -499,7 +500,7 @@ func mysqlCreateUserCommandFn(cmd *cobra.Command, args []string) {
 // create super user
 func NewMysqlCreateSuperUserCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "createsuperuser <user> <password> <YES/NO>",
+		Use:   "createsuperuser <user> <host> <password> <YES/NO>",
 		Short: "create mysql super user",
 		Run:   mysqlCreateSuperUserCommandFn,
 	}
@@ -507,14 +508,15 @@ func NewMysqlCreateSuperUserCommand() *cobra.Command {
 }
 
 func mysqlCreateSuperUserCommandFn(cmd *cobra.Command, args []string) {
-	if len(args) != 3 {
-		ErrorOK(fmt.Errorf("args.count.error:should.be.3"))
+	if len(args) != 4 {
+		ErrorOK(fmt.Errorf("args.count.error:should.be.4"))
 	}
 
 	user := args[0]
-	passwd := args[1]
-	ssl := args[2]
-	log.Warning("prepare.to.create.super.user[%v]", user)
+	host := args[1]
+	passwd := args[2]
+	ssl := args[3]
+	log.Warning("prepare.to.create.superuser[%v]@[%v]", user, host)
 	conf, err := GetConfig()
 	ErrorOK(err)
 
@@ -522,11 +524,11 @@ func mysqlCreateSuperUserCommandFn(cmd *cobra.Command, args []string) {
 	{
 		leader, err := callx.GetClusterLeader(self)
 		ErrorOK(err)
-		rsp, err := callx.CreateSuperUserRPC(leader, user, passwd, ssl)
+		rsp, err := callx.CreateSuperUserRPC(leader, user, host, passwd, ssl)
 		ErrorOK(err)
 		RspOK(rsp.RetCode)
 	}
-	log.Warning("create.super.user[%v].done", user)
+	log.Warning("create.superuser[%v].done", user)
 }
 
 // drop user(normal&super)
@@ -547,7 +549,7 @@ func mysqlDropUserCommandFn(cmd *cobra.Command, args []string) {
 
 	user := args[0]
 	host := args[1]
-	log.Warning("prepare.to.drop.normaluser[%v]@[%v]", user, host)
+	log.Warning("prepare.to.drop.user[%v]@[%v]", user, host)
 	conf, err := GetConfig()
 	ErrorOK(err)
 
@@ -559,7 +561,7 @@ func mysqlDropUserCommandFn(cmd *cobra.Command, args []string) {
 		ErrorOK(err)
 		RspOK(rsp.RetCode)
 	}
-	log.Warning("drop.normaluser[%v]@[%v].done", user, host)
+	log.Warning("drop.user[%v].done", user)
 }
 
 // change normal user password
@@ -581,7 +583,7 @@ func mysqlChangePasswordCommandFn(cmd *cobra.Command, args []string) {
 	user := args[0]
 	host := args[1]
 	passwd := args[2]
-	log.Warning("prepare.to.changepassword.user[%v].host[%v]", user, host)
+	log.Warning("prepare.to.changepassword.user[%v]@[%v]", user, host)
 	conf, err := GetConfig()
 	ErrorOK(err)
 
@@ -594,7 +596,7 @@ func mysqlChangePasswordCommandFn(cmd *cobra.Command, args []string) {
 		ErrorOK(err)
 		RspOK(rsp.RetCode)
 	}
-	log.Warning("create.changepassword[%v].done", user)
+	log.Warning("changepassword.user[%v].done", user)
 }
 
 // set global sysvar
@@ -729,7 +731,7 @@ func NewMysqlCreateUserWithPrivilegesCommand() *cobra.Command {
 }
 
 func mysqlCreateUserWithPrivilegesCommandFn(cmd *cobra.Command, args []string) {
-	log.Warning("prepare.to.create.normaluser.[%v].with.privs", grantUser)
+	log.Warning("prepare.to.create.normaluser[%v]@[%v].with.privs", grantUser, grantHost)
 	conf, err := GetConfig()
 	ErrorOK(err)
 

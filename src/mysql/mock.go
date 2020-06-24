@@ -50,12 +50,12 @@ type MockGTID struct {
 	// Users
 	GetUserFn                     func(*sql.DB) ([]model.MysqlUser, error)
 	CheckUserExistsFn             func(*sql.DB, string) (bool, error)
-	CreateUserFn                  func(*sql.DB, string, string, string) error
+	CreateUserFn                  func(*sql.DB, string, string, string, string) error
 	DropUserFn                    func(*sql.DB, string, string) error
 	ChangeUserPasswdFn            func(*sql.DB, string, string, string) error
 	CreateReplUserWithoutBinlogFn func(*sql.DB, string, string) error
-	GrantAllPrivilegesFn          func(*sql.DB, string, string) error
-	GrantNormalPrivilegesFn       func(*sql.DB, string) error
+	GrantAllPrivilegesFn          func(*sql.DB, string, string, string, string) error
+	GrantNormalPrivilegesFn       func(*sql.DB, string, string) error
 	CreateUserWithPrivilegesFn    func(*sql.DB, string, string, string, string, string, string, string) error
 	GrantReplicationPrivilegesFn  func(*sql.DB, string) error
 }
@@ -298,12 +298,12 @@ func (mogtid *MockGTID) CheckUserExists(db *sql.DB, query string) (bool, error) 
 }
 
 // CreateUser mock.
-func DefaultCreateUser(db *sql.DB, user string, passwd string, ssltype string) error {
+func DefaultCreateUser(db *sql.DB, user string, host string, passwd string, ssltype string) error {
 	return nil
 }
 
-func (mogtid *MockGTID) CreateUser(db *sql.DB, user string, passwd string, ssltype string) error {
-	return mogtid.CreateUserFn(db, user, passwd, ssltype)
+func (mogtid *MockGTID) CreateUser(db *sql.DB, user string, host string, passwd string, ssltype string) error {
+	return mogtid.CreateUserFn(db, user, host, passwd, ssltype)
 }
 
 // GetUser mock.
@@ -359,12 +359,12 @@ func (mogtid *MockGTID) ChangeUserPasswd(db *sql.DB, user string, host string, p
 }
 
 // GrantNormalPrivileges mock.
-func DefaultGrantNormalPrivileges(db *sql.DB, user string) error {
+func DefaultGrantNormalPrivileges(db *sql.DB, user string, host string) error {
 	return nil
 }
 
-func (mogtid *MockGTID) GrantNormalPrivileges(db *sql.DB, user string) error {
-	return mogtid.GrantNormalPrivilegesFn(db, user)
+func (mogtid *MockGTID) GrantNormalPrivileges(db *sql.DB, user string, host string) error {
+	return mogtid.GrantNormalPrivilegesFn(db, user, host)
 }
 
 // GrantReplicationPrivileges mock.
@@ -377,12 +377,12 @@ func (mogtid *MockGTID) GrantReplicationPrivileges(db *sql.DB, user string) erro
 }
 
 // GrantAllPrivileges mock.
-func DefaultGrantAllPrivileges(db *sql.DB, user string, passwd string) error {
+func DefaultGrantAllPrivileges(db *sql.DB, user string, host string, passwd string, ssl string) error {
 	return nil
 }
 
-func (mogtid *MockGTID) GrantAllPrivileges(db *sql.DB, user string, passwd, ssl string) error {
-	return mogtid.GrantAllPrivilegesFn(db, user, passwd)
+func (mogtid *MockGTID) GrantAllPrivileges(db *sql.DB, user string, host, passwd, ssl string) error {
+	return mogtid.GrantAllPrivilegesFn(db, user, host, passwd, ssl)
 }
 
 func defaultMockGTID() *MockGTID {

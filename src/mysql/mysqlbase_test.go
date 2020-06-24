@@ -398,15 +398,15 @@ func TestCreateUser(t *testing.T) {
 	mysql.db = db
 
 	// ssl is NO
-	query := "CREATE USER `xx` IDENTIFIED BY 'xxx'"
+	query := "CREATE USER `xx`@`192.168.0.%` IDENTIFIED BY 'xxx'"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql.CreateUser("xx", "xxx", "NO")
+	err = mysql.CreateUser("xx", "192.168.0.%", "xxx", "NO")
 	assert.Nil(t, err)
 
 	// ssl is YES
-	query = "CREATE USER `xx` IDENTIFIED BY 'xxx' REQUIRE X509"
+	query = "CREATE USER `xx`@`192.168.0.%` IDENTIFIED BY 'xxx' REQUIRE X509"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql.CreateUser("xx", "xxx", "YES")
+	err = mysql.CreateUser("xx", "192.168.0.%", "xxx", "YES")
 	assert.Nil(t, err)
 }
 
@@ -422,9 +422,9 @@ func TestCreateUserWithPrivileges(t *testing.T) {
 	mysql.db = db
 
 	queryList := []string{
-		"CREATE USER `xx` IDENTIFIED BY 'pwd'",
-		"CREATE USER `xx` IDENTIFIED BY 'pwd' REQUIRE X509",
-		"GRANT ALTER , ALTER ROUTINE ON test.* TO `xx`@'127.0.0.1'",
+		"CREATE USER `xx`@`127.0.0.1` IDENTIFIED BY 'pwd'",
+		"CREATE USER `xx`@`127.0.0.1` IDENTIFIED BY 'pwd' REQUIRE X509",
+		"GRANT ALTER , ALTER ROUTINE ON test.* TO `xx`@`127.0.0.1`",
 	}
 
 	// ssl is NO
@@ -482,7 +482,7 @@ func TestDropUser(t *testing.T) {
 	mysql := NewMysql(conf, log)
 	mysql.db = db
 
-	query := "DROP USER `xx`@'127.0.0.1'"
+	query := "DROP USER `xx`@`127.0.0.1`"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
 	err = mysql.DropUser("xx", "127.0.0.1")
 	assert.Nil(t, err)
@@ -553,7 +553,7 @@ func TestChangeUserPasswd(t *testing.T) {
 	mysql := NewMysql(conf, log)
 	mysql.db = db
 
-	query := "ALTER USER `xx`@'localhost' IDENTIFIED BY 'xxx'"
+	query := "ALTER USER `xx`@`localhost` IDENTIFIED BY 'xxx'"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
 	err = mysql.ChangeUserPasswd("xx", "localhost", "xxx")
 	assert.Nil(t, err)
@@ -571,21 +571,21 @@ func TestGrantAllPrivileges(t *testing.T) {
 	mysql.db = db
 
 	queryList := []string{
-		"CREATE USER `xx` IDENTIFIED BY 'pwd'",
-		"CREATE USER `xx` IDENTIFIED BY 'pwd' REQUIRE X509",
-		"GRANT ALL ON *.* TO `xx` WITH GRANT OPTION",
+		"CREATE USER `xx`@`192.168.0.%` IDENTIFIED BY 'pwd'",
+		"CREATE USER `xx`@`192.168.0.%` IDENTIFIED BY 'pwd' REQUIRE X509",
+		"GRANT ALL ON *.* TO `xx`@`192.168.0.%` WITH GRANT OPTION",
 	}
 
 	// ssl is NO
 	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec(queryList[2]).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql.GrantAllPrivileges("xx", "pwd", "NO")
+	err = mysql.GrantAllPrivileges("xx", "192.168.0.%", "pwd", "NO")
 	assert.Nil(t, err)
 
 	// ssl is YES
 	mock.ExpectExec(queryList[1]).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec(queryList[2]).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql.GrantAllPrivileges("xx", "pwd", "YES")
+	err = mysql.GrantAllPrivileges("xx", "192.168.0.%", "pwd", "YES")
 	assert.Nil(t, err)
 }
 
@@ -600,9 +600,9 @@ func TestGrantNormalPrivileges(t *testing.T) {
 	mysql := NewMysql(conf, log)
 	mysql.db = db
 
-	query := "GRANT ALTER,ALTER ROUTINE,CREATE,CREATE ROUTINE,CREATE TEMPORARY TABLES,CREATE VIEW,DELETE,DROP,EXECUTE,EVENT,INDEX,INSERT,LOCK TABLES,PROCESS,RELOAD,SELECT,SHOW DATABASES,SHOW VIEW,UPDATE,TRIGGER,REFERENCES,REPLICATION SLAVE,REPLICATION CLIENT ON *.* TO `xx`"
+	query := "GRANT ALTER,ALTER ROUTINE,CREATE,CREATE ROUTINE,CREATE TEMPORARY TABLES,CREATE VIEW,DELETE,DROP,EXECUTE,EVENT,INDEX,INSERT,LOCK TABLES,PROCESS,RELOAD,SELECT,SHOW DATABASES,SHOW VIEW,UPDATE,TRIGGER,REFERENCES,REPLICATION SLAVE,REPLICATION CLIENT ON *.* TO `xx`@`127.0.0.1`"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql.GrantNormalPrivileges("xx")
+	err = mysql.GrantNormalPrivileges("xx", "127.0.0.1")
 	assert.Nil(t, err)
 }
 
@@ -645,8 +645,8 @@ func TestGrantUserPrivileges(t *testing.T) {
 		privs := "SELECT"
 		ssl := "NO"
 		queryList := []string{
-			"CREATE USER `xx` IDENTIFIED BY 'pwd'",
-			"GRANT SELECT ON db.table1 TO `xx`@'192.168.0.1'",
+			"CREATE USER `xx`@`192.168.0.1` IDENTIFIED BY 'pwd'",
+			"GRANT SELECT ON db.table1 TO `xx`@`192.168.0.1`",
 		}
 
 		mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -660,8 +660,8 @@ func TestGrantUserPrivileges(t *testing.T) {
 		privs := "SELECT,"
 		ssl := "YES"
 		queryList := []string{
-			"CREATE USER `xx` IDENTIFIED BY 'pwd' REQUIRE X509",
-			"GRANT SELECT ON db.table1 TO `xx`@'192.168.0.1'",
+			"CREATE USER `xx`@`192.168.0.1` IDENTIFIED BY 'pwd' REQUIRE X509",
+			"GRANT SELECT ON db.table1 TO `xx`@`192.168.0.1`",
 		}
 
 		mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -675,8 +675,8 @@ func TestGrantUserPrivileges(t *testing.T) {
 		privs := "SELECT,GRANT OPTION"
 		ssl := "X509"
 		queryList := []string{
-			"CREATE USER `xx` IDENTIFIED BY 'pwd' REQUIRE X509",
-			"GRANT SELECT ON db.table1 TO `xx`@'192.168.0.1'",
+			"CREATE USER `xx`@`192.168.0.1` IDENTIFIED BY 'pwd' REQUIRE X509",
+			"GRANT SELECT ON db.table1 TO `xx`@`192.168.0.1`",
 		}
 
 		mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
