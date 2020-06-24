@@ -53,21 +53,21 @@ func TestCLIMysqlCommand(t *testing.T) {
 	// create normal user.
 	{
 		cmd := NewMysqlCommand()
-		_, err := executeCommand(cmd, "createuser", "userxx", "passwdxx", "NO")
+		_, err := executeCommand(cmd, "createuser", "userxx", "192.168.0.%", "passwdxx", "NO")
 		assert.Nil(t, err)
 	}
 
 	// create super user.
 	{
 		cmd := NewMysqlCommand()
-		_, err := executeCommand(cmd, "createsuperuser", "userxx", "passwdxx", "NO")
+		_, err := executeCommand(cmd, "createsuperuser", "192.168.0.%", "userxx", "passwdxx", "NO")
 		assert.Nil(t, err)
 	}
 
 	// change password
 	{
 		cmd := NewMysqlCommand()
-		_, err := executeCommand(cmd, "changepassword", "userxx", "%", "passwdxx")
+		_, err := executeCommand(cmd, "changepassword", "userxx", "192.168.0.%", "passwdxx")
 		assert.Nil(t, err)
 	}
 
@@ -81,7 +81,7 @@ func TestCLIMysqlCommand(t *testing.T) {
 	// drop normal user.
 	{
 		cmd := NewMysqlCommand()
-		_, err := executeCommand(cmd, "dropuser", "userxx", "%")
+		_, err := executeCommand(cmd, "dropuser", "userxx", "192.168.0.%")
 		assert.Nil(t, err)
 	}
 
@@ -109,7 +109,7 @@ func TestCLIMysqlCommand(t *testing.T) {
 	// create user with privileges
 	{
 		cmd := NewMysqlCommand()
-		_, err := executeCommand(cmd, "createuserwithgrants", "--user", "xx", "--passwd", "xx", "--database", "db1", "--host", "192.168.0.1", "--privs", "SELECT,DROP")
+		_, err := executeCommand(cmd, "createuserwithgrants", "--user", "xx", "--passwd", "xx", "--database", "db1", "--host", "192.168.0.%", "--privs", "SELECT,DROP")
 		assert.Nil(t, err)
 	}
 }

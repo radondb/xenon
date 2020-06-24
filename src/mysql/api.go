@@ -453,12 +453,12 @@ func (m *Mysql) GetUser() ([]model.MysqlUser, error) {
 }
 
 // CreateUser used to create the new user.
-func (m *Mysql) CreateUser(user string, passwd string, ssltype string) error {
+func (m *Mysql) CreateUser(user string, host string, passwd string, ssltype string) error {
 	db, err := m.getDB()
 	if err != nil {
 		return err
 	}
-	return m.mysqlHandler.CreateUser(db, user, passwd, ssltype)
+	return m.mysqlHandler.CreateUser(db, user, host, passwd, ssltype)
 }
 
 // DropUser used to drop a user.
@@ -489,12 +489,12 @@ func (m *Mysql) CreateReplUserWithoutBinlog(user string, passwd string) error {
 }
 
 // GrantNormalPrivileges used grant normal privs.
-func (m *Mysql) GrantNormalPrivileges(user string) error {
+func (m *Mysql) GrantNormalPrivileges(user string, host string) error {
 	db, err := m.getDB()
 	if err != nil {
 		return err
 	}
-	return m.mysqlHandler.GrantNormalPrivileges(db, user)
+	return m.mysqlHandler.GrantNormalPrivileges(db, user, host)
 }
 
 // CreateUserWithPrivileges used to create a new user with grants.
@@ -516,10 +516,10 @@ func (m *Mysql) GrantReplicationPrivileges(user string) error {
 }
 
 // GrantAllPrivileges used to grants all privs for the user.
-func (m *Mysql) GrantAllPrivileges(user string, passwd string, ssl string) error {
+func (m *Mysql) GrantAllPrivileges(user string, host string, passwd string, ssl string) error {
 	db, err := m.getDB()
 	if err != nil {
 		return err
 	}
-	return m.mysqlHandler.GrantAllPrivileges(db, user, passwd, ssl)
+	return m.mysqlHandler.GrantAllPrivileges(db, user, host, passwd, ssl)
 }
