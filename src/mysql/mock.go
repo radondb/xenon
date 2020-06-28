@@ -49,7 +49,7 @@ type MockGTID struct {
 
 	// Users
 	GetUserFn                     func(*sql.DB) ([]model.MysqlUser, error)
-	CheckUserExistsFn             func(*sql.DB, string) (bool, error)
+	CheckUserExistsFn             func(*sql.DB, string, string) (bool, error)
 	CreateUserFn                  func(*sql.DB, string, string, string, string) error
 	DropUserFn                    func(*sql.DB, string, string) error
 	ChangeUserPasswdFn            func(*sql.DB, string, string, string) error
@@ -289,12 +289,12 @@ func SetSemiSyncMasterTimeout(db *sql.DB, timeout uint64) error {
 // User handlers.
 
 // CheckUserExists mock.
-func DefaultCheckUserExists(db *sql.DB, user string) (bool, error) {
+func DefaultCheckUserExists(db *sql.DB, user string, host string) (bool, error) {
 	return false, nil
 }
 
-func (mogtid *MockGTID) CheckUserExists(db *sql.DB, query string) (bool, error) {
-	return mogtid.CheckUserExistsFn(db, query)
+func (mogtid *MockGTID) CheckUserExists(db *sql.DB, user string, host string) (bool, error) {
+	return mogtid.CheckUserExistsFn(db, user, host)
 }
 
 // CreateUser mock.

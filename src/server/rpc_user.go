@@ -34,17 +34,32 @@ func (u *UserRPC) CreateNormalUser(req *model.MysqlUserRPCRequest, rsp *model.My
 		return nil
 	}
 
+	// check
+	ok, err := u.server.mysql.CheckUserExists(req.User, req.Host)
+	if err != nil {
+		rsp.RetCode = err.Error()
+		log.Error("rpc[%v].create.normaluser[%v]@[%v].with.error[%v]", state.String(), req.User, req.Host, err)
+		return nil
+	}
+
+	if ok {
+		msg := fmt.Sprintf("normaluser[%v]@[%v].exists.when.create", req.User, req.Host)
+		rsp.RetCode = msg
+		u.server.log.Error("%v", msg)
+		return nil
+	}
+
 	// create
 	if err := u.server.mysql.CreateUser(req.User, req.Host, req.Passwd, req.SSL); err != nil {
 		rsp.RetCode = err.Error()
-		log.Error("rpc[%v].create.user[%v]@[%v].error[%v]", state.String(), req.User, req.Host, err)
+		log.Error("rpc[%v].create.normaluser[%v]@[%v].error[%v]", state.String(), req.User, req.Host, err)
 		return nil
 	}
 
 	// grants
 	if err := u.server.mysql.GrantNormalPrivileges(req.User, req.Host); err != nil {
 		rsp.RetCode = err.Error()
-		log.Error("rpc[%v].create.user[%v]@[%v].error[%v]", state.String(), req.User, req.Host, err)
+		log.Error("rpc[%v].create.normaluser[%v]@[%v].error[%v]", state.String(), req.User, req.Host, err)
 		return nil
 	}
 	return nil
@@ -63,15 +78,15 @@ func (u *UserRPC) CreateSuperUser(req *model.MysqlUserRPCRequest, rsp *model.Mys
 	}
 
 	// check
-	ok, err := u.server.mysql.CheckUserExists(req.User)
+	ok, err := u.server.mysql.CheckUserExists(req.User, req.Host)
 	if err != nil {
 		rsp.RetCode = err.Error()
-		log.Error("rpc[%v].create.superuser[%v].with.error[%v]", state.String(), req.User, err)
+		log.Error("rpc[%v].create.superuser[%v]@[%v].with.error[%v]", state.String(), req.User, req.Host, err)
 		return nil
 	}
 
 	if ok {
-		msg := fmt.Sprintf("superuser[%v].is.exists.when.create", req.User)
+		msg := fmt.Sprintf("superuser[%v]@[%v].exists.when.create", req.User, req.Host)
 		rsp.RetCode = msg
 		u.server.log.Error("%v", msg)
 		return nil
@@ -101,15 +116,15 @@ func (u *UserRPC) CreateUserWithPrivileges(req *model.MysqlUserRPCRequest, rsp *
 	}
 
 	// check
-	ok, err := u.server.mysql.CheckUserExists(req.User)
+	ok, err := u.server.mysql.CheckUserExists(req.User, req.Host)
 	if err != nil {
 		rsp.RetCode = err.Error()
-		log.Error("rpc[%v].create.user[%v].with.priv.error[%v]", state.String(), req.User, err)
+		log.Error("rpc[%v].create.user[%v]@[%v].with.priv.error[%v]", state.String(), req.User, req.Host, err)
 		return nil
 	}
 
 	if ok {
-		msg := fmt.Sprintf("user[%v].is.exists.when.create.with.priv", req.User)
+		msg := fmt.Sprintf("user[%v]@[%v].exists.when.create.with.priv", req.User, req.Host)
 		rsp.RetCode = msg
 		u.server.log.Error("%v", msg)
 		return nil

@@ -278,8 +278,8 @@ func (my *MysqlBase) SetSemiSyncMasterTimeout(db *sql.DB, timeout uint64) error 
 }
 
 // CheckUserExists used to check the user exists or not.
-func (my *MysqlBase) CheckUserExists(db *sql.DB, user string) (bool, error) {
-	query := fmt.Sprintf("SELECT User FROM mysql.user WHERE User = '%s'", user)
+func (my *MysqlBase) CheckUserExists(db *sql.DB, user string, host string) (bool, error) {
+	query := fmt.Sprintf("SELECT User FROM mysql.user WHERE User = '%s' and Host = '%s'", user, host)
 	rows, err := Query(db, query)
 	if err != nil {
 		return false, err
