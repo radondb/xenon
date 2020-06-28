@@ -80,7 +80,7 @@ type MysqlHandler interface {
 
 	// User handlers.
 	GetUser(*sql.DB) ([]model.MysqlUser, error)
-	CheckUserExists(*sql.DB, string) (bool, error)
+	CheckUserExists(*sql.DB, string, string) (bool, error)
 	CreateUser(*sql.DB, string, string, string, string) error
 	DropUser(*sql.DB, string, string) error
 	ChangeUserPasswd(*sql.DB, string, string, string) error

@@ -373,13 +373,13 @@ func TestCheckUserExists(t *testing.T) {
 	mysql := NewMysql(conf, log)
 	mysql.db = db
 
-	query := "SELECT User FROM mysql.user WHERE User = 'xx'"
+	query := "SELECT User FROM mysql.user WHERE User = 'xx' and Host = '192.168.0.%'"
 	columns := []string{"User"}
 	want := true
 	mockRows := sqlmock.NewRows(columns).AddRow(want)
 	mock.ExpectQuery(query).WillReturnRows(mockRows)
 
-	exists, err := mysql.CheckUserExists("xx")
+	exists, err := mysql.CheckUserExists("xx", "192.168.0.%")
 	assert.Nil(t, err)
 
 	got := exists
