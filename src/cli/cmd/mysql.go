@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"model"
+	"strings"
 	"time"
 	"xbase/common"
 
@@ -311,19 +312,24 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 
 	// 15. set gtid_purged
 	{
+		version := strings.TrimSpace(conf.Mysql.Version)
 
 		log.Warning("S15-->reset.master.begin....")
-		callx.MysqlResetMasterRPC(self)
-		log.Warning("S15-->reset.master.end....")
+		if version == "mysql80" {
+			log.Warning("S15-->reset.master.skip.mysql80")
+		} else {
+			callx.MysqlResetMasterRPC(self)
+			log.Warning("S15-->reset.master.end....")
 
-		gtid, err := callx.GetXtrabackupGTIDPurged(self, conf.Backup.BackupDir)
-		ErrorOK(err)
+			gtid, err := callx.GetXtrabackupGTIDPurged(self, conf.Backup.BackupDir)
+			ErrorOK(err)
 
-		log.Warning("S15-->set.gtid_purged[%v].begin....", gtid)
-		rsp, err := callx.SetGlobalVarRPC(self, fmt.Sprintf("SET GLOBAL gtid_purged='%s'", gtid))
-		ErrorOK(err)
-		RspOK(rsp.RetCode)
-		log.Warning("S15-->set.gtid_purged.end....")
+			log.Warning("S15-->set.gtid_purged[%v].begin....", gtid)
+			rsp, err := callx.SetGlobalVarRPC(self, fmt.Sprintf("SET GLOBAL gtid_purged='%s'", gtid))
+			ErrorOK(err)
+			RspOK(rsp.RetCode)
+			log.Warning("S15-->set.gtid_purged.end....")
+		}
 	}
 
 	// 16. enable raft
@@ -535,7 +541,7 @@ func mysqlCreateSuperUserCommandFn(cmd *cobra.Command, args []string) {
 func NewMysqlDropUserCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "dropuser <user> <host>",
-		Short: "drop mysql normal user",
+		Short: "drop mysql user",
 		Run:   mysqlDropUserCommandFn,
 	}
 

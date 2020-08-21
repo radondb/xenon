@@ -91,7 +91,7 @@ func TestMysql56CreateUser(t *testing.T) {
 	assert.Nil(t, err)
 
 	// ssl is YES
-	query = "GRANT USAGE ON *.* TO `xx`@`192.168.0.%` IDENTIFIED BY 'xxx' REQUIRE SSL"
+	query = "GRANT USAGE ON *.* TO `xx`@`192.168.0.%` IDENTIFIED BY 'xxx' REQUIRE X509"
 	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
 	err = mysql56.CreateUser("xx", "192.168.0.%", "xxx", "YES")
 	assert.Nil(t, err)
@@ -111,7 +111,7 @@ func TestMysql56CreateUserWithPrivileges(t *testing.T) {
 
 	queryList := []string{
 		"GRANT USAGE ON *.* TO `xx`@`127.0.0.1` IDENTIFIED BY 'pwd'",
-		"GRANT USAGE ON *.* TO `xx`@`127.0.0.1` IDENTIFIED BY 'pwd' REQUIRE SSL",
+		"GRANT USAGE ON *.* TO `xx`@`127.0.0.1` IDENTIFIED BY 'pwd' REQUIRE X509",
 		"GRANT ALTER , ALTER ROUTINE ON test.* TO `xx`@`127.0.0.1`",
 	}
 
@@ -142,7 +142,7 @@ func TestMysql56GrantAllPrivileges(t *testing.T) {
 
 	queryList := []string{
 		"GRANT USAGE ON *.* TO `xx`@`192.168.0.%` IDENTIFIED BY 'pwd'",
-		"GRANT USAGE ON *.* TO `xx`@`192.168.0.%` IDENTIFIED BY 'pwd' REQUIRE SSL",
+		"GRANT USAGE ON *.* TO `xx`@`192.168.0.%` IDENTIFIED BY 'pwd' REQUIRE X509",
 		"GRANT ALL ON *.* TO `xx`@`192.168.0.%` WITH GRANT OPTION",
 	}
 
