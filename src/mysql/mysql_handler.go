@@ -98,6 +98,7 @@ var (
 func init() {
 	handlers["mysql56"] = new(Mysql56)
 	handlers["mysql57"] = new(Mysql57)
+	handlers["mysql80"] = new(Mysql80)
 }
 
 func getHandler(name string) MysqlHandler {

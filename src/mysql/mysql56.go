@@ -40,7 +40,7 @@ func (my *Mysql56) ChangeUserPasswd(db *sql.DB, user string, host string, passwd
 func (my *Mysql56) CreateUser(db *sql.DB, user string, host string, passwd string, ssltype string) error {
 	query := fmt.Sprintf("GRANT USAGE ON *.* TO `%s`@`%s` IDENTIFIED BY '%s'", user, host, passwd)
 	if ssltype == "YES" {
-		query = fmt.Sprintf("%s REQUIRE SSL", query)
+		query = fmt.Sprintf("%s REQUIRE X509", query)
 	}
 	return Execute(db, query)
 }
