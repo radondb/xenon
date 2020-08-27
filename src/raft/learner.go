@@ -116,23 +116,6 @@ func (r *Learner) processHeartbeatRequest(req *model.RaftRPCRequest) *model.Raft
 			r.ERROR("mysql.SetReadOnly.error[%v]", err)
 		}
 
-		// MySQL3: start slave
-		if err := r.mysql.StartSlave(); err != nil {
-			r.ERROR("mysql.StartSlave.error[%v]", err)
-		}
-
-		// MySQL4: change master
-		if r.getLeader() != req.GetFrom() {
-			r.WARNING("get.heartbeat.from[N:%v, V:%v, E:%v].change.mysql.master[%+v]", req.GetFrom(), req.GetViewID(), req.GetEpochID(), req.GetGTID())
-
-			if err := r.mysql.ChangeMasterTo(&req.Repl); err != nil {
-				r.ERROR("change.master.to[FROM:%v, GTID:%v].error[%v]", req.GetFrom(), req.GetRepl(), err)
-				rsp.RetCode = model.ErrorChangeMaster
-				return rsp
-			}
-			r.leader = req.GetFrom()
-		}
-
 		// view change
 		if viewdiff < 0 {
 			r.WARNING("get.heartbeat.from[N:%v, V:%v, E:%v].update.view", req.GetFrom(), req.GetViewID(), req.GetEpochID())

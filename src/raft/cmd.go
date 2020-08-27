@@ -37,7 +37,7 @@ func (r *Raft) leaderStopShellCommand() error {
 	}
 
 	if out, err := r.cmd.RunCommand(bash, args); err != nil {
-		r.ERROR("leaderStartShellCommand[%v].out[%v].error[%+v]", args, out, err)
+		r.ERROR("leaderStopShellCommand[%v].out[%v].error[%+v]", args, out, err)
 		return err
 	}
 	r.WARNING("leaderStopShellCommand[%v].done", args)
