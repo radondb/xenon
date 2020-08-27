@@ -24,7 +24,7 @@ Table of Contents
 ## Step1. Download src code from github
 
 ```
-$ git clone https://github.com/xenon/xenon
+$ git clone https://github.com/radondb/xenon.git
 ```
 
 ## Step2. Build
