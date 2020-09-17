@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"model"
+	"path"
 	"strings"
 	"time"
 	"xbase/common"
@@ -178,6 +179,10 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 
 	self := conf.Server.Endpoint
 	bestone := ""
+	version := strings.TrimSpace(conf.Mysql.Version)
+	datadir := conf.Backup.BackupDir
+	binlogDir := ""
+	binlogPrefix := ""
 
 	// 1. first to check I am leader or not
 	{
@@ -249,7 +254,7 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 
 	// 8. remove data files
 	{
-		datadir := conf.Backup.BackupDir
+		// remove mysql data
 		cmds := "bash"
 		args := []string{
 			"-c",
@@ -258,13 +263,71 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 
 		_, err := common.RunCommand(cmds, args...)
 		ErrorOK(err)
-		log.Warning("S8-->rm.datadir[%v]", datadir)
+		log.Warning("S8-->clear.datadir[%v]", datadir)
+
+		/*
+			Remove mysql binlog and index, considering that mysql binlog or index may not be in the same directory as the data.
+			For example, The contents of file my.cnf are as follows:
+
+			#log-bin=/data/mysql-log/mysql-bin/mysql-bin
+			log-bin=./mysql-bin
+			log-bin=/data/mysql-log/mysql-bin/mysql-bin
+			#log-bin=/data/mysql/mysql-bin
+			log-bin-index=/data/mysql/mysql-bin.index
+			log-bin-index=/data/mysql-log/mysql-bin/mysql-bin.index
+			log-bin-index=./mysql-bin.index
+			#log-bin-index=/data/mysql-log/mysql-bin/mysql-bin.index
+
+			The following shell instruction resolves that the paths of log-bin and log-bin-index are
+			/data/mysql-log/mysql-bin/mysql-bin and ./mysql-bin.index respectively.
+		*/
+		args = []string{
+			"-c",
+			fmt.Sprintf("grep 'log-bin=' %s | sed -r '/^#/d' | awk -F '=' '{print $2}' | tail -n 1", conf.Mysql.DefaultsFile),
+		}
+		binlogPrefix, err = common.RunCommand(cmds, args...)
+		ErrorOK(err)
+		binlogPrefix = strings.TrimSpace(binlogPrefix)
+		if binlogPrefix != "" && strings.Index(binlogPrefix, "/") == 0 {
+			binlogDir = path.Dir(binlogPrefix)
+			if binlogDir != path.Dir(datadir+"/") {
+				log.Warning("mysql.binlog.dir[%v].is.different.from.data.dir[%v]", binlogDir, datadir)
+				args = []string{
+					"-c",
+					fmt.Sprintf("rm -f %s/*", binlogDir),
+				}
+
+				_, err := common.RunCommand(cmds, args...)
+				ErrorOK(err)
+				log.Warning("S8-->clear.mysql.binlog[%v.*]", binlogPrefix)
+			}
+		}
+
+		args = []string{
+			"-c",
+			fmt.Sprintf("grep 'log-bin-index=' %s | sed -r '/^#/d' | awk -F '=' '{print $2}' | tail -n 1", conf.Mysql.DefaultsFile),
+		}
+		indexPath, err := common.RunCommand(cmds, args...)
+		ErrorOK(err)
+		if indexPath != "" && strings.Index(indexPath, "/") == 0 {
+			indexDir := path.Dir(indexPath)
+			if indexDir != path.Dir(datadir+"/") {
+				log.Warning("mysql.binlog.index[%v].is.not.in.data.dir[%v]", indexPath, datadir)
+				args = []string{
+					"-c",
+					fmt.Sprintf("rm -f %s", indexPath),
+				}
+				_, err := common.RunCommand(cmds, args...)
+				ErrorOK(err)
+				log.Warning("S8-->clear.mysql.binlog.index[%v]", indexPath)
+			}
+		}
 	}
 
 	// 9. do backup from bestone
 	{
 		log.Warning("S9-->xtrabackup.begin....")
-		rsp, err := callx.RequestBackupRPC(bestone, conf, conf.Backup.BackupDir)
+		rsp, err := callx.RequestBackupRPC(bestone, conf, datadir)
 		ErrorOK(err)
 		RspOK(rsp.RetCode)
 		log.Warning("S9-->xtrabackup.end....")
@@ -273,8 +336,34 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 	// 10. do apply-log
 	{
 		log.Warning("S10-->apply-log.begin....")
-		err := callx.DoApplyLogRPC(conf.Server.Endpoint, conf.Backup.BackupDir)
+		err := callx.DoApplyLogRPC(conf.Server.Endpoint, datadir)
 		ErrorOK(err)
+
+		if version == "mysql80" {
+			/*
+				For 5.7, mysql will not work properly if log-bin-index is specified and log-bin is not specified.
+				But For 8.0, it works fine, mysql will automatically generate a new file based on the current serial number.
+
+				Xtrabackup will copy the nearest binlog from the source to the current data directory,
+				therefore, you need to move the last binlog to the directory specified by log-bin.
+			*/
+			if binlogDir != "" && strings.Index(binlogDir, "/") == 0 {
+				datadir2 := path.Dir(datadir + "/")
+				// if the binlog path is absolute and different from mysql data directory, move the binlog
+				if binlogDir != datadir2 {
+					log.Warning("mysql.binlog.dir[%v].is.different.from.data.dir[%v]", binlogDir, datadir2)
+					binlogBase := path.Base(binlogPrefix)
+					cmds := "bash"
+					args = []string{
+						"-c",
+						fmt.Sprintf("mv %s/%s.* %s", datadir2, binlogBase, binlogDir),
+					}
+					_, err := common.RunCommand(cmds, args...)
+					ErrorOK(err)
+					log.Warning("move.binlog[%v/%v.*].to.dir[%v]", datadir2, binlogBase, binlogDir)
+				}
+			}
+		}
 		log.Warning("S10-->apply-log.end....")
 	}
 
@@ -312,8 +401,6 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 
 	// 15. set gtid_purged
 	{
-		version := strings.TrimSpace(conf.Mysql.Version)
-
 		log.Warning("S15-->reset.master.begin....")
 		if version == "mysql80" {
 			log.Warning("S15-->reset.master.skip.mysql80")
@@ -321,7 +408,7 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 			callx.MysqlResetMasterRPC(self)
 			log.Warning("S15-->reset.master.end....")
 
-			gtid, err := callx.GetXtrabackupGTIDPurged(self, conf.Backup.BackupDir)
+			gtid, err := callx.GetXtrabackupGTIDPurged(self, datadir)
 			ErrorOK(err)
 
 			log.Warning("S15-->set.gtid_purged[%v].begin....", gtid)
