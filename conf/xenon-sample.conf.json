@@ -14,6 +14,7 @@
 	"mysql":
 	{
 		"admin":"root",
+		"version":"mysql80",
 		"passwd":"",
 		"host":"localhost",
 		"port":${YOUR-MYSQL-PORT},
