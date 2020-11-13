@@ -14,7 +14,14 @@ import (
 )
 
 func RandomTimeout(min int) *time.Timer {
-	max := min * 2
+	var max int
+	if min <= 5 {
+		max = min * 2
+	} else if min <= 20 {
+		max = min + min/2
+	} else {
+		max = min + 10
+	}
 	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
 	d, delta := min, (max - min)
 	if delta > 0 {

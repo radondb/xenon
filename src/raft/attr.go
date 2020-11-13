@@ -16,9 +16,8 @@ import (
 )
 
 const (
-	noVote      = ""
-	noLeader    = ""
-	maxSendTime = 1000 // max send timeout 1sec
+	noVote   = ""
+	noLeader = ""
 )
 
 // State enum.
@@ -154,8 +153,8 @@ func (r *Raft) getEpochID() uint64 {
 	return atomic.LoadUint64(&r.meta.EpochID)
 }
 
-func (r *Raft) getGTID() (model.GTID, error) {
-	return r.mysql.GetGTID()
+func (r *Raft) getGTID() model.GTID {
+	return r.gtid
 }
 
 func (r *Raft) getLeader() string {

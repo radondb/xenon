@@ -22,8 +22,9 @@ func TestMysql57Handler(t *testing.T) {
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	conf := config.DefaultMysqlConfig()
 
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 	want := new(Mysql57)
+	want.SetQueryTimeout(10000)
 	got := mysql.mysqlHandler
 	assert.Equal(t, want, got)
 }

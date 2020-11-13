@@ -75,6 +75,7 @@ type Raft struct {
 	skipPurgeBinlog     bool // if true, purge binlog will skipped
 	skipCheckSemiSync   bool // if true, check semi-sync will skipped
 	isBrainSplit        bool // if true, follower can upgrade to candidate
+	gtid                model.GTID
 }
 
 // NewRaft creates the new raft.
@@ -213,7 +214,7 @@ func (r *Raft) freePeers() {
 
 // send command to state machine(F/C/L/I/S) loop with maxSendTime tiemout
 // (F/C/L/I/S)-loop should handle it and return
-func (r *Raft) send(t int, request interface{}) (interface{}, error) {
+func (r *Raft) send(t int, request interface{}, maxSendTime int) (interface{}, error) {
 	if !r.running() {
 		return nil, errStop
 	}

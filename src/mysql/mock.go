@@ -23,6 +23,7 @@ import (
 
 // MockGTID tuple.
 type MockGTID struct {
+	SetQueryTimeoutFn          func(int)
 	PingFn                     func(*sql.DB) (*PingEntry, error)
 	SetReadOnlyFn              func(*sql.DB, bool) error
 	GetMasterGTIDFn            func(*sql.DB) (*model.GTID, error)
@@ -174,6 +175,15 @@ func DefaultCheckGTID(followerGTID *model.GTID, leaderGTID *model.GTID) bool {
 // GetGtidSubtract mock.
 func (mogtid *MockGTID) GetGtidSubtract(db *sql.DB, slaveGTID string, masterGTID string) (string, error) {
 	return mogtid.GetGtidSubtractFn(db, slaveGTID, masterGTID)
+}
+
+// DefaultSetQueryTimeout mock.
+func DefaultSetQueryTimeout(timeout int) {
+}
+
+// SetQueryTimeout mock.
+func (mogtid *MockGTID) SetQueryTimeout(timeout int) {
+	mogtid.SetQueryTimeoutFn(timeout)
 }
 
 // DefaultPing mock.
@@ -387,6 +397,7 @@ func (mogtid *MockGTID) GrantAllPrivileges(db *sql.DB, user string, host, passwd
 
 func defaultMockGTID() *MockGTID {
 	mock := &MockGTID{}
+	mock.SetQueryTimeoutFn = DefaultSetQueryTimeout
 	mock.PingFn = DefaultPing
 	mock.SetReadOnlyFn = DefaultSetReadOnly
 	mock.GetMasterGTIDFn = DefaultGetMasterGTID
@@ -948,7 +959,7 @@ func NewMockGTIDX5ChangeToMasterError() *MockGTID {
 func MockMysql(log *xlog.Log, port int, h MysqlHandler) (string, *Mysql, func()) {
 	id := fmt.Sprintf("127.0.0.1:%d", port)
 	conf := config.DefaultMysqlConfig()
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 
 	// setup rpc
 	rpc, err := xrpc.NewService(xrpc.Log(log),
@@ -974,7 +985,7 @@ func MockMysql(log *xlog.Log, port int, h MysqlHandler) (string, *Mysql, func())
 func MockMysqlReplUser(log *xlog.Log, port int, h MysqlHandler) (string, *Mysql, func()) {
 	id := fmt.Sprintf("127.0.0.1:%d", port)
 	conf := config.DefaultMysqlConfig()
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 
 	// setup rpc
 	rpc, err := xrpc.NewService(xrpc.Log(log),

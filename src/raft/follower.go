@@ -256,16 +256,16 @@ func (r *Follower) processRequestVoteRequest(req *model.RaftRPCRequest) *model.R
 		}
 	}
 
-	// 3. check viewid(req.viewid >= thisnode.viewid)
-	// if the req.viewid is larger than or equal with this node, update the viewid
-	// if the req.viewid is less than this node, we don't voted for other one then
-	// voted for this candidate
+	// 3. check viewid(req.viewid > thisnode.viewid)
+	// if the req.viewid is larger than this node, update the viewid
+	// if the req.viewid is equal with this node and we have voted for other one then
+	// don't voted for this candidate
 	{
-		if req.GetViewID() >= r.getViewID() {
+		if req.GetViewID() > r.getViewID() {
 			r.updateView(req.GetViewID(), noLeader)
 		} else {
 			if (r.votedFor != noVote) && (r.votedFor != req.GetFrom()) {
-				r.WARNING("get.requestvote.from[N:%v, V:%v, E:%v].already.vote.ret.reject", req.GetFrom(), req.GetViewID(), req.GetEpochID())
+				r.WARNING("get.requestvote.from[N:%v, V:%v, E:%v].already.vote.for[%v].ret.reject", req.GetFrom(), req.GetViewID(), req.GetEpochID(), r.votedFor)
 				rsp.RetCode = model.ErrorVoteNotGranted
 				return rsp
 			}
@@ -274,11 +274,15 @@ func (r *Follower) processRequestVoteRequest(req *model.RaftRPCRequest) *model.R
 
 	// 4. voted for this candidate
 	r.votedFor = req.GetFrom()
+	r.WARNING("get.requestvote.from[N:%v, V:%v, E:%v].vote.for.this.candidate", req.GetFrom(), req.GetViewID(), req.GetEpochID())
 	return rsp
 }
 
 func (r *Follower) processPingRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
 	rsp := model.NewRaftRPCResponse(model.OK)
+	rsp.Raft.From = r.getID()
+	rsp.Raft.ViewID = r.getViewID()
+	rsp.Raft.EpochID = r.getEpochID()
 	rsp.Raft.State = r.state.String()
 	return rsp
 }
@@ -311,12 +315,12 @@ func (r *Follower) startCheckBrainSplit() {
 			case rsp := <-respChan:
 				if rsp.RetCode == model.OK {
 					if rsp.Raft.State == "LEADER" {
-						r.DEBUG("receive.responses.of.leader.skip.check.brain.split")
+						r.DEBUG("receive.ping.responses.from.leader[%v].skip.check.brain.split", rsp.GetFrom())
 						continue
 					}
 					if strings.Contains("FOLLOWER CANDIDATE LEARNER", rsp.Raft.State) {
-						r.DEBUG("receive.responses.of.%v.skip.check.brain.split", rsp.Raft.State)
 						cnt++
+						r.DEBUG("receive.ping.responses[%v].from[N:%v, R:%v]", cnt, rsp.GetFrom(), rsp.Raft.State)
 					}
 				}
 

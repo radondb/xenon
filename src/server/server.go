@@ -51,7 +51,7 @@ func NewServer(conf *config.Config, log *xlog.Log) *Server {
 	}
 
 	s.mysqld = mysqld.NewMysqld(conf.Backup, log)
-	s.mysql = mysql.NewMysql(conf.Mysql, log)
+	s.mysql = mysql.NewMysql(conf.Mysql, conf.Raft.ElectionTimeout, log)
 	s.raft = raft.NewRaft(conf.Server.Endpoint, conf.Raft, log, s.mysql)
 	rpc, err := xrpc.NewService(xrpc.Log(log),
 		xrpc.ConnectionStr(conf.Server.Endpoint))

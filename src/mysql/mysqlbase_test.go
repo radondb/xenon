@@ -26,6 +26,7 @@ var mysqlbase = new(MysqlBase)
 func TestMysqlBasePing(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)
+	mysqlbase.SetQueryTimeout(10000)
 	defer db.Close()
 
 	query := "SHOW SLAVE STATUS"
@@ -50,6 +51,7 @@ func TestMysqlBasePing(t *testing.T) {
 func TestMysqlBaseGetSlaveGTIDGotZeroRow(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)
+	mysqlbase.SetQueryTimeout(10000)
 	defer db.Close()
 
 	query := "SHOW SLAVE STATUS"
@@ -75,6 +77,7 @@ func TestMysqlBaseGetSlaveGTIDGotZeroRow(t *testing.T) {
 func TestMysqlBaseGetSlaveGTID(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)
+	mysqlbase.SetQueryTimeout(10000)
 	defer db.Close()
 
 	query := "SHOW SLAVE STATUS"
@@ -124,6 +127,7 @@ func TestMysqlBaseGetMasterGTID(t *testing.T) {
 	{
 		db, mock, err := sqlmock.New()
 		assert.Nil(t, err)
+		mysqlbase.SetQueryTimeout(10000)
 		defer db.Close()
 
 		query := "SHOW MASTER STATUS"
@@ -162,6 +166,7 @@ func TestMysqlBaseGetMasterGTID(t *testing.T) {
 func TestGetUUID(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)
+	mysqlbase.SetQueryTimeout(10000)
 	defer db.Close()
 
 	query := "SELECT @@SERVER_UUID"
@@ -178,6 +183,7 @@ func TestGetUUID(t *testing.T) {
 func TestMysqlBaseChangeMasterToCommand(t *testing.T) {
 	db, _, err := sqlmock.New()
 	assert.Nil(t, err)
+	mysqlbase.SetQueryTimeout(10000)
 	defer db.Close()
 
 	want := []string{
@@ -200,6 +206,7 @@ func TestMysqlBaseChangeMasterToCommand(t *testing.T) {
 func TestMysqlBaseChangeMasterTo(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)
+	mysqlbase.SetQueryTimeout(10000)
 	defer db.Close()
 
 	queryList := []string{"STOP SLAVE",
@@ -222,6 +229,7 @@ func TestMysqlBaseChangeMasterTo(t *testing.T) {
 func TestMysqlBaseChangeToMaster(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)
+	mysqlbase.SetQueryTimeout(10000)
 	defer db.Close()
 
 	queryList := []string{"STOP SLAVE",
@@ -237,6 +245,7 @@ func TestMysqlBaseChangeToMaster(t *testing.T) {
 func TestMysqlBaseSlaveIOThread(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)
+	mysqlbase.SetQueryTimeout(10000)
 	defer db.Close()
 
 	queryList := []string{
@@ -256,6 +265,7 @@ func TestMysqlBaseSlaveIOThread(t *testing.T) {
 func TestMysqlBaseReadOnly(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)
+	mysqlbase.SetQueryTimeout(10000)
 	defer db.Close()
 
 	queryList := []string{
@@ -279,6 +289,7 @@ func TestMysqlBaseReadOnly(t *testing.T) {
 func TestMysqlBaseSetGlobalVar(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)
+	mysqlbase.SetQueryTimeout(10000)
 	defer db.Close()
 
 	queryList := []string{
@@ -304,6 +315,7 @@ func TestMysqlBaseSetGlobalVar(t *testing.T) {
 func TestMysqlBaseResetMaster(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)
+	mysqlbase.SetQueryTimeout(10000)
 	defer db.Close()
 
 	queryList := []string{
@@ -318,6 +330,7 @@ func TestMysqlBaseResetMaster(t *testing.T) {
 func TestMysqlBasePurgeBinlogsTo(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)
+	mysqlbase.SetQueryTimeout(10000)
 	defer db.Close()
 
 	queryList := []string{
@@ -332,6 +345,7 @@ func TestMysqlBasePurgeBinlogsTo(t *testing.T) {
 func TestMysqlBaseSemiMaster(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)
+	mysqlbase.SetQueryTimeout(10000)
 	defer db.Close()
 
 	queryList := []string{
@@ -351,14 +365,15 @@ func TestMysqlBaseSemiMaster(t *testing.T) {
 func TestMysqlBaseSemiMasterTimeout(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.Nil(t, err)
+	mysqlbase.SetQueryTimeout(10000)
 	defer db.Close()
 
 	queryList := []string{
-		"SET GLOBAL rpl_semi_sync_master_timeout=300000",
+		"SET GLOBAL rpl_semi_sync_master_timeout=10000",
 	}
 
 	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysqlbase.SetSemiSyncMasterTimeout(db, 300000)
+	err = mysqlbase.SetSemiSyncMasterTimeout(db, 10000)
 	assert.Nil(t, err)
 }
 
@@ -370,7 +385,7 @@ func TestCheckUserExists(t *testing.T) {
 	// log
 	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
 	conf := config.DefaultMysqlConfig()
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 	mysql.db = db
 
 	query := "SELECT User FROM mysql.user WHERE User = 'xx' and Host = '192.168.0.%'"
@@ -394,7 +409,7 @@ func TestCreateUser(t *testing.T) {
 	// log
 	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
 	conf := config.DefaultMysqlConfig()
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 	mysql.db = db
 
 	// ssl is NO
@@ -418,7 +433,7 @@ func TestCreateUserWithPrivileges(t *testing.T) {
 	// log
 	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
 	conf := config.DefaultMysqlConfig()
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 	mysql.db = db
 
 	queryList := []string{
@@ -448,7 +463,7 @@ func TestGetUser(t *testing.T) {
 	// log
 	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
 	conf := config.DefaultMysqlConfig()
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 	mysql.db = db
 
 	query := "SELECT User, Host, Super_priv FROM mysql.user"
@@ -479,7 +494,7 @@ func TestDropUser(t *testing.T) {
 	// log
 	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
 	conf := config.DefaultMysqlConfig()
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 	mysql.db = db
 
 	query := "DROP USER `xx`@`127.0.0.1`"
@@ -496,7 +511,7 @@ func TestCreateReplUserWithoutBinlog(t *testing.T) {
 	// log
 	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
 	conf := config.DefaultMysqlConfig()
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 	mysql.db = db
 
 	queryList := []string{
@@ -522,7 +537,7 @@ func TestCreateReplUserWithoutBinlogErr(t *testing.T) {
 	// log
 	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
 	conf := config.DefaultMysqlConfig()
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 	mysql.db = db
 
 	queryList := []string{
@@ -550,7 +565,7 @@ func TestChangeUserPasswd(t *testing.T) {
 	// log
 	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
 	conf := config.DefaultMysqlConfig()
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 	mysql.db = db
 
 	query := "ALTER USER `xx`@`localhost` IDENTIFIED BY 'xxx'"
@@ -567,7 +582,7 @@ func TestGrantAllPrivileges(t *testing.T) {
 	// log
 	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
 	conf := config.DefaultMysqlConfig()
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 	mysql.db = db
 
 	queryList := []string{
@@ -597,7 +612,7 @@ func TestGrantNormalPrivileges(t *testing.T) {
 	// log
 	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
 	conf := config.DefaultMysqlConfig()
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 	mysql.db = db
 
 	query := "GRANT ALTER,ALTER ROUTINE,CREATE,CREATE ROUTINE,CREATE TEMPORARY TABLES,CREATE VIEW,DELETE,DROP,EXECUTE,EVENT,INDEX,INSERT,LOCK TABLES,PROCESS,RELOAD,SELECT,SHOW DATABASES,SHOW VIEW,UPDATE,TRIGGER,REFERENCES,REPLICATION SLAVE,REPLICATION CLIENT ON *.* TO `xx`@`127.0.0.1`"
@@ -614,7 +629,7 @@ func TestGrantReplicationPrivileges(t *testing.T) {
 	// log
 	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
 	conf := config.DefaultMysqlConfig()
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 	mysql.db = db
 
 	query := "GRANT REPLICATION SLAVE,REPLICATION CLIENT ON *.* TO `xx`"
@@ -631,7 +646,7 @@ func TestGrantUserPrivileges(t *testing.T) {
 	// log
 	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
 	conf := config.DefaultMysqlConfig()
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 	mysql.db = db
 
 	user := "xx"

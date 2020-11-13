@@ -46,8 +46,8 @@ func (p *Peer) sendHeartbeat(c chan *model.RaftRPCResponse) {
 	req.Raft.Leader = p.raft.getLeader()
 	req.Peers = p.raft.getPeers()
 	req.IdlePeers = p.raft.getIdlePeers()
+	req.GTID = p.raft.getGTID()
 	req.Repl = p.raft.mysql.GetRepl()
-	req.GTID, _ = p.raft.mysql.GetGTID()
 
 	client, cleanup, err := p.NewClient()
 	if err != nil {
@@ -59,13 +59,14 @@ func (p *Peer) sendHeartbeat(c chan *model.RaftRPCResponse) {
 	defer cleanup()
 
 	method := model.RPCRaftHeartbeat
-	err = client.CallTimeout(p.requestTimeout, method, req, rsp)
+	err = client.CallTimeout(p.requestTimeout*2, method, req, rsp)
 	if err != nil {
-		p.raft.ERROR("send.heartbeat.to[%v].client.call.error[%v]", p.getID(), err)
+		p.raft.ERROR("send.heartbeat.to.peer[%v].client.call.error[%v]", p.getID(), err)
 		rsp.RetCode = model.ErrorRPCCall
 		c <- rsp
 		return
 	}
+	p.raft.DEBUG("send.heartbeat.to.peer[%v].client.call.ok.rsp[%v].my.gtid.is[%v]", p.getID(), rsp, req.GTID)
 	c <- rsp
 }
 
@@ -84,7 +85,7 @@ func (p *Peer) sendRequestVote(c chan *model.RaftRPCResponse) {
 	req.Raft.From = p.raft.getID()
 	req.Raft.To = p.connectionStr
 	req.Raft.Leader = p.raft.getLeader()
-	req.GTID, err = p.raft.getGTID()
+	req.GTID, err = p.raft.mysql.GetGTID()
 	if err != nil {
 		p.raft.ERROR("send.requestvote.to.peer[%v].get.gtid.error[%v]", p.getID(), err)
 		rsp.RetCode = model.ErrorMySQLDown
@@ -138,7 +139,7 @@ func (p *Peer) SendPing(c chan *model.RaftRPCResponse) {
 		c <- rsp
 		return
 	}
-	p.raft.WARNING("send.ping.to.peer[%v].client.call.ok.rsp[%v]", p.getID(), rsp)
+	p.raft.DEBUG("send.ping.to.peer[%v].client.call.ok.rsp[%v]", p.getID(), rsp)
 	c <- rsp
 }
 

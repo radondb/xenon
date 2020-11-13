@@ -21,7 +21,7 @@ type RaftRPC struct {
 // Ping rpc.
 // send MsgRaftPing
 func (r *RaftRPC) Ping(req *model.RaftRPCRequest, rsp *model.RaftRPCResponse) error {
-	ret, err := r.raft.send(MsgRaftPing, req)
+	ret, err := r.raft.send(MsgRaftPing, req, r.raft.getHeartbeatTimeout())
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func (r *RaftRPC) Ping(req *model.RaftRPCRequest, rsp *model.RaftRPCResponse) er
 
 // Heartbeat rpc.
 func (r *RaftRPC) Heartbeat(req *model.RaftRPCRequest, rsp *model.RaftRPCResponse) error {
-	ret, err := r.raft.send(MsgRaftHeartbeat, req)
+	ret, err := r.raft.send(MsgRaftHeartbeat, req, r.raft.getHeartbeatTimeout())
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func (r *RaftRPC) Heartbeat(req *model.RaftRPCRequest, rsp *model.RaftRPCRespons
 
 // RequestVote rpc.
 func (r *RaftRPC) RequestVote(req *model.RaftRPCRequest, rsp *model.RaftRPCResponse) error {
-	ret, err := r.raft.send(MsgRaftRequestVote, req)
+	ret, err := r.raft.send(MsgRaftRequestVote, req, r.raft.getHeartbeatTimeout())
 	if err != nil {
 		return err
 	}

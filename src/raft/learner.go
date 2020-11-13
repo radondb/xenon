@@ -154,6 +154,9 @@ func (r *Learner) processRequestVoteRequest(req *model.RaftRPCRequest) *model.Ra
 
 func (r *Learner) processPingRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
 	rsp := model.NewRaftRPCResponse(model.OK)
+	rsp.Raft.From = r.getID()
+	rsp.Raft.ViewID = r.getViewID()
+	rsp.Raft.EpochID = r.getEpochID()
 	rsp.Raft.State = r.state.String()
 	return rsp
 }

@@ -15,6 +15,8 @@ import (
 
 // MysqlHandler interface.
 type MysqlHandler interface {
+	SetQueryTimeout(int)
+
 	// check health and return log_bin_basename
 	Ping(*sql.DB) (*PingEntry, error)
 

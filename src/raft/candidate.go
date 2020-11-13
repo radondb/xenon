@@ -227,9 +227,9 @@ func (r *Candidate) processRequestVoteRequest(req *model.RaftRPCRequest) *model.
 		}
 	}
 
-	// 3. check viewid(req.viewid >= thisnode.viewid)
+	// 3. check viewid(req.viewid > thisnode.viewid)
 	// if the req.viewid is larger than this node, update the viewid
-	// if the req.viewid is equal and we have voted for other one then
+	// if the req.viewid is equal with this node and we have voted for other one then
 	// don't voted for this candidate
 	{
 		if req.GetViewID() > r.getViewID() {
@@ -237,7 +237,7 @@ func (r *Candidate) processRequestVoteRequest(req *model.RaftRPCRequest) *model.
 			r.degradeToFollower()
 		} else {
 			if (r.votedFor != noVote) && (r.votedFor != req.GetFrom()) {
-				r.WARNING("get.requestvote.from[N:%v, V:%v, E:%v].already.vote", req.GetFrom(), req.GetViewID(), req.GetEpochID())
+				r.WARNING("get.requestvote.from[N:%v, V:%v, E:%v].already.vote.for[%v].ret.reject", req.GetFrom(), req.GetViewID(), req.GetEpochID(), r.votedFor)
 				rsp.RetCode = model.ErrorVoteNotGranted
 				return rsp
 			}
@@ -246,6 +246,8 @@ func (r *Candidate) processRequestVoteRequest(req *model.RaftRPCRequest) *model.
 
 	// 4. voted for this candidate
 	r.votedFor = req.GetFrom()
+	r.WARNING("get.requestvote.from[N:%v, V:%v, E:%v].vote.for.this.candidate", req.GetFrom(), req.GetViewID(), req.GetEpochID())
+
 	// 5. a loser
 	r.degradeToFollower()
 	return rsp
@@ -256,6 +258,7 @@ func (r *Candidate) sendRequestVote(respChan chan *model.RaftRPCResponse) {
 	defer r.mutex.RUnlock()
 
 	r.incViewID()
+	r.votedFor = noVote
 	for _, peer := range r.peers {
 		r.wg.Add(1)
 		go func(peer *Peer) {
@@ -311,6 +314,9 @@ func (r *Candidate) processRequestVoteResponse(voteGranted *int, rsp *model.Raft
 
 func (r *Candidate) processPingRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
 	rsp := model.NewRaftRPCResponse(model.OK)
+	rsp.Raft.From = r.getID()
+	rsp.Raft.ViewID = r.getViewID()
+	rsp.Raft.EpochID = r.getEpochID()
 	rsp.Raft.State = r.state.String()
 	return rsp
 }
