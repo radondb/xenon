@@ -23,8 +23,9 @@ func TestMysql80Handler(t *testing.T) {
 	conf := config.DefaultMysqlConfig()
 	conf.Version = "mysql80"
 
-	mysql := NewMysql(conf, log)
+	mysql := NewMysql(conf, 10000, log)
 	want := new(Mysql80)
+	want.SetQueryTimeout(10000)
 	got := mysql.mysqlHandler
 	assert.Equal(t, want, got)
 }

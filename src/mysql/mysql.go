@@ -61,8 +61,8 @@ type Mysql struct {
 }
 
 // NewMysql creates the new Mysql.
-func NewMysql(conf *config.MysqlConfig, log *xlog.Log) *Mysql {
-	return &Mysql{
+func NewMysql(conf *config.MysqlConfig, queryTimeout int, log *xlog.Log) *Mysql {
+	mysql := &Mysql{
 		db:           nil,
 		log:          log,
 		conf:         conf,
@@ -70,6 +70,8 @@ func NewMysql(conf *config.MysqlConfig, log *xlog.Log) *Mysql {
 		mysqlHandler: getHandler(conf.Version),
 		pingTicker:   common.NormalTicker(conf.PingTimeout),
 	}
+	mysql.mysqlHandler.SetQueryTimeout(queryTimeout)
+	return mysql
 }
 
 // SetMysqlHandler used to set the repl handler.

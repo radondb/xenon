@@ -83,7 +83,7 @@ func mockRafts(log *xlog.Log, conf *config.RaftConfig, port int, count int, idle
 		}
 
 		// setup mysql
-		mysql57 := mysql.NewMysql(config.DefaultMysqlConfig(), log)
+		mysql57 := mysql.NewMysql(config.DefaultMysqlConfig(), 10000, log)
 		mysql57.SetMysqlHandler(mysql.NewMockGTIDA())
 		mysql57.PingStart()
 

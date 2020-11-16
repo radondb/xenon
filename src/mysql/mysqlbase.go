@@ -42,14 +42,20 @@ var (
 		"YES", "NO",
 	}
 
-	_ MysqlHandler = &MysqlBase{}
-	// timeout is 10s
-	reqTimeout = 10000
+	_ MysqlHandler = &MysqlBase{
+		queryTimeout: 10000,
+	}
 )
 
 // MysqlBase tuple.
 type MysqlBase struct {
 	MysqlHandler
+	queryTimeout int
+}
+
+// SetQueryTimeout used to set parameter queryTimeout
+func (my *MysqlBase) SetQueryTimeout(timeout int) {
+	my.queryTimeout = timeout
 }
 
 // Ping has 2 affects:
@@ -58,7 +64,7 @@ type MysqlBase struct {
 func (my *MysqlBase) Ping(db *sql.DB) (*PingEntry, error) {
 	pe := &PingEntry{}
 	query := "SHOW SLAVE STATUS"
-	rows, err := QueryWithTimeout(db, reqTimeout, query)
+	rows, err := QueryWithTimeout(db, my.queryTimeout, query)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +86,7 @@ func (my *MysqlBase) SetReadOnly(db *sql.DB, readonly bool) error {
 	// Set super_read_only on the slave.
 	// https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_super_read_only
 	cmds = append(cmds, fmt.Sprintf("SET GLOBAL super_read_only = %d", enabled))
-	return ExecuteSuperQueryListWithTimeout(db, reqTimeout, cmds)
+	return ExecuteSuperQueryListWithTimeout(db, my.queryTimeout, cmds)
 }
 
 // GetSlaveGTID gets the gtid from the default channel.
@@ -89,7 +95,7 @@ func (my *MysqlBase) GetSlaveGTID(db *sql.DB) (*model.GTID, error) {
 	gtid := &model.GTID{}
 
 	query := "SHOW SLAVE STATUS"
-	rows, err := QueryWithTimeout(db, reqTimeout, query)
+	rows, err := QueryWithTimeout(db, my.queryTimeout, query)
 	if err != nil {
 		return gtid, err
 	}
@@ -117,7 +123,7 @@ func (my *MysqlBase) GetMasterGTID(db *sql.DB) (*model.GTID, error) {
 	gtid := &model.GTID{}
 
 	query := "SHOW MASTER STATUS"
-	rows, err := QueryWithTimeout(db, reqTimeout, query)
+	rows, err := QueryWithTimeout(db, my.queryTimeout, query)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +143,7 @@ func (my *MysqlBase) GetMasterGTID(db *sql.DB) (*model.GTID, error) {
 func (my *MysqlBase) GetUUID(db *sql.DB) (string, error) {
 	uuid := ""
 	query := "SELECT @@SERVER_UUID"
-	rows, err := QueryWithTimeout(db, reqTimeout, query)
+	rows, err := QueryWithTimeout(db, my.queryTimeout, query)
 	if err != nil {
 		return uuid, err
 	}
@@ -152,25 +158,25 @@ func (my *MysqlBase) GetUUID(db *sql.DB) (string, error) {
 // StartSlaveIOThread used to start the io thread.
 func (my *MysqlBase) StartSlaveIOThread(db *sql.DB) error {
 	cmd := "START SLAVE IO_THREAD"
-	return ExecuteWithTimeout(db, reqTimeout, cmd)
+	return ExecuteWithTimeout(db, my.queryTimeout, cmd)
 }
 
 // StopSlaveIOThread used to stop the op thread.
 func (my *MysqlBase) StopSlaveIOThread(db *sql.DB) error {
 	cmd := "STOP SLAVE IO_THREAD"
-	return ExecuteWithTimeout(db, reqTimeout, cmd)
+	return ExecuteWithTimeout(db, my.queryTimeout, cmd)
 }
 
 // StartSlave used to start slave.
 func (my *MysqlBase) StartSlave(db *sql.DB) error {
 	cmd := "START SLAVE"
-	return ExecuteWithTimeout(db, reqTimeout, cmd)
+	return ExecuteWithTimeout(db, my.queryTimeout, cmd)
 }
 
 // StopSlave used to stop the slave.
 func (my *MysqlBase) StopSlave(db *sql.DB) error {
 	cmd := "STOP SLAVE"
-	return ExecuteWithTimeout(db, reqTimeout, cmd)
+	return ExecuteWithTimeout(db, my.queryTimeout, cmd)
 }
 
 func (my *MysqlBase) changeMasterToCommands(master *model.Repl) []string {
@@ -192,14 +198,14 @@ func (my *MysqlBase) ChangeMasterTo(db *sql.DB, master *model.Repl) error {
 	cmds = append(cmds, "STOP SLAVE")
 	cmds = append(cmds, my.changeMasterToCommands(master)...)
 	cmds = append(cmds, "START SLAVE")
-	return ExecuteSuperQueryListWithTimeout(db, reqTimeout, cmds)
+	return ExecuteSuperQueryListWithTimeout(db, my.queryTimeout, cmds)
 }
 
 // ChangeToMaster changes a slave to be master.
 func (my *MysqlBase) ChangeToMaster(db *sql.DB) error {
 	cmds := []string{"STOP SLAVE",
 		"RESET SLAVE ALL"} //"ALL" makes it forget the master host:port
-	return ExecuteSuperQueryListWithTimeout(db, reqTimeout, cmds)
+	return ExecuteSuperQueryListWithTimeout(db, my.queryTimeout, cmds)
 }
 
 // WaitUntilAfterGTID used to do 'SELECT WAIT_UNTIL_SQL_THREAD_AFTER_GTIDS' command.
@@ -212,7 +218,7 @@ func (my *MysqlBase) WaitUntilAfterGTID(db *sql.DB, targetGTID string) error {
 // GetGtidSubtract used to do "SELECT GTID_SUBTRACT('subsetGTID','setGTID') as gtid_sub" command
 func (my *MysqlBase) GetGtidSubtract(db *sql.DB, subsetGTID string, setGTID string) (string, error) {
 	query := fmt.Sprintf("SELECT GTID_SUBTRACT('%s','%s') as gtid_sub", subsetGTID, setGTID)
-	rows, err := QueryWithTimeout(db, reqTimeout, query)
+	rows, err := QueryWithTimeout(db, my.queryTimeout, query)
 	if err != nil {
 		return "", err
 	}
@@ -231,50 +237,50 @@ func (my *MysqlBase) SetGlobalSysVar(db *sql.DB, varsql string) error {
 	if !strings.HasPrefix(varsql, prefix) {
 		return errors.Errorf("[%v].must.be.startwith:%v", varsql, prefix)
 	}
-	return ExecuteWithTimeout(db, reqTimeout, varsql)
+	return ExecuteWithTimeout(db, my.queryTimeout, varsql)
 }
 
 // ResetMaster used to reset master.
 func (my *MysqlBase) ResetMaster(db *sql.DB) error {
 	cmds := "RESET MASTER"
-	return ExecuteWithTimeout(db, reqTimeout, cmds)
+	return ExecuteWithTimeout(db, my.queryTimeout, cmds)
 }
 
 // ResetSlaveAll used to reset slave.
 func (my *MysqlBase) ResetSlaveAll(db *sql.DB) error {
 	cmds := []string{"STOP SLAVE",
 		"RESET SLAVE ALL"} //"ALL" makes it forget the master host:port
-	return ExecuteSuperQueryListWithTimeout(db, reqTimeout, cmds)
+	return ExecuteSuperQueryListWithTimeout(db, my.queryTimeout, cmds)
 }
 
 // PurgeBinlogsTo used to purge binlog.
 func (my *MysqlBase) PurgeBinlogsTo(db *sql.DB, binlog string) error {
 	cmds := fmt.Sprintf("PURGE BINARY LOGS TO '%s'", binlog)
-	return ExecuteWithTimeout(db, reqTimeout, cmds)
+	return ExecuteWithTimeout(db, my.queryTimeout, cmds)
 }
 
 // EnableSemiSyncMaster used to enable the semi-sync on master.
 func (my *MysqlBase) EnableSemiSyncMaster(db *sql.DB) error {
 	cmds := "SET GLOBAL rpl_semi_sync_master_enabled=ON"
-	return ExecuteWithTimeout(db, reqTimeout, cmds)
+	return ExecuteWithTimeout(db, my.queryTimeout, cmds)
 }
 
 //SetSemiWaitSlaveCount used set rpl_semi_sync_master_wait_for_slave_count
 func (my *MysqlBase) SetSemiWaitSlaveCount(db *sql.DB, count int) error {
 	cmds := fmt.Sprintf("SET GLOBAL rpl_semi_sync_master_wait_for_slave_count = %d", count)
-	return ExecuteWithTimeout(db, reqTimeout, cmds)
+	return ExecuteWithTimeout(db, my.queryTimeout, cmds)
 }
 
 // DisableSemiSyncMaster used to disable the semi-sync from master.
 func (my *MysqlBase) DisableSemiSyncMaster(db *sql.DB) error {
 	cmds := "SET GLOBAL rpl_semi_sync_master_enabled=OFF"
-	return ExecuteWithTimeout(db, reqTimeout, cmds)
+	return ExecuteWithTimeout(db, my.queryTimeout, cmds)
 }
 
 // SetSemiSyncMasterTimeout used to set semi-sync master timeout
 func (my *MysqlBase) SetSemiSyncMasterTimeout(db *sql.DB, timeout uint64) error {
 	cmds := fmt.Sprintf("SET GLOBAL rpl_semi_sync_master_timeout=%d", timeout)
-	return ExecuteWithTimeout(db, reqTimeout, cmds)
+	return ExecuteWithTimeout(db, my.queryTimeout, cmds)
 }
 
 // CheckUserExists used to check the user exists or not.

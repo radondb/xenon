@@ -34,6 +34,7 @@ type Leader struct {
 
 	purgeBinlogTick   *time.Ticker
 	checkSemiSyncTick *time.Ticker
+	checkGTIDTick     *time.Ticker
 
 	// leader process heartbeat request handler
 	processHeartbeatRequestHandler func(*model.RaftRPCRequest) *model.RaftRPCResponse
@@ -52,7 +53,7 @@ type Leader struct {
 }
 
 const (
-	semisyncTimeoutFor2Nodes = 300000              // 5 minutes
+	semisyncTimeoutFor2Nodes = 10000               // 10 seconds
 	semisyncTimeout          = 1000000000000000000 // for 3 or more nodes
 )
 
@@ -345,6 +346,9 @@ func (r *Leader) processHeartbeatResponse(ackGranted *int, rsp *model.RaftRPCRes
 
 func (r *Leader) processPingRequest(req *model.RaftRPCRequest) *model.RaftRPCResponse {
 	rsp := model.NewRaftRPCResponse(model.OK)
+	rsp.Raft.From = r.getID()
+	rsp.Raft.ViewID = r.getViewID()
+	rsp.Raft.EpochID = r.getEpochID()
 	rsp.Raft.State = r.state.String()
 	return rsp
 }
@@ -357,6 +361,7 @@ func (r *Leader) degradeToFollower() {
 
 	r.purgeBinlogStop()
 	r.checkSemiSyncStop()
+	r.checkGTIDStop()
 	r.IncLeaderDegrades()
 	r.setState(FOLLOWER)
 	r.isDegradeToFollower = true
@@ -473,7 +478,7 @@ func (r *Leader) purgeBinlog() {
 }
 
 func (r *Leader) checkSemiSyncStart() {
-	interval := 5000
+	interval := r.getElectionTimeout() / 2
 	r.checkSemiSyncTick = common.NormalTicker(interval)
 	go func(leader *Leader) {
 		for range leader.checkSemiSyncTick.C {
@@ -514,11 +519,37 @@ func (r *Leader) checkSemiSync() {
 	}
 }
 
+func (r *Leader) checkGTIDStart() {
+	interval := r.getElectionTimeout() / 2
+	r.checkGTIDTick = common.NormalTicker(interval)
+	go func(leader *Leader) {
+		for range leader.checkGTIDTick.C {
+			leader.checkGTID()
+		}
+	}(r)
+	r.INFO("check.gtid.thread.start[%vms]...", interval)
+}
+
+func (r *Leader) checkGTIDStop() {
+	r.checkGTIDTick.Stop()
+	r.INFO("check.gtid.thread.stop...")
+}
+
+func (r *Leader) checkGTID() {
+	if gtid, err := r.mysql.GetGTID(); err != nil {
+		r.ERROR("mysql.get.gtid.error[%v]", err)
+	} else {
+		r.gtid = gtid
+		r.DEBUG("mysql.get.gtid[%v]", r.gtid)
+	}
+}
+
 func (r *Leader) stateInit() {
 	r.WARNING("state.init")
 	r.updateStateBegin()
 	r.purgeBinlogStart()
 	r.checkSemiSyncStart()
+	r.checkGTIDStart()
 	r.prepareSettingsAsync()
 	r.isDegradeToFollower = false
 
@@ -534,6 +565,7 @@ func (r *Leader) stateExit() {
 
 		r.purgeBinlogStop()
 		r.checkSemiSyncStop()
+		r.checkGTIDStop()
 	}
 	// Wait for the LEADER state-machine async work done.
 	r.wg.Wait()
