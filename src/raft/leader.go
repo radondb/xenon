@@ -444,7 +444,7 @@ func (r *Leader) purgeBinlogStart() {
 			leader.purgeBinlog()
 		}
 	}(r)
-	r.INFO("purge.bing.start[%vms]...", r.conf.PurgeBinlogInterval)
+	r.INFO("purge.binlog.start[%vms]...", r.conf.PurgeBinlogInterval)
 }
 
 func (r *Leader) purgeBinlogStop() {

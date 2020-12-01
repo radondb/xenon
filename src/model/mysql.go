@@ -10,6 +10,7 @@ package model
 
 const (
 	RPCMysqlStatus                   = "MysqlRPC.Status"
+	RPCMysqlGTIDSubtract             = "MysqlRPC.GTIDSubtract"
 	RPCMysqlSetGlobalSysVar          = "MysqlRPC.SetGlobalSysVar"
 	RPCMysqlCreateUserWithPrivileges = "UserRPC.CreateUserWithPrivileges"
 	RPCMysqlCreateNormalUser         = "UserRPC.CreateNormalUser"
@@ -151,6 +152,34 @@ func NewMysqlStatusRPCRequest() *MysqlStatusRPCRequest {
 
 func NewMysqlStatusRPCResponse(code string) *MysqlStatusRPCResponse {
 	return &MysqlStatusRPCResponse{RetCode: code}
+}
+
+type MysqlGTIDSubtractRPCRequest struct {
+	// The IP of this request
+	From string
+
+	// The first parameter of the function GTID_SUBTRACT
+	SubsetGTID string
+
+	// The second parameter of the function GTID_SUBTRACT
+	SetGTID string
+}
+
+type MysqlGTIDSubtractRPCResponse struct {
+	// The GTID Subtract of this request
+	Subtract string
+
+	// Return code to rpc client:
+	// OK or other errors
+	RetCode string
+}
+
+func NewMysqlGTIDSubtractRPCRequest() *MysqlGTIDSubtractRPCRequest {
+	return &MysqlGTIDSubtractRPCRequest{}
+}
+
+func NewMysqlGTIDSubtractRPCResponse(code string) *MysqlGTIDSubtractRPCResponse {
+	return &MysqlGTIDSubtractRPCResponse{RetCode: code}
 }
 
 // user

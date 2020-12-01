@@ -200,16 +200,17 @@ func (c *ReplicationConfig) UnmarshalJSON(b []byte) error {
 
 type BackupConfig struct {
 	// MUST: set in init
-	SSHHost               string `json:"ssh-host"`
-	SSHUser               string `json:"ssh-user"`
-	SSHPasswd             string `json:"ssh-passwd"`
-	SSHPort               int    `json:"ssh-port"`
-	BackupDir             string `json:"backupdir"`
-	XtrabackupBinDir      string `json:"xtrabackup-bindir"`
-	BackupIOPSLimits      int    `json:"backup-iops-limits"`
-	UseMemory             string `json:"backup-use-memory"`
-	Parallel              int    `json:"backup-parallel"`
-	MysqldMonitorInterval int    `json:"mysqld-monitor-interval"`
+	SSHHost                 string `json:"ssh-host"`
+	SSHUser                 string `json:"ssh-user"`
+	SSHPasswd               string `json:"ssh-passwd"`
+	SSHPort                 int    `json:"ssh-port"`
+	BackupDir               string `json:"backupdir"`
+	XtrabackupBinDir        string `json:"xtrabackup-bindir"`
+	BackupIOPSLimits        int    `json:"backup-iops-limits"`
+	UseMemory               string `json:"backup-use-memory"`
+	Parallel                int    `json:"backup-parallel"`
+	MysqldMonitorInterval   int    `json:"mysqld-monitor-interval"`
+	MaxAllowedLocalTrxCount int    `json:"max-allowed-local-trx-count"`
 
 	// mysql admin
 	Admin string
@@ -232,19 +233,20 @@ type BackupConfig struct {
 
 func DefaultBackupConfig() *BackupConfig {
 	return &BackupConfig{
-		SSHPort:               22,
-		BackupDir:             "/u01/backup",
-		XtrabackupBinDir:      ".",
-		BackupIOPSLimits:      100000,
-		UseMemory:             "2GB",
-		Parallel:              2,
-		MysqldMonitorInterval: 1000 * 1,
-		Admin:                 "root",
-		Passwd:                "",
-		Host:                  "localhost",
-		Port:                  3306,
-		Basedir:               "/u01/mysql_20160606/",
-		DefaultsFile:          "/etc/my3306.cnf",
+		SSHPort:                 22,
+		BackupDir:               "/u01/backup",
+		XtrabackupBinDir:        ".",
+		BackupIOPSLimits:        100000,
+		UseMemory:               "2GB",
+		Parallel:                2,
+		MysqldMonitorInterval:   1000 * 1,
+		MaxAllowedLocalTrxCount: 0,
+		Admin:                   "root",
+		Passwd:                  "",
+		Host:                    "localhost",
+		Port:                    3306,
+		Basedir:                 "/u01/mysql_20160606/",
+		DefaultsFile:            "/etc/my3306.cnf",
 	}
 }
 

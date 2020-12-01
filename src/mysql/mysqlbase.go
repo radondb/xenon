@@ -215,8 +215,8 @@ func (my *MysqlBase) WaitUntilAfterGTID(db *sql.DB, targetGTID string) error {
 	return Execute(db, query)
 }
 
-// GetGtidSubtract used to do "SELECT GTID_SUBTRACT('subsetGTID','setGTID') as gtid_sub" command
-func (my *MysqlBase) GetGtidSubtract(db *sql.DB, subsetGTID string, setGTID string) (string, error) {
+// GetGTIDSubtract used to do "SELECT GTID_SUBTRACT('subsetGTID','setGTID') as gtid_sub" command
+func (my *MysqlBase) GetGTIDSubtract(db *sql.DB, subsetGTID string, setGTID string) (string, error) {
 	query := fmt.Sprintf("SELECT GTID_SUBTRACT('%s','%s') as gtid_sub", subsetGTID, setGTID)
 	rows, err := QueryWithTimeout(db, my.queryTimeout, query)
 	if err != nil {

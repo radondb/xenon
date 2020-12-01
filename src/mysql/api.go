@@ -165,7 +165,7 @@ func (m *Mysql) CheckGTID(followerGTID *model.GTID, candidateGTID *model.GTID) b
 
 	// gtid_sub is not none, means the follower gtid is bigger than candidate gtid
 	// if viewdiff<=0 and gtid_sub is not null it must be localcommitted
-	gtid_sub, err := m.GetGtidSubtract(fGTID, cGTID)
+	gtid_sub, err := m.GetGTIDSubtract(fGTID, cGTID)
 	if err != nil {
 		log.Error("mysql.CheckGTID.error[%v]", err)
 		return false
@@ -176,12 +176,12 @@ func (m *Mysql) CheckGTID(followerGTID *model.GTID, candidateGTID *model.GTID) b
 	return false
 }
 
-func (m *Mysql) GetGtidSubtract(subsetGTID string, setGTID string) (string, error) {
+func (m *Mysql) GetGTIDSubtract(subsetGTID string, setGTID string) (string, error) {
 	db, err := m.getDB()
 	if err != nil {
 		return "", err
 	}
-	return m.mysqlHandler.GetGtidSubtract(db, subsetGTID, setGTID)
+	return m.mysqlHandler.GetGTIDSubtract(db, subsetGTID, setGTID)
 }
 
 // StartSlaveIOThread used to start the slave io thread.

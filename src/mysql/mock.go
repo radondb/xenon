@@ -172,8 +172,8 @@ func DefaultCheckGTID(followerGTID *model.GTID, leaderGTID *model.GTID) bool {
 	return false
 }
 
-// GetGtidSubtract mock.
-func (mogtid *MockGTID) GetGtidSubtract(db *sql.DB, slaveGTID string, masterGTID string) (string, error) {
+// GetGTIDSubtract mock.
+func (mogtid *MockGTID) GetGTIDSubtract(db *sql.DB, slaveGTID string, masterGTID string) (string, error) {
 	return mogtid.GetGtidSubtractFn(db, slaveGTID, masterGTID)
 }
 

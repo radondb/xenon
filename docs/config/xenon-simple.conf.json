@@ -38,11 +38,12 @@
 		"ssh-user":"ubuntu",
 		"ssh-passwd":"ubuntu",
 		"ssh-port":22,
-		"backup-dir":"/home/ubuntu/data3306",
+		"backupdir":"/home/ubuntu/data3306",
 		"xtrabackup-bindir":"/home/ubuntu/xtrabackup_20161216",
 		"backup-iops-limits":100000,
 		"backup-use-memory": "2GB",
-		"backup-parallel": 2
+		"backup-parallel": 2,
+		"max-allowed-local-trx-count": 0
 	},
 
 	"rpc":

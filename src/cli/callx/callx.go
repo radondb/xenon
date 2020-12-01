@@ -753,6 +753,23 @@ func GetGTIDRPC(node string) (*model.MysqlStatusRPCResponse, error) {
 	return rsp, err
 }
 
+func GetGTIDSubtractRPC(node string, subsetGTID string, setGTID string) (*model.MysqlGTIDSubtractRPCResponse, error) {
+	cli, cleanup, err := GetClient(node)
+	if err != nil {
+		return nil, err
+	}
+	defer cleanup()
+
+	method := model.RPCMysqlGTIDSubtract
+	req := model.NewMysqlGTIDSubtractRPCRequest()
+	req.SubsetGTID = subsetGTID
+	req.SetGTID = setGTID
+	rsp := model.NewMysqlGTIDSubtractRPCResponse(model.OK)
+	err = cli.Call(method, req, rsp)
+
+	return rsp, err
+}
+
 // GetMysqlUserRPC get mysql user
 func GetMysqlUserRPC(node string) (*model.MysqlUserRPCResponse, error) {
 	cli, cleanup, err := GetClient(node)

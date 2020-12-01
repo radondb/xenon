@@ -17,7 +17,7 @@
 		"version":"mysql80",
 		"passwd":"",
 		"host":"localhost",
-		"port":${YOUR-MYSQL-PORT},
+		"port":"${YOUR-MYSQL-PORT}",
 		"basedir":"${YOUR-MYSQL-BIN-DIR}",
 		"defaults-file":"${YOUR-MYSQL-CNF-PATH}"
 	},
@@ -35,7 +35,8 @@
 		"ssh-passwd":"${YOUR-SSH-PWD}",
 		"basedir":"${YOUR-MYSQL-BIN-DIR}",
 		"backupdir":"${YOUR-BACKUP-DIR}",
-		"xtrabackup-bindir":"${YOUR-XTRABACKUP-BIN-DIR}"
+		"xtrabackup-bindir":"${YOUR-XTRABACKUP-BIN-DIR}",
+		"max-allowed-local-trx-count": "${YOUR-MAX-ALLOWED-LOCAL-TRX-COUNT}"
 	},
 
 	"rpc":
