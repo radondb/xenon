@@ -145,7 +145,7 @@ $ sudo vi /etc/xenon/xenon.json
         "ssh-user":"${YOUR-SSH-USER}",
         "ssh-passwd":"${YOUR-SSH-PWD}",
         "basedir":"${YOUR-MYSQL-BIN-DIR}",
-        "backup-dir":"${YOUR-BACKUP-DIR}",
+        "backupdir":"${YOUR-BACKUP-DIR}",
         "xtrabackup-bindir":"${YOUR-XTRABACKUP-BIN-DIR}"
     },
 

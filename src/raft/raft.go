@@ -212,7 +212,7 @@ func (r *Raft) freePeers() {
 	}
 }
 
-// send command to state machine(F/C/L/I/S) loop with maxSendTime tiemout
+// send command to state machine(F/C/L/I/S) loop with maxSendTime timeout
 // (F/C/L/I/S)-loop should handle it and return
 func (r *Raft) send(t int, request interface{}, maxSendTime int) (interface{}, error) {
 	if !r.running() {

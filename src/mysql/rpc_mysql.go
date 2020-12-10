@@ -106,3 +106,15 @@ func (m *MysqlRPC) Status(req *model.MysqlStatusRPCRequest, rsp *model.MysqlStat
 	rsp.Stats = m.mysql.getStats()
 	return nil
 }
+
+// GTIDSubstract returns the mysql GTID subtract info.
+func (m *MysqlRPC) GTIDSubtract(req *model.MysqlGTIDSubtractRPCRequest, rsp *model.MysqlGTIDSubtractRPCResponse) error {
+	var err error
+
+	rsp.RetCode = model.OK
+	if rsp.Subtract, err = m.mysql.GetGTIDSubtract(req.SubsetGTID, req.SetGTID); err != nil {
+		rsp.RetCode = err.Error()
+		return nil
+	}
+	return nil
+}

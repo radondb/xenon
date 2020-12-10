@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"model"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 	"xbase/common"
@@ -150,17 +151,65 @@ func mysqlShutDownCommandFn(cmd *cobra.Command, args []string) {
 // rebuild me
 var (
 	fromStr string
+	force   bool
 )
 
 func NewMysqlRebuildMeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rebuildme [--from=endpoint]",
-		Short: "rebuild a slave --from=endpoint",
+		Use:   "rebuildme [--from=endpoint][--force]",
+		Short: "rebuild a slave --from=endpoint --force",
 		Run:   mysqlRebuildMeCommandFn,
 	}
 	cmd.Flags().StringVar(&fromStr, "from", "", "--from=endpoint")
+	cmd.Flags().BoolVar(&force, "force", false, "--force")
 
 	return cmd
+}
+
+func getLocalTrxCount(self string, bestone string) (int, error) {
+	count := 0
+
+	rsp1, err := callx.GetGTIDRPC(bestone)
+	if err != nil {
+		return -1, fmt.Errorf("get.gtid.from.bestone[%v].failed[%v]", bestone, err)
+	} else if rsp1.GTID.Executed_GTID_Set == "" {
+		return -1, fmt.Errorf("the.Executed_GTID_Set.of.bestone[%v].is.null", bestone)
+	}
+	fromGTID := rsp1.GTID
+
+	rsp1, err = callx.GetGTIDRPC(self)
+	if err != nil {
+		return -1, fmt.Errorf("get.gtid.from.myself[%v].failed[%v]", self, err)
+	} else if rsp1.GTID.Executed_GTID_Set == "" {
+		return -1, fmt.Errorf("the.Executed_GTID_Set.of.myself[%v].is.null", self)
+	}
+	localGTID := rsp1.GTID
+
+	rsp2, err := callx.GetGTIDSubtractRPC(self, localGTID.Executed_GTID_Set, fromGTID.Executed_GTID_Set)
+	if err != nil {
+		return -1, fmt.Errorf("get.gtid.subtract.from.self[%v].failed[%v]", self, err)
+	}
+	subtract := rsp2.Subtract
+
+	// compute the number of local transactions
+	gtidSet := strings.Split(subtract, "\n")
+	for _, gtid := range gtidSet {
+		gtid = strings.TrimSpace(gtid)
+		gtid = strings.TrimSuffix(gtid, ",")
+		diffs := strings.Split(gtid, ":")[1:]
+		for _, diff := range diffs {
+			values := strings.Split(diff, "-")
+			if len(values) == 1 {
+				count += 1
+			} else {
+				s, _ := strconv.Atoi(values[0])
+				e, _ := strconv.Atoi(values[1])
+				count += e - s + 1
+			}
+		}
+	}
+
+	return count, nil
 }
 
 func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
@@ -183,6 +232,7 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 	datadir := conf.Backup.BackupDir
 	binlogDir := ""
 	binlogPrefix := ""
+	maxAllowedLocalTrxCount := conf.Backup.MaxAllowedLocalTrxCount
 
 	// 1. first to check I am leader or not
 	{
@@ -190,11 +240,11 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 		leader, err := callx.GetClusterLeader(self)
 		ErrorOK(err)
 		if leader == self {
-			log.Panic("[%v].I.am.leader.you.cant.rebuildme.sir", self)
+			log.Panic("I[%v].am.leader.you.cant.rebuildme.sir", self)
 		}
 	}
 
-	// 2. find the best to backup
+	// 2. find the best to backup and check gtid
 	{
 		if fromStr != "" {
 			bestone = fromStr
@@ -203,6 +253,22 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 			ErrorOK(err)
 		}
 		log.Warning("S2-->prepare.rebuild.from[%v]....", bestone)
+
+		// check if there are more than 2 local transactions on the local node than bestone
+		if force {
+			log.Warning("S2-->the.[--force].is.specified.skip.check.gtid")
+		} else {
+			working, err := callx.MysqlIsWorkingRPC(self)
+			ErrorOK(err)
+			if working == false {
+				log.Panic("local.mysql.is.not.working.you.cant.rebuildme.sir")
+			}
+			localTrxCount, err := getLocalTrxCount(self, bestone)
+			ErrorOK(err)
+			if localTrxCount > maxAllowedLocalTrxCount {
+				log.Panic("I[%v].have.[%v].local.transactions.more.than.maxAllowedLocalTrxCount[%v].compared.to.from[%v].you.cant.rebuildme.sir", self, localTrxCount, maxAllowedLocalTrxCount, bestone)
+			}
+		}
 	}
 
 	// 3. check bestone is not in BACKUPING
