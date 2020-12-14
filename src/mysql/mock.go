@@ -35,7 +35,7 @@ type MockGTID struct {
 	ChangeMasterToFn           func(*sql.DB, *model.Repl) error
 	ChangeToMasterFn           func(*sql.DB) error
 	WaitUntilAfterGTIDFn       func(*sql.DB, string) error
-	GetGtidSubtractFn          func(*sql.DB, string, string) (string, error)
+	GetGTIDSubtractFn          func(*sql.DB, string, string) (string, error)
 	GetUUIDFn                  func(*sql.DB) (string, error)
 	CheckGTIDFn                func(*model.GTID, *model.GTID) bool
 	SetGlobalSysVarFn          func(*sql.DB, string) error
@@ -163,8 +163,8 @@ func (mogtid *MockGTID) WaitUntilAfterGTID(db *sql.DB, targetGTID string) error 
 	return mogtid.WaitUntilAfterGTIDFn(db, targetGTID)
 }
 
-// DefaultGetGtidSubtract mock.
-func DefaultGetGtidSubtract(db *sql.DB, slaveGTID string, masterGTID string) (string, error) {
+// DefaultGetGTIDSubtract mock.
+func DefaultGetGTIDSubtract(db *sql.DB, slaveGTID string, masterGTID string) (string, error) {
 	return "", nil
 }
 
@@ -174,7 +174,7 @@ func DefaultCheckGTID(followerGTID *model.GTID, leaderGTID *model.GTID) bool {
 
 // GetGTIDSubtract mock.
 func (mogtid *MockGTID) GetGTIDSubtract(db *sql.DB, slaveGTID string, masterGTID string) (string, error) {
-	return mogtid.GetGtidSubtractFn(db, slaveGTID, masterGTID)
+	return mogtid.GetGTIDSubtractFn(db, slaveGTID, masterGTID)
 }
 
 // DefaultSetQueryTimeout mock.
@@ -409,7 +409,7 @@ func defaultMockGTID() *MockGTID {
 	mock.ChangeMasterToFn = DefaultChangeMasterTo
 	mock.ChangeToMasterFn = DefaultChangeToMaster
 	mock.WaitUntilAfterGTIDFn = DefaultWaitUntilAfterGTID
-	mock.GetGtidSubtractFn = DefaultGetGtidSubtract
+	mock.GetGTIDSubtractFn = DefaultGetGTIDSubtract
 	mock.GetUUIDFn = DefaultGetUUID
 	mock.CheckGTIDFn = DefaultCheckGTID
 	mock.SetGlobalSysVarFn = DefaultSetGlobalSysVar
@@ -519,7 +519,7 @@ func NewMockGTIDLC() *MockGTID {
 	mock.GetMasterGTIDFn = GetMasterGTIDLC
 	mock.GetSlaveGTIDFn = GetMasterGTIDLC
 	mock.CheckGTIDFn = CheckGTIDLC
-	mock.GetGtidSubtractFn = GetGtidSubtractInvalid
+	mock.GetGTIDSubtractFn = GetGTIDSubtractInvalid
 	mock.GetUUIDFn = GetUUIDLC
 	return mock
 }
@@ -716,6 +716,129 @@ func GetMasterGTIDD(db *sql.DB) (*model.GTID, error) {
 	return gtid, nil
 }
 
+// NewMockGTIDE1 mock.
+func NewMockGTIDE1() *MockGTID {
+	mock := defaultMockGTID()
+	mock.GetMasterGTIDFn = GetMasterGTIDE1
+	mock.GetGTIDSubtractFn = GetGTIDSubtractE
+	return mock
+}
+
+// GetMasterGTIDE1 mock.
+func GetMasterGTIDE1(db *sql.DB) (*model.GTID, error) {
+	gtid := &model.GTID{}
+	gtid.Master_Log_File = "mysql-bin.000001"
+	gtid.Read_Master_Log_Pos = 126
+	gtid.Executed_GTID_Set = "c78e798a-cccc-cccc-cccc-525433e8e796:1-200, df24366e-inva-bbbb-bbbb-525433b6dbaa:1-200, ef24366e-aaaa-aaaa-aaaa-525433b6deee:100"
+	gtid.Slave_IO_Running = true
+	gtid.Slave_SQL_Running = true
+	return gtid, nil
+}
+
+// NewMockGTIDE2 mock.
+func NewMockGTIDE2() *MockGTID {
+	mock := defaultMockGTID()
+	mock.GetMasterGTIDFn = GetMasterGTIDE2
+	mock.GetGTIDSubtractFn = GetGTIDSubtractE
+	return mock
+}
+
+// GetMasterGTIDE2 mock.
+func GetMasterGTIDE2(db *sql.DB) (*model.GTID, error) {
+	gtid := &model.GTID{}
+	gtid.Master_Log_File = "mysql-bin.000001"
+	gtid.Read_Master_Log_Pos = 126
+	gtid.Executed_GTID_Set = "c78e798a-cccc-cccc-cccc-525433e8e796:1-10, df24366e-inva-bbbb-bbbb-525433b6dbaa:1-40"
+	gtid.Slave_IO_Running = true
+	gtid.Slave_SQL_Running = true
+	return gtid, nil
+}
+
+// NewMockGTIDE3 mock.
+func NewMockGTIDE3() *MockGTID {
+	mock := defaultMockGTID()
+	mock.GetMasterGTIDFn = GetMasterGTIDE3
+	mock.GetGTIDSubtractFn = GetGTIDSubtractE
+	return mock
+}
+
+// GetMasterGTIDE3 mock.
+func GetMasterGTIDE3(db *sql.DB) (*model.GTID, error) {
+	gtid := &model.GTID{}
+	gtid.Master_Log_File = "mysql-bin.000001"
+	gtid.Read_Master_Log_Pos = 126
+	gtid.Executed_GTID_Set = "df24366e-inva-bbbb-bbbb-525433b6dbaa:1-31"
+	gtid.Slave_IO_Running = true
+	gtid.Slave_SQL_Running = true
+	return gtid, nil
+}
+
+// GetGTIDSubtractE mock
+func GetGTIDSubtractE(db *sql.DB, subsetGTID string, setGTID string) (string, error) {
+	if setGTID != "c78e798a-cccc-cccc-cccc-525433e8e796:1-10, df24366e-inva-bbbb-bbbb-525433b6dbaa:1-30" {
+		return "", nil
+	}
+
+	switch subsetGTID {
+	case "c78e798a-cccc-cccc-cccc-525433e8e796:1-200, df24366e-inva-bbbb-bbbb-525433b6dbaa:1-200, ef24366e-aaaa-aaaa-aaaa-525433b6deee:100":
+		return "c78e798a-cccc-cccc-cccc-525433e8e796:11-200,\ndf24366e-inva-bbbb-bbbb-525433b6dbaa:31-200,\nef24366e-aaaa-aaaa-aaaa-525433b6deee:100", nil
+	case "c78e798a-cccc-cccc-cccc-525433e8e796:1-10, df24366e-inva-bbbb-bbbb-525433b6dbaa:1-40":
+		return "df24366e-inva-bbbb-bbbb-525433b6dbaa:31-40", nil
+	case "df24366e-inva-bbbb-bbbb-525433b6dbaa:1-31":
+		return "df24366e-inva-bbbb-bbbb-525433b6dbaa:31", nil
+	}
+
+	return "", nil
+}
+
+// NewMockGTIDF mock.
+func NewMockGTIDF() *MockGTID {
+	mock := defaultMockGTID()
+	mock.GetMasterGTIDFn = GetMasterGTIDF
+	mock.GetGTIDSubtractFn = GetGTIDSubtractE
+	return mock
+}
+
+// GetMasterGTIDF mock.
+func GetMasterGTIDF(db *sql.DB) (*model.GTID, error) {
+	gtid := &model.GTID{}
+	gtid.Master_Log_File = "mysql-bin.000001"
+	gtid.Read_Master_Log_Pos = 126
+	gtid.Executed_GTID_Set = "c78e798a-cccc-cccc-cccc-525433e8e796:1-10, df24366e-inva-bbbb-bbbb-525433b6dbaa:1-30"
+	gtid.Slave_IO_Running = true
+	gtid.Slave_SQL_Running = true
+	return gtid, nil
+}
+
+// NewMockGTIDNull mock.
+func NewMockGTIDNull() *MockGTID {
+	mock := defaultMockGTID()
+	mock.GetMasterGTIDFn = GetMasterGTIDNull
+	return mock
+}
+
+// GetMasterGTIDNull mock.
+func GetMasterGTIDNull(db *sql.DB) (*model.GTID, error) {
+	gtid := &model.GTID{}
+	gtid.Master_Log_File = "mysql-bin.000001"
+	gtid.Read_Master_Log_Pos = 126
+	gtid.Executed_GTID_Set = ""
+	gtid.Slave_IO_Running = true
+	gtid.Slave_SQL_Running = true
+	return gtid, nil
+}
+
+// NewMockGTIDGetSubtractError mock.
+func NewMockGTIDGetGTIDSubtractError() *MockGTID {
+	mock := defaultMockGTID()
+	mock.GetGTIDSubtractFn = GetGTIDSubtractError
+	return mock
+}
+
+func GetGTIDSubtractError(db *sql.DB, subsetGTID string, setGTID string) (string, error) {
+	return "", errors.New("mock.GetGTIDSubtract.error")
+}
+
 // NewMockGTIDPingError mock.
 // mock Ping returns error
 func NewMockGTIDPingError() *MockGTID {
@@ -745,7 +868,7 @@ func PingError1(db *sql.DB) (*PingEntry, error) {
 // mock GetMasterGTIDInvalid returns Invalid
 func NewMockGTIDInvalid() *MockGTID {
 	mock := defaultMockGTID()
-	mock.GetGtidSubtractFn = GetGtidSubtractInvalid
+	mock.GetGTIDSubtractFn = GetGTIDSubtractInvalid
 	mock.GetMasterGTIDFn = GetMasterGTIDInvalid
 	return mock
 }
@@ -824,8 +947,8 @@ func WaitUntilAfterGTIDError(db *sql.DB, targetGTID string) error {
 	return errors.New("mock.WaitUntilAfterGTID.error")
 }
 
-// GetGtidSubtractInvalid mock.
-func GetGtidSubtractInvalid(db *sql.DB, slaveGTID string, masterGTID string) (string, error) {
+// GetGTIDSubtractInvalid mock.
+func GetGTIDSubtractInvalid(db *sql.DB, slaveGTID string, masterGTID string) (string, error) {
 	return "localcommit", nil
 }
 
