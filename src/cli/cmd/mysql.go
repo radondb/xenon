@@ -305,6 +305,10 @@ func mysqlRebuildMeCommandFn(cmd *cobra.Command, args []string) {
 		// wait
 		err = callx.WaitMysqldShutdownRPC(self)
 		ErrorOK(err)
+
+		// set the mysql state to dead, avoid failure to rebuild node with small amounts of data
+		err = callx.SetMysqlStateRPC(self, model.MysqlDead)
+		ErrorOK(err)
 	}
 
 	// 7. check bestone is not in BACKUPING again

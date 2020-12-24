@@ -11,6 +11,7 @@ package model
 const (
 	RPCMysqlStatus                   = "MysqlRPC.Status"
 	RPCMysqlGTIDSubtract             = "MysqlRPC.GTIDSubtract"
+	RPCMysqlSetState                 = "MysqlRPC.SetState"
 	RPCMysqlSetGlobalSysVar          = "MysqlRPC.SetGlobalSysVar"
 	RPCMysqlCreateUserWithPrivileges = "UserRPC.CreateUserWithPrivileges"
 	RPCMysqlCreateNormalUser         = "UserRPC.CreateNormalUser"
@@ -23,6 +24,18 @@ const (
 	RPCMysqlResetMaster              = "MysqlRPC.ResetMaster"
 	RPCMysqlResetSlaveAll            = "MysqlRPC.ResetSlaveAll"
 	RPCMysqlIsWorking                = "MysqlRPC.IsWorking"
+)
+
+type (
+	// State enum.
+	MysqlState string
+)
+
+const (
+	// MysqlAlive enum.
+	MysqlAlive MysqlState = "ALIVE"
+	// MysqlDead enum.
+	MysqlDead MysqlState = "DEAD"
 )
 
 // GTID info
@@ -180,6 +193,28 @@ func NewMysqlGTIDSubtractRPCRequest() *MysqlGTIDSubtractRPCRequest {
 
 func NewMysqlGTIDSubtractRPCResponse(code string) *MysqlGTIDSubtractRPCResponse {
 	return &MysqlGTIDSubtractRPCResponse{RetCode: code}
+}
+
+type MysqlSetStateRPCRequest struct {
+	// The IP of this request
+	From string
+
+	// The new state
+	State MysqlState
+}
+
+type MysqlSetStateRPCResponse struct {
+	// Return code to rpc client:
+	// OK or other errors
+	RetCode string
+}
+
+func NewMysqlSetStateRPCRequest() *MysqlSetStateRPCRequest {
+	return &MysqlSetStateRPCRequest{}
+}
+
+func NewMysqlSetStateRPCResponse(code string) *MysqlSetStateRPCResponse {
+	return &MysqlSetStateRPCResponse{RetCode: code}
 }
 
 // user

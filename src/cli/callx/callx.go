@@ -315,6 +315,25 @@ func KillMysqldRPC(node string) error {
 	return nil
 }
 
+func SetMysqlStateRPC(node string, state model.MysqlState) error {
+	cli, cleanup, err := GetClient(node)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
+	method := model.RPCMysqlSetState
+	req := model.NewMysqlSetStateRPCRequest()
+	req.State = state
+	rsp := model.NewMysqlSetStateRPCResponse(model.OK)
+	err = cli.Call(method, req, rsp)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func WaitMysqldShutdownRPC(node string) error {
 	cli, cleanup, err := GetClient(node)
 	if err != nil {

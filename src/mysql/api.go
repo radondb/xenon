@@ -44,7 +44,7 @@ func (m *Mysql) PingStop() {
 // the slaves Slave_IO_Running is false, because it's in connecting state
 func (m *Mysql) Promotable() bool {
 	log := m.log
-	promotable := (m.GetState() == MysqlAlive)
+	promotable := (m.GetState() == model.MysqlAlive)
 	if promotable {
 		gtid, err := m.GetGTID()
 		if err != nil {
@@ -257,7 +257,7 @@ func (m *Mysql) WaitUntilAfterGTID(targetGTID string) error {
 }
 
 // GetState returns the mysql state.
-func (m *Mysql) GetState() State {
+func (m *Mysql) GetState() model.MysqlState {
 	return m.getState()
 }
 
@@ -315,7 +315,7 @@ func (m *Mysql) WaitMysqlWorks(timeout int) error {
 	go func() {
 		for {
 			m.Ping()
-			if m.GetState() == MysqlAlive {
+			if m.GetState() == model.MysqlAlive {
 				errChannel <- nil
 				break
 			}

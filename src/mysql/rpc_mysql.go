@@ -84,7 +84,7 @@ func (m *MysqlRPC) StartSlave(req *model.MysqlRPCRequest, rsp *model.MysqlRPCRes
 
 // IsWorking used to check the mysql works or not.
 func (m *MysqlRPC) IsWorking(req *model.MysqlRPCRequest, rsp *model.MysqlRPCResponse) error {
-	if m.mysql.GetState() == MysqlAlive {
+	if m.mysql.GetState() == model.MysqlAlive {
 		rsp.RetCode = model.OK
 	} else {
 		rsp.RetCode = model.ErrorMySQLDown
@@ -116,5 +116,12 @@ func (m *MysqlRPC) GTIDSubtract(req *model.MysqlGTIDSubtractRPCRequest, rsp *mod
 		rsp.RetCode = err.Error()
 		return nil
 	}
+	return nil
+}
+
+// SetState used to set the mysql state.
+func (m *MysqlRPC) SetState(req *model.MysqlSetStateRPCRequest, rsp *model.MysqlSetStateRPCResponse) error {
+	rsp.RetCode = model.OK
+	m.mysql.setState(req.State)
 	return nil
 }

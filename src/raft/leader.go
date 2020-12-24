@@ -10,7 +10,6 @@ package raft
 
 import (
 	"model"
-	"mysql"
 	"strings"
 	"sync"
 	"time"
@@ -287,7 +286,7 @@ func (r *Leader) processRequestVoteRequest(req *model.RaftRPCRequest) *model.Raf
 // broadcast hearbeat requests to other peers of the cluster
 func (r *Leader) sendHeartbeat(mysqlDown *bool, c chan *model.RaftRPCResponse) {
 	// check MySQL down
-	if r.mysql.GetState() == mysql.MysqlDead {
+	if r.mysql.GetState() == model.MysqlDead {
 		*mysqlDown = true
 		return
 	}

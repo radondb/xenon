@@ -42,9 +42,48 @@ func TestMysqlRPCStatus(t *testing.T) {
 		}
 		want := model.NewMysqlStatusRPCResponse(model.OK)
 		want.GTID = GTID
-		want.Status = string(MysqlDead)
+		want.Status = string(model.MysqlDead)
 		want.Stats = &model.MysqlStats{}
 
+		got := rsp
+		assert.Equal(t, want, got)
+	}
+}
+
+func TestMysqlRPCSetState(t *testing.T) {
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	port := common.RandomPort(8000, 9000)
+	id, _, cleanup := MockMysql(log, port, NewMockGTIDB())
+	defer cleanup()
+
+	// MysqlDead
+	{
+		method := model.RPCMysqlSetState
+		req := model.NewMysqlSetStateRPCRequest()
+		req.State = model.MysqlDead
+		rsp := model.NewMysqlSetStateRPCResponse(model.OK)
+		c, cleanup := MockGetClient(t, id)
+		defer cleanup()
+		err := c.Call(method, req, rsp)
+		assert.Nil(t, err)
+
+		want := model.NewMysqlSetStateRPCResponse(model.OK)
+		got := rsp
+		assert.Equal(t, want, got)
+	}
+
+	// MysqlAlive
+	{
+		method := model.RPCMysqlSetState
+		req := model.NewMysqlSetStateRPCRequest()
+		req.State = model.MysqlAlive
+		rsp := model.NewMysqlSetStateRPCResponse(model.OK)
+		c, cleanup := MockGetClient(t, id)
+		defer cleanup()
+		err := c.Call(method, req, rsp)
+		assert.Nil(t, err)
+
+		want := model.NewMysqlSetStateRPCResponse(model.OK)
 		got := rsp
 		assert.Equal(t, want, got)
 	}

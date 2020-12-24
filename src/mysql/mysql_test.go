@@ -10,6 +10,7 @@ package mysql
 
 import (
 	"config"
+	"model"
 	"testing"
 	"time"
 	"xbase/common"
@@ -28,7 +29,7 @@ func TestMysql(t *testing.T) {
 
 	time.Sleep(time.Duration(config.DefaultMysqlConfig().PingTimeout*2) * time.Millisecond)
 	got := mysql.GetState()
-	want := MysqlAlive
+	want := model.MysqlAlive
 	assert.Equal(t, want, got)
 	mysql.PingStop()
 }
@@ -42,7 +43,7 @@ func TestStateDead(t *testing.T) {
 
 	time.Sleep(time.Duration(config.DefaultMysqlConfig().PingTimeout*2) * time.Millisecond)
 	got := mysql.GetState()
-	want := MysqlDead
+	want := model.MysqlDead
 	assert.Equal(t, want, got)
 	mysql.PingStop()
 }
@@ -56,7 +57,7 @@ func TestCreateReplUser(t *testing.T) {
 
 	time.Sleep(time.Duration(config.DefaultMysqlConfig().PingTimeout*2) * time.Millisecond)
 	got := mysql.GetState()
-	want := MysqlAlive
+	want := model.MysqlAlive
 	assert.Equal(t, want, got)
 	mysql.PingStop()
 }
