@@ -20,19 +20,11 @@ import (
 )
 
 type (
-	// State enum.
-	State string
-
 	// Option enum.
 	Option string
 )
 
 const (
-	// MysqlAlive enum.
-	MysqlAlive State = "ALIVE"
-	// MysqlDead enum.
-	MysqlDead State = "DEAD"
-
 	// MysqlReadonly enum.
 	MysqlReadonly Option = "READONLY"
 	// MysqlReadwrite enum.
@@ -49,7 +41,7 @@ type Mysql struct {
 	db           *sql.DB
 	conf         *config.MysqlConfig
 	log          *xlog.Log
-	state        State
+	state        model.MysqlState
 	option       Option
 	mutex        sync.RWMutex
 	dbmutex      sync.RWMutex
@@ -66,7 +58,7 @@ func NewMysql(conf *config.MysqlConfig, queryTimeout int, log *xlog.Log) *Mysql 
 		db:           nil,
 		log:          log,
 		conf:         conf,
-		state:        MysqlDead,
+		state:        model.MysqlDead,
 		mysqlHandler: getHandler(conf.Version),
 		pingTicker:   common.NormalTicker(conf.PingTimeout),
 	}
@@ -92,7 +84,7 @@ func (m *Mysql) Ping() {
 		log.Error("mysql[%v].ping.getdb.error[%v].downs:%v,downslimits:%v", m.getConnStr(), err, m.downs, downsLimits)
 		if m.downs > downsLimits {
 			log.Error("mysql.dead.downs:%v,downslimits:%v", m.downs, downsLimits)
-			m.setState(MysqlDead)
+			m.setState(model.MysqlDead)
 		}
 		m.IncMysqlDowns()
 		m.downs++
@@ -103,7 +95,7 @@ func (m *Mysql) Ping() {
 		log.Error("mysql[%v].ping.error[%v].downs:%v,downslimits:%v", m.getConnStr(), err, m.downs, downsLimits)
 		if m.downs > downsLimits {
 			log.Error("mysql.dead.downs:%v,downslimits:%v", m.downs, downsLimits)
-			m.setState(MysqlDead)
+			m.setState(model.MysqlDead)
 		}
 		m.IncMysqlDowns()
 		m.downs++
@@ -121,7 +113,7 @@ func (m *Mysql) Ping() {
 
 	// reset downs.
 	m.downs = 0
-	m.setState(MysqlAlive)
+	m.setState(model.MysqlAlive)
 	m.pingEntry = *pe
 }
 

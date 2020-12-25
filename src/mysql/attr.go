@@ -10,15 +10,16 @@ package mysql
 
 import (
 	"fmt"
+	"model"
 )
 
-func (m *Mysql) setState(state State) {
+func (m *Mysql) setState(state model.MysqlState) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	m.state = state
 }
 
-func (m *Mysql) getState() State {
+func (m *Mysql) getState() model.MysqlState {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 	return m.state
