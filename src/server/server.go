@@ -63,7 +63,7 @@ func NewServer(conf *config.Config, log *xlog.Log) *Server {
 }
 
 func (s *Server) Init() {
-	s.setupMysqld()
+	// s.setupMysqld()
 	s.setupMysql()
 	s.setupRPC()
 }

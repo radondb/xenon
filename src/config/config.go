@@ -13,7 +13,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -345,7 +344,7 @@ func parseConfig(data []byte) (*Config, error) {
 	// mysql
 	conf.Mysql.ReplUser = conf.Replication.User
 	conf.Mysql.ReplPasswd = conf.Replication.Passwd
-	conf.Mysql.ReplHost = strings.Split(conf.Server.Endpoint, ":")[0]
+	conf.Mysql.ReplHost = conf.Mysql.Host
 	return conf, nil
 }
 
