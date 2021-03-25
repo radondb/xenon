@@ -10,15 +10,17 @@
 package xlog
 
 var (
-	DefaultName  = " "
-	DefaultLevel = DEBUG
+	defaultName  = " "
+	defaultLevel = DEBUG
 )
 
+// Options used for the options of the xlog.
 type Options struct {
 	Name  string
 	Level LogLevel
 }
 
+// Option func.
 type Option func(*Options)
 
 func newOptions(opts ...Option) *Options {
@@ -28,24 +30,23 @@ func newOptions(opts ...Option) *Options {
 	}
 
 	if len(opt.Name) == 0 {
-		opt.Name = DefaultName
+		opt.Name = defaultName
 	}
 
 	if opt.Level == 0 {
-		opt.Level = DefaultLevel
+		opt.Level = defaultLevel
 	}
-
 	return opt
 }
 
-// Log Name
+// Name used to set the name.
 func Name(v string) Option {
 	return func(o *Options) {
 		o.Name = v
 	}
 }
 
-// Log Level
+// Level used to set the log level.
 func Level(v LogLevel) Option {
 	return func(o *Options) {
 		o.Level = v
