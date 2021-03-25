@@ -109,7 +109,7 @@ func (s *Server) setupMysql() {
 		return
 	}
 	if !ret {
-		log.Info("server.mysql.prepare.to.create.replication.user[%v]", s.conf.Mysql.ReplUser)
+		log.Info("setupMysql.server.mysql.prepare.to.create.replication.user[%v]", s.conf.Mysql.ReplUser)
 		user := s.conf.Mysql.ReplUser
 		pwd := s.conf.Mysql.ReplPasswd
 		if err = s.mysql.CreateReplUserWithoutBinlog(user, pwd); err != nil {
