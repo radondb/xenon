@@ -140,6 +140,9 @@ type MysqlConfig struct {
 	// slave system variables configure(separated by ;)
 	SlaveSysVars string `json:"slave-sysvars"`
 
+	// If true, the mysql monitor will disabled, default is false.
+	MonitorDisabled bool `json:"monitor-disabled"`
+
 	// mysql intranet ip, other replicas Master_Host
 	ReplHost string
 
