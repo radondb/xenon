@@ -7,3 +7,4 @@ peers.json
 config.path
 *.outs
 tags
+.vscode
