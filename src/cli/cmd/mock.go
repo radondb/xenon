@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"config"
 	"os"
+
+	"config"
 )
 
 var defaultConfig = config.Config{

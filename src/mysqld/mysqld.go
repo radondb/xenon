@@ -9,12 +9,13 @@
 package mysqld
 
 import (
-	"config"
-	"model"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"config"
+	"model"
 	"xbase/common"
 	"xbase/xlog"
 )

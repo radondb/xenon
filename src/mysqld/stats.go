@@ -9,8 +9,9 @@
 package mysqld
 
 import (
-	"model"
 	"sync/atomic"
+
+	"model"
 )
 
 // IncBackups used to increase the backup counter.

@@ -9,9 +9,10 @@
 package raft
 
 import (
-	"model"
 	"sync/atomic"
 	"time"
+
+	"model"
 )
 
 // IncLeaderPromotes counter.

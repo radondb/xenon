@@ -10,11 +10,12 @@ package mysql
 
 import (
 	"database/sql"
-	"github.com/pkg/errors"
+
 	"xbase/common"
 
 	// driver.
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/pkg/errors"
 )
 
 // Query executes a query that returns rows

@@ -11,9 +11,10 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
-	"model"
 	"strconv"
 	"strings"
+
+	"model"
 
 	"github.com/pkg/errors"
 )

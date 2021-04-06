@@ -9,8 +9,9 @@
 package raft
 
 import (
-	"model"
 	"strconv"
+
+	"model"
 )
 
 // RaftRPC tuple.

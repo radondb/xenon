@@ -9,8 +9,9 @@
 package mysqld
 
 import (
-	"model"
 	"testing"
+
+	"model"
 	"xbase/common"
 	"xbase/xlog"
 

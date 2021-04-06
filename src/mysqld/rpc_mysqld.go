@@ -10,8 +10,9 @@ package mysqld
 
 import (
 	"fmt"
-	"model"
 	"time"
+
+	"model"
 )
 
 // MysqldRPC tuple.

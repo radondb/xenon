@@ -9,9 +9,10 @@
 package server
 
 import (
+	"testing"
+
 	"model"
 	"raft"
-	"testing"
 	"xbase/common"
 	"xbase/xlog"
 

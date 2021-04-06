@@ -9,10 +9,11 @@
 package mysql
 
 import (
-	"config"
-	"model"
 	"testing"
 	"time"
+
+	"config"
+	"model"
 	"xbase/common"
 	"xbase/xlog"
 

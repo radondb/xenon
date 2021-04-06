@@ -9,10 +9,11 @@
 package cmd
 
 import (
+	"testing"
+
 	"mysql"
 	"raft"
 	"server"
-	"testing"
 	"xbase/common"
 	"xbase/xlog"
 

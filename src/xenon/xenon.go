@@ -9,12 +9,13 @@
 package main
 
 import (
-	"build"
-	"config"
 	"flag"
 	"fmt"
 	_ "net/http/pprof"
 	"os"
+
+	"build"
+	"config"
 	"raft"
 	"server"
 	"xbase/xlog"

@@ -9,11 +9,12 @@
 package mysql
 
 import (
-	"config"
 	"database/sql"
 	"fmt"
-	"model"
 	"testing"
+
+	"config"
+	"model"
 	"xbase/xlog"
 	"xbase/xrpc"
 

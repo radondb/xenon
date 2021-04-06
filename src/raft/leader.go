@@ -9,10 +9,11 @@
 package raft
 
 import (
-	"model"
 	"strings"
 	"sync"
 	"time"
+
+	"model"
 	"xbase/common"
 )
 

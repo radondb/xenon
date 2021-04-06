@@ -9,12 +9,13 @@
 package mysql
 
 import (
-	"config"
 	"database/sql"
 	"fmt"
-	"model"
 	"sync"
 	"time"
+
+	"config"
+	"model"
 	"xbase/common"
 	"xbase/xlog"
 )
