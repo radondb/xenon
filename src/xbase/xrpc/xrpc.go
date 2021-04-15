@@ -49,15 +49,14 @@ func (s *Service) Start() error {
 		return errors.New("xrpc.Start.error[Please RegisterService first]")
 	}
 
-	lis, err := net.Listen("tcp", s.opts.ConnectionStr)
+	err := s.setListener()
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	s.listener = lis
 
 	go func() {
 		for {
-			conn, err := lis.Accept()
+			conn, err := s.listener.Accept()
 			if err != nil {
 				s.opts.Log.Error("xrpc.accept.error[%v]", err)
 				return
@@ -65,8 +64,22 @@ func (s *Service) Start() error {
 			go s.server.ServeConn(conn)
 		}
 	}()
-	s.opts.Log.Warning("xrpc.Start.listening.on[%v]", lis.Addr())
+	s.opts.Log.Warning("xrpc.Start.listening.on[%v]", s.listener.Addr())
 	return nil
+}
+
+func (s *Service) setListener() error {
+	var lis net.Listener
+	var err error
+	for retry := 0; retry < 30; retry++ {
+		lis, err = net.Listen("tcp", s.opts.ConnectionStr)
+		if err == nil {
+			s.listener = lis
+			return nil
+		}
+		time.Sleep(time.Second)
+	}
+	return err
 }
 
 // stops the rpc server
