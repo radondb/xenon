@@ -42,7 +42,7 @@ func MockServers(log *xlog.Log, port int, count int) ([]*Server, func()) {
 		conf.Raft.HeartbeatTimeout = shortHeartbeatTimeoutForTest
 		conf.Raft.ElectionTimeout = shortHeartbeatTimeoutForTest * 3
 
-		server := NewServer(conf, log)
+		server := NewServer(conf, log, raft.FOLLOWER)
 
 		// mock mysqld
 		_, mysqld, _ := mysqld.MockMysqld(log, port)

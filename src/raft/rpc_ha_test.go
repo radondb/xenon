@@ -775,7 +775,7 @@ func TestRaftSuperIDLEEnableHA(t *testing.T) {
 
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
-	names, rafts, cleanup := MockRafts(log, port, 3, -1)
+	names, rafts, cleanup := MockRafts(log, port, 3, 2)
 	defer cleanup()
 
 	// 1.  Start 3 rafts.

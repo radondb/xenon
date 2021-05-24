@@ -27,6 +27,7 @@ Xenon has many cool features, such as:
 - [build and run xenon](docs/how_to_build_and_run_xenon.md) : How to build and run xenon.
 - [xenon cli commands](docs/xenoncli_commands.md) : Xenon client commands.
 - [how xenon works](docs/how_xenon_works.md) : How xenon works.
+- [how xenon upgrades](docs/how_xenon_upgrades.md): How xenon upgrades.
 
 ## Use case
 

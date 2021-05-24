@@ -49,6 +49,7 @@ type Raft struct {
 	mysql               *mysql.Mysql
 	cmd                 common.Command
 	conf                *config.RaftConfig
+	initRole            State // The temporary role specified on the first startup
 	leader              string
 	votedFor            string
 	id                  string
@@ -79,13 +80,14 @@ type Raft struct {
 }
 
 // NewRaft creates the new raft.
-func NewRaft(id string, conf *config.RaftConfig, log *xlog.Log, mysql *mysql.Mysql) *Raft {
+func NewRaft(id string, conf *config.RaftConfig, log *xlog.Log, mysql *mysql.Mysql, state State) *Raft {
 	r := &Raft{
 		id:                id,
 		conf:              conf,
 		log:               log,
 		cmd:               common.NewLinuxCommand(log),
 		mysql:             mysql,
+		initRole:          state,
 		leader:            noLeader,
 		state:             FOLLOWER,
 		meta:              &RaftMeta{},
@@ -129,6 +131,19 @@ func (r *Raft) Start() error {
 		r.WARNING("start.as.super.IDLE")
 	} else {
 		r.setState(FOLLOWER)
+	}
+
+	// set state by init role
+	r.WARNING("raft.init.role.is.[%v]", r.initRole)
+	switch r.initRole {
+	case LEADER:
+		r.setState(LEADER)
+		r.setLeader(r.getID())
+		r.IncLeaderPromotes()
+	case FOLLOWER:
+		r.setState(FOLLOWER)
+	case IDLE:
+		r.setState(IDLE)
 	}
 
 	// state loops

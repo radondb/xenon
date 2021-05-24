@@ -44,7 +44,7 @@ type Server struct {
 	begin  time.Time
 }
 
-func NewServer(conf *config.Config, log *xlog.Log) *Server {
+func NewServer(conf *config.Config, log *xlog.Log, initState raft.State) *Server {
 	s := &Server{
 		log:  log,
 		conf: conf,
@@ -52,7 +52,7 @@ func NewServer(conf *config.Config, log *xlog.Log) *Server {
 
 	s.mysqld = mysqld.NewMysqld(conf.Backup, log)
 	s.mysql = mysql.NewMysql(conf.Mysql, conf.Raft.ElectionTimeout, log)
-	s.raft = raft.NewRaft(conf.Server.Endpoint, conf.Raft, log, s.mysql)
+	s.raft = raft.NewRaft(conf.Server.Endpoint, conf.Raft, log, s.mysql, initState)
 	rpc, err := xrpc.NewService(xrpc.Log(log),
 		xrpc.ConnectionStr(conf.Server.Endpoint))
 	if err != nil {
