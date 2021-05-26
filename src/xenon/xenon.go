@@ -13,8 +13,6 @@ import (
 	"config"
 	"flag"
 	"fmt"
-	"log"
-	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"raft"
@@ -35,9 +33,6 @@ func init() {
 	flag.StringVar(&flag_log, "log", "", "log type:[STD|SYS]")
 	flag.StringVar(&flag_role, "r", "", "role type:[LEADER|FOLLOWER|IDLE]")
 	flag.StringVar(&flag_role, "role", "", "role type:[LEADER|FOLLOWER|IDLE]")
-	go func() {
-		log.Println(http.ListenAndServe(":6060", nil))
-	}()
 }
 
 func main() {

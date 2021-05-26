@@ -44,7 +44,7 @@ func TestKillMysqld(t *testing.T) {
 	go func() {
 		args := []string{
 			"-c",
-			fmt.Sprintf("watch -d 1 '--defaults-file=%v'", conf.DefaultsFile)}
+			fmt.Sprintf("watch -d 'echo --defaults-file=%v'", conf.DefaultsFile)}
 		common.RunCommand("bash", args...)
 	}()
 
