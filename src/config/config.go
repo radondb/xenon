@@ -131,6 +131,9 @@ type MysqlConfig struct {
 	// admit defeat count for ping mysql
 	AdmitDefeatPingCnt int `json:"admit-defeat-ping-count"`
 
+	// rpl_semi_sync_master_timeout for 2 nodes
+	SemiSyncTimeoutForTwoNodes uint64 `json:"semi-sync-timeout-for-two-nodes"`
+
 	// master system variables configure(separated by ;)
 	MasterSysVars string `json:"master-sysvars"`
 
@@ -149,18 +152,19 @@ type MysqlConfig struct {
 
 func DefaultMysqlConfig() *MysqlConfig {
 	return &MysqlConfig{
-		Admin:              "root",
-		Passwd:             "",
-		Host:               "localhost",
-		Port:               3306,
-		Version:            "mysql57",
-		PingTimeout:        1000,
-		AdmitDefeatPingCnt: 2,
-		Basedir:            "/u01/mysql_20160606/",
-		DefaultsFile:       "/etc/my3306.cnf",
-		ReplHost:           "127.0.0.1",
-		ReplUser:           "repl",
-		ReplPasswd:         "repl",
+		Admin:                      "root",
+		Passwd:                     "",
+		Host:                       "localhost",
+		Port:                       3306,
+		Version:                    "mysql57",
+		PingTimeout:                1000,
+		AdmitDefeatPingCnt:         2,
+		SemiSyncTimeoutForTwoNodes: 10000,
+		Basedir:                    "/u01/mysql_20160606/",
+		DefaultsFile:               "/etc/my3306.cnf",
+		ReplHost:                   "127.0.0.1",
+		ReplUser:                   "repl",
+		ReplPasswd:                 "repl",
 	}
 }
 

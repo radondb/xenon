@@ -45,55 +45,57 @@ type RaftMeta struct {
 
 // Raft tuple.
 type Raft struct {
-	log                 *xlog.Log
-	mysql               *mysql.Mysql
-	cmd                 common.Command
-	conf                *config.RaftConfig
-	initRole            State // The temporary role specified on the first startup
-	leader              string
-	votedFor            string
-	id                  string
-	fired               chan bool
-	state               State
-	meta                *RaftMeta
-	mutex               sync.RWMutex
-	lock                sync.WaitGroup
-	heartbeatTick       *time.Timer
-	electionTick        *time.Timer
-	checkBrainSplitTick *time.Timer
-	checkVotesTick      *time.Timer
-	stateBegin          time.Time
-	c                   chan *ev
-	L                   *Leader
-	C                   *Candidate
-	F                   *Follower
-	I                   *Idle
-	IV                  *Invalid
-	LN                  *Learner
-	peers               map[string]*Peer // all peers expect SuperIDLE
-	idlePeers           map[string]*Peer // all SuperIDLE peers
-	stats               model.RaftStats
-	skipPurgeBinlog     bool // if true, purge binlog will skipped
-	skipCheckSemiSync   bool // if true, check semi-sync will skipped
-	isBrainSplit        bool // if true, follower can upgrade to candidate
-	gtid                model.GTID
+	log                      *xlog.Log
+	mysql                    *mysql.Mysql
+	cmd                      common.Command
+	conf                     *config.RaftConfig
+	initRole                 State // The temporary role specified on the first startup
+	leader                   string
+	votedFor                 string
+	id                       string
+	fired                    chan bool
+	state                    State
+	meta                     *RaftMeta
+	mutex                    sync.RWMutex
+	lock                     sync.WaitGroup
+	heartbeatTick            *time.Timer
+	electionTick             *time.Timer
+	checkBrainSplitTick      *time.Timer
+	checkVotesTick           *time.Timer
+	stateBegin               time.Time
+	c                        chan *ev
+	L                        *Leader
+	C                        *Candidate
+	F                        *Follower
+	I                        *Idle
+	IV                       *Invalid
+	LN                       *Learner
+	peers                    map[string]*Peer // all peers expect SuperIDLE
+	idlePeers                map[string]*Peer // all SuperIDLE peers
+	stats                    model.RaftStats
+	skipPurgeBinlog          bool   // if true, purge binlog will skipped
+	skipCheckSemiSync        bool   // if true, check semi-sync will skipped
+	semiSyncTimeoutFor2Nodes uint64 // It only works if peers are 2
+	isBrainSplit             bool   // if true, follower can upgrade to candidate
+	gtid                     model.GTID
 }
 
 // NewRaft creates the new raft.
-func NewRaft(id string, conf *config.RaftConfig, log *xlog.Log, mysql *mysql.Mysql, state State) *Raft {
+func NewRaft(id string, conf *config.RaftConfig, semiSyncTimeout uint64, log *xlog.Log, mysql *mysql.Mysql, state State) *Raft {
 	r := &Raft{
-		id:                id,
-		conf:              conf,
-		log:               log,
-		cmd:               common.NewLinuxCommand(log),
-		mysql:             mysql,
-		initRole:          state,
-		leader:            noLeader,
-		state:             FOLLOWER,
-		meta:              &RaftMeta{},
-		peers:             make(map[string]*Peer),
-		idlePeers:         make(map[string]*Peer),
-		skipCheckSemiSync: false,
+		id:                       id,
+		conf:                     conf,
+		log:                      log,
+		cmd:                      common.NewLinuxCommand(log),
+		mysql:                    mysql,
+		initRole:                 state,
+		leader:                   noLeader,
+		state:                    FOLLOWER,
+		meta:                     &RaftMeta{},
+		peers:                    make(map[string]*Peer),
+		idlePeers:                make(map[string]*Peer),
+		skipCheckSemiSync:        false,
+		semiSyncTimeoutFor2Nodes: semiSyncTimeout,
 	}
 
 	// state handler
