@@ -10,6 +10,7 @@ package raft
 
 import (
 	"config"
+	"model"
 	"mysql"
 	"testing"
 	"time"
@@ -984,6 +985,191 @@ func TestRaftStartAsFOLLOWER(t *testing.T) {
 }
 
 // TEST EFFECTS:
+// test run with the LEADER as the initialization role
+//
+// TEST PROCESSES:
+// 1. start rafts[0] as LEADER
+// 2. wait 2 election timeout
+// 3. check whether the rafts[0] state is LEADER
+// 4. start rafts[1]
+// 5. wait 2 election timeout
+// 6. check whether the rafts[0] state is LEADER
+// 7. add a peer
+// 8. wait 2 election timeout
+// 9. check whether the rafts[0] state is LEADER
+func TestRaftInitRoleIsLeader(t *testing.T) {
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	conf := config.DefaultRaftConfig()
+	var newpeer = "127.0.0.1:18888"
+
+	port := common.RandomPort(8100, 8200)
+	_, rafts, cleanup := MockRaftsWithConfig(log, conf, port, 2, -1)
+	defer cleanup()
+
+	// 1. start rafts[0] as LEADER
+	{
+		rafts[0].initRole = LEADER
+		rafts[0].Start()
+		rafts[0].mysql.SetState(model.MysqlAlive)
+	}
+
+	// 2. wait 2 election timeout
+	MockWaitLeaderEggs(rafts, 0)
+
+	// 3. check whether the rafts[0] state is LEADER
+	{
+		want := LEADER
+		got := rafts[0].getState()
+		assert.Equal(t, want, got)
+	}
+
+	// 4. start rafts[1]
+	rafts[1].Start()
+
+	// 5. wait 2 election timeout
+	MockWaitLeaderEggs(rafts, 0)
+
+	// 6. check whether the rafts[0] state is LEADER
+	{
+		want := LEADER
+		got := rafts[0].getState()
+		assert.Equal(t, want, got)
+	}
+
+	// 7. add a peer
+	{
+		for _, raft := range rafts {
+			raft.AddPeer(newpeer)
+		}
+	}
+
+	// 8. wait 2 election timeout
+	MockWaitLeaderEggs(rafts, 0)
+
+	// 9. check whether the rafts[0] state is LEADER
+	{
+		want := LEADER
+		got := rafts[0].getState()
+		assert.Equal(t, want, got)
+	}
+}
+
+// TEST EFFECTS:
+// test run with the FOLLOWER as the initialization role
+//
+// TEST PROCESSES:
+// 1. start rafts[0] as FOLLOWER
+// 2. wait 2 election timeout
+// 3. check whether the rafts[0] state is FOLLOWER
+// 4. start rafts[1]
+// 5. wait 2 election timeout
+// 6. check if a LEADER is generated
+// 7. add a peer
+// 8. wait 2 election timeout
+// 9. check if the LEADER is the same node
+func TestRaftInitRoleIsFollower(t *testing.T) {
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	conf := config.DefaultRaftConfig()
+	var newpeer = "127.0.0.1:18888"
+	var whoisleader = -1
+
+	port := common.RandomPort(8100, 8200)
+	_, rafts, cleanup := MockRaftsWithConfig(log, conf, port, 2, -1)
+	defer cleanup()
+
+	// 1. start rafts[0] as FOLLOWER
+	{
+		rafts[0].initRole = FOLLOWER
+		rafts[0].Start()
+		rafts[0].mysql.SetState(model.MysqlAlive)
+	}
+
+	// 2. wait 2 election timeout
+	MockWaitLeaderEggs(rafts, 0)
+
+	// 3. check whether the rafts[0] state is FOLLOWER
+	{
+		want := FOLLOWER
+		got := rafts[0].getState()
+		assert.Equal(t, want, got)
+	}
+
+	// 4. start rafts[1]
+	rafts[1].Start()
+
+	// 5. wait 2 election timeout
+	MockWaitLeaderEggs(rafts, 0)
+
+	// 6. check if a LEADER is generated
+	{
+		for i, raft := range rafts {
+			if raft.GetState() == LEADER {
+				whoisleader = i
+			}
+		}
+		assert.NotEqual(t, -1, whoisleader)
+	}
+
+	// 7. add a peer
+	{
+		for _, raft := range rafts {
+			raft.AddPeer(newpeer)
+		}
+	}
+
+	// 8. wait 2 election timeout
+	MockWaitLeaderEggs(rafts, 0)
+
+	// 9. check if the LEADER is the same node
+	{
+		want := LEADER
+		got := rafts[whoisleader].getState()
+		assert.Equal(t, want, got)
+	}
+}
+
+// TEST EFFECTS:
+// test run with the IDLE as the initialization role
+//
+// TEST PROCESSES:
+// 1. start rafts, rafts[0] is IDLE
+// 2. wait 2 election timeout
+// 3. check if a LEADER is generated
+func TestRaftInitRoleIsIdle(t *testing.T) {
+	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
+	conf := config.DefaultRaftConfig()
+	var whoisleader = -1
+
+	port := common.RandomPort(8100, 8200)
+	_, rafts, cleanup := MockRaftsWithConfig(log, conf, port, 3, -1)
+	defer cleanup()
+
+	// 1. start rafts, rafts[0] is IDLE
+	{
+		for i, raft := range rafts {
+			if i == 0 {
+				raft.initRole = IDLE
+				raft.mysql.SetState(model.MysqlAlive)
+			}
+			raft.Start()
+		}
+	}
+
+	// 2. wait leader generated
+	MockWaitLeaderEggs(rafts, 1)
+
+	// 3. check if a LEADER is generated
+	{
+		for i, raft := range rafts {
+			if raft.GetState() == LEADER {
+				whoisleader = i
+			}
+		}
+		assert.NotEqual(t, -1, whoisleader)
+	}
+}
+
+// TEST EFFECTS:
 // test a cluster with 11 rafts
 //
 // TEST PROCESSES:
@@ -1603,7 +1789,6 @@ func TestRaft1Nodes(t *testing.T) {
 	}
 }
 
-/*
 // TEST EFFECTS:
 // test the 2nodes of cluster
 //
@@ -1718,7 +1903,6 @@ func TestRaft2NodesWithGTID(t *testing.T) {
 		assert.Equal(t, 0, whoisleader)
 	}
 }
-*/
 
 // TEST EFFECTS:
 // test the leader heartbeat acks less than the quorum.
@@ -1846,16 +2030,24 @@ func TestRaftLeaderChangeToMasterError(t *testing.T) {
 		raft.Start()
 	}
 
-	// check new leader is rafts[2]
+	// 3.wait rafts[2] elected as leader
 	{
+		time.Sleep(time.Millisecond * time.Duration(rafts[0].getElectionTimeout()))
+
 		var got State
-		time.Sleep(time.Millisecond * 3000)
 		want := (LEADER + FOLLOWER + FOLLOWER)
 		for _, raft := range rafts {
 			got += raft.getState()
 		}
 		assert.True(t, got < want)
 	}
+
+	// 4.  rafts[2] ChangeToMaster error, degrade to FOLLOWER
+	{
+		MockWaitLeaderEggs(rafts, 0)
+		assert.Equal(t, FOLLOWER, rafts[2].getState())
+	}
+
 }
 
 // TEST EFFECTS:

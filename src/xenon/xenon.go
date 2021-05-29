@@ -17,6 +17,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"raft"
 	"server"
 	"xbase/xlog"
 )
@@ -24,6 +25,7 @@ import (
 var (
 	flag_conf string
 	flag_log  string
+	flag_role string
 )
 
 func init() {
@@ -31,6 +33,8 @@ func init() {
 	flag.StringVar(&flag_conf, "config", "", "xenon config file")
 	flag.StringVar(&flag_log, "l", "", "log type:[STD|SYS]")
 	flag.StringVar(&flag_log, "log", "", "log type:[STD|SYS]")
+	flag.StringVar(&flag_role, "r", "", "role type:[LEADER|FOLLOWER|IDLE]")
+	flag.StringVar(&flag_role, "role", "", "role type:[LEADER|FOLLOWER|IDLE]")
 	go func() {
 		log.Println(http.ListenAndServe(":6060", nil))
 	}()
@@ -38,6 +42,7 @@ func init() {
 
 func main() {
 	var log *xlog.Log
+	var state raft.State
 	flag.Parse()
 
 	build := build.GetInfo()
@@ -66,6 +71,18 @@ func main() {
 	log.SetLevel(conf.Log.Level)
 	defer log.Close()
 
+	// set the initialization state
+	switch flag_role {
+	case "LEADER":
+		state = raft.LEADER
+	case "FOLLOWER":
+		state = raft.FOLLOWER
+	case "IDLE":
+		state = raft.IDLE
+	default:
+		state = raft.UNKNOW
+	}
+
 	// build
 	log.Info("main: tag=[%s], git=[%s], goversion=[%s], builddate=[%s]",
 		build.Tag, build.Git, build.GoVersion, build.Time)
@@ -74,7 +91,7 @@ func main() {
 	log.Warning("xenon.conf.mysqld:[%+v]", conf.Backup)
 
 	// server
-	server := server.NewServer(conf, log)
+	server := server.NewServer(conf, log, state)
 	server.Init()
 	server.Start()
 	log.Info("xenon.start.success...")

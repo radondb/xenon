@@ -65,6 +65,7 @@ func MockRaftsWithLong(log *xlog.Log, port int, count int, idleStart int) ([]str
 
 func mockRafts(log *xlog.Log, conf *config.RaftConfig, port int, count int, idleStart int, islong bool) ([]string, []*Raft, func()) {
 	ids := []string{}
+	var raft *Raft
 	rafts := []*Raft{}
 	rpcs := []*xrpc.Service{}
 	ip, _ := common.GetLocalIP()
@@ -87,8 +88,15 @@ func mockRafts(log *xlog.Log, conf *config.RaftConfig, port int, count int, idle
 		mysql57.SetMysqlHandler(mysql.NewMockGTIDA())
 		mysql57.PingStart()
 
+		for i, id := range ids {
+			if idleStart != -1 && i >= idleStart {
+				raft = NewRaft(id, conf, log, mysql57, IDLE)
+			} else {
+				raft = NewRaft(id, conf, log, mysql57, FOLLOWER)
+			}
+		}
+
 		// setup raft
-		raft := NewRaft(id, conf, log, mysql57)
 		rafts = append(rafts, raft)
 
 		// setup rpc

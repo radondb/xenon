@@ -46,6 +46,9 @@ const (
 
 	// STOPPED state.
 	STOPPED
+
+	// UNKNOW state.
+	UNKNOW
 )
 
 func (s State) String() string {

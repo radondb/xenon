@@ -427,7 +427,12 @@ func (r *Leader) prepareSettingsAsync() {
 		}
 		r.WARNING("mysql.SetReadWrite.done")
 		r.WARNING("6. start.vip.prepare")
-		if err := r.leaderStartShellCommand(); err != nil {
+		if r.initRole == LEADER {
+			// The -r LEADER is specified at startup server, ndicates that the current node
+			// has previously executed leaderStartShellCommand，skip this one.
+			r.initRole = UNKNOW
+			r.WARNING("the.init.role.is.leader.skip")
+		} else if err := r.leaderStartShellCommand(); err != nil {
 			// TODO(array): what todo?
 			r.ERROR("leader.StartShellCommand.error[%v]", err)
 		}

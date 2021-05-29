@@ -261,6 +261,11 @@ func (m *Mysql) GetState() model.MysqlState {
 	return m.getState()
 }
 
+// SetState set the mysql state.
+func (m *Mysql) SetState(state model.MysqlState) {
+	m.setState(state)
+}
+
 // GetOption returns the mysql option.
 func (m *Mysql) GetOption() Option {
 	return m.getOption()
