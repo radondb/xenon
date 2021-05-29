@@ -52,8 +52,7 @@ type Leader struct {
 }
 
 const (
-	semisyncTimeoutFor2Nodes = 10000               // 10 seconds
-	semisyncTimeout          = 1000000000000000000 // for 3 or more nodes
+	semisyncTimeout = 1000000000000000000 // for 3 or more nodes
 )
 
 // NewLeader creates new Leader.
@@ -507,7 +506,7 @@ func (r *Leader) checkSemiSync() {
 	min := 3
 	cur := r.getMembers()
 	if cur < min {
-		if err := r.mysql.SetSemiSyncMasterTimeout(semisyncTimeoutFor2Nodes); err != nil {
+		if err := r.mysql.SetSemiSyncMasterTimeout(r.semiSyncTimeoutFor2Nodes); err != nil {
 			r.ERROR("mysql.set.semi-sync.master.timeout.to.default.error[%v]", err)
 		}
 	} else {

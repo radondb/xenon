@@ -90,9 +90,9 @@ func mockRafts(log *xlog.Log, conf *config.RaftConfig, port int, count int, idle
 
 		for i, id := range ids {
 			if idleStart != -1 && i >= idleStart {
-				raft = NewRaft(id, conf, log, mysql57, IDLE)
+				raft = NewRaft(id, conf, 10000, log, mysql57, IDLE)
 			} else {
-				raft = NewRaft(id, conf, log, mysql57, FOLLOWER)
+				raft = NewRaft(id, conf, 10000, log, mysql57, FOLLOWER)
 			}
 		}
 
