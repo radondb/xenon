@@ -628,7 +628,7 @@ func mysqlCancelBackupCommandFn(cmd *cobra.Command, args []string) {
 // create normal user
 func NewMysqlCreateUserCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "createuser <user> <host> <password> <YES/NO>",
+		Use:   "createuser <user> <host> <password> <YES | NO>",
 		Short: "create mysql normal user",
 		Run:   mysqlCreateUserCommandFn,
 	}
@@ -663,7 +663,7 @@ func mysqlCreateUserCommandFn(cmd *cobra.Command, args []string) {
 // create super user
 func NewMysqlCreateSuperUserCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "createsuperuser <user> <host> <password> <YES/NO>",
+		Use:   "createsuperuser <user> <host> <password> <YES | NO>",
 		Short: "create mysql super user",
 		Run:   mysqlCreateSuperUserCommandFn,
 	}
@@ -672,14 +672,14 @@ func NewMysqlCreateSuperUserCommand() *cobra.Command {
 
 func mysqlCreateSuperUserCommandFn(cmd *cobra.Command, args []string) {
 	if len(args) != 4 {
-		ErrorOK(fmt.Errorf("args.count.error:should.be.4"))
+		ErrorOK(fmt.Errorf("args.count.should.be.4: <user> <host> <password> <YES | NO>"))
 	}
 
 	user := args[0]
 	host := args[1]
 	passwd := args[2]
 	ssl := args[3]
-	log.Warning("prepare.to.create.superuser[%v]@[%v]", user, host)
+	log.Warning("prepare.to.create.superuser[%v]@[%v].with.ssl[%v]", user, host, ssl)
 	conf, err := GetConfig()
 	ErrorOK(err)
 
@@ -888,7 +888,7 @@ func NewMysqlCreateUserWithPrivilegesCommand() *cobra.Command {
 	cmd.Flags().StringVar(&grantTable, "table", "", "--table=<table>")
 	cmd.Flags().StringVar(&grantHost, "host", "", "--host=<host>")
 	cmd.Flags().StringVar(&grantPrivs, "privs", "for example:SELECT,CREATE(comma-separated)", "--privs=<privs>")
-	cmd.Flags().StringVar(&requireSSL, "ssl", "NO", "--ssl=<YES/NO>")
+	cmd.Flags().StringVar(&requireSSL, "ssl", "NO", "--ssl=<YES | NO>")
 
 	return cmd
 }

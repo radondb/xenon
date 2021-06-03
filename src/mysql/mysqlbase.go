@@ -38,13 +38,15 @@ var (
 		"REPLICATION SLAVE", "REPLICATION CLIENT",
 	}
 
-	mysqlSSLType = []string{
-		"YES", "NO",
-	}
-
 	_ MysqlHandler = &MysqlBase{
 		queryTimeout: 10000,
 	}
+)
+
+const (
+	// ssl type: YES | NO
+	SSLTypYes = "YES"
+	SSLTypNo  = "NO"
 )
 
 // MysqlBase tuple.
@@ -317,7 +319,7 @@ func (my *MysqlBase) GetUser(db *sql.DB) ([]model.MysqlUser, error) {
 // see http://dev.mysql.com/doc/refman/5.7/en/string-literals.html
 func (my *MysqlBase) CreateUser(db *sql.DB, user string, host string, passwd string, ssltype string) error {
 	query := fmt.Sprintf("CREATE USER `%s`@`%s` IDENTIFIED BY '%s'", user, host, passwd)
-	if ssltype == "YES" {
+	if strings.ToUpper(ssltype) == SSLTypYes {
 		query = fmt.Sprintf("%s REQUIRE X509", query)
 	}
 	return Execute(db, query)
@@ -371,20 +373,14 @@ func (my *MysqlBase) CreateUserWithPrivileges(db *sql.DB, user, passwd, database
 		}
 	}
 
-	// build standard ssl_type map
-	standardSSL := make(map[string]string)
-	for _, ssltype := range mysqlSSLType {
-		standardSSL[ssltype] = ssltype
-	}
-
 	// check ssl_type
-	ssltype := strings.TrimSpace(ssl)
-	if _, ok := standardSSL[ssltype]; !ok {
-		return errors.Errorf("can't create user[%v] require ssl_type[%v]", user, ssltype)
+	upperSSL := strings.ToUpper(ssl)
+	if upperSSL != SSLTypYes && upperSSL != SSLTypNo {
+		return errors.Errorf("wrong ssl_type[%v], it should be 'YES' or 'NO'", ssl)
 	}
 
-	if err := my.CreateUser(db, user, host, passwd, ssltype); err != nil {
-		return errors.Errorf("create user[%v] with privileges[%v] require ssl_type[%v] failed: [%v]", user, privs, ssltype, err)
+	if err := my.CreateUser(db, user, host, passwd, upperSSL); err != nil {
+		return errors.Errorf("create user[%v] with privileges[%v] require ssl_type[%v] failed: [%v]", user, privs, ssl, err)
 	}
 
 	query = fmt.Sprintf("GRANT %s ON %s.%s TO `%s`@`%s`", privs, database, table, user, host)
@@ -400,20 +396,15 @@ func (my *MysqlBase) GrantReplicationPrivileges(db *sql.DB, user string) error {
 // GrantAllPrivileges used to grant all privis.
 func (my *MysqlBase) GrantAllPrivileges(db *sql.DB, user string, host string, passwd string, ssl string) error {
 	var query string
-	// build standard ssl_type map
-	standardSSL := make(map[string]string)
-	for _, ssltype := range mysqlSSLType {
-		standardSSL[ssltype] = ssltype
-	}
 
 	// check ssl_type
-	ssltype := strings.TrimSpace(ssl)
-	if _, ok := standardSSL[ssltype]; !ok {
-		return errors.Errorf("can't create user[%v]@[%v] require ssl_type[%v]", user, host, ssltype)
+	upperSSL := strings.ToUpper(ssl)
+	if upperSSL != SSLTypYes && upperSSL != SSLTypNo {
+		return errors.Errorf("wrong ssl_type[%v], it should be 'YES' or 'NO'", ssl)
 	}
 
-	if err := my.CreateUser(db, user, host, passwd, ssltype); err != nil {
-		return errors.Errorf("create user[%v]@[%v] with all privileges require ssl_type[%v] failed: [%v]", user, host, ssltype, err)
+	if err := my.CreateUser(db, user, host, passwd, upperSSL); err != nil {
+		return errors.Errorf("create user[%v]@[%v] with all privileges require ssl_type[%v] failed: [%v]", user, host, ssl, err)
 	}
 
 	query = fmt.Sprintf("GRANT %s ON *.* TO `%s`@`%s` WITH GRANT OPTION", strings.Join(mysqlAllPrivileges, ","), user, host)
