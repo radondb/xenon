@@ -412,15 +412,95 @@ func TestCreateUser(t *testing.T) {
 	mysql := NewMysql(conf, 10000, log)
 	mysql.db = db
 
+	querys := []string{
+		"CREATE USER `xx1`@`192.168.0.%` IDENTIFIED BY 'xxx'",
+		"CREATE USER `xx2`@`192.168.0.%` IDENTIFIED BY 'xxx'",
+		"CREATE USER `xx3`@`192.168.0.%` IDENTIFIED BY 'xxx'",
+		"CREATE USER `xx4`@`192.168.0.%` IDENTIFIED BY 'xxx'",
+		"CREATE USER `xx5`@`192.168.0.%` IDENTIFIED BY 'xxx' REQUIRE X509",
+		"CREATE USER `xx6`@`192.168.0.%` IDENTIFIED BY 'xxx' REQUIRE X509",
+		"CREATE USER `xx7`@`192.168.0.%` IDENTIFIED BY 'xxx' REQUIRE X509",
+		"CREATE USER `xx8`@`192.168.0.%` IDENTIFIED BY 'xxx' REQUIRE X509",
+	}
+
+	for _, query := range querys {
+		mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
+	}
+
 	// ssl is NO
-	query := "CREATE USER `xx`@`192.168.0.%` IDENTIFIED BY 'xxx'"
-	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
-	err = mysql.CreateUser("xx", "192.168.0.%", "xxx", "NO")
+	err = mysql.CreateUser("xx1", "192.168.0.%", "xxx", "NO")
+	assert.Nil(t, err)
+
+	// ssl is No
+	err = mysql.CreateUser("xx2", "192.168.0.%", "xxx", "No")
+	assert.Nil(t, err)
+
+	// ssl is nO
+	err = mysql.CreateUser("xx3", "192.168.0.%", "xxx", "nO")
+	assert.Nil(t, err)
+
+	// ssl is no
+	err = mysql.CreateUser("xx4", "192.168.0.%", "xxx", "no")
 	assert.Nil(t, err)
 
 	// ssl is YES
-	query = "CREATE USER `xx`@`192.168.0.%` IDENTIFIED BY 'xxx' REQUIRE X509"
-	mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, 1))
+	err = mysql.CreateUser("xx5", "192.168.0.%", "xxx", "YES")
+	assert.Nil(t, err)
+
+	// ssl is YEs
+	err = mysql.CreateUser("xx6", "192.168.0.%", "xxx", "YEs")
+	assert.Nil(t, err)
+
+	// ssl is Yes
+	err = mysql.CreateUser("xx7", "192.168.0.%", "xxx", "Yes")
+	assert.Nil(t, err)
+
+	// ssl is yes
+	err = mysql.CreateUser("xx8", "192.168.0.%", "xxx", "yes")
+	assert.Nil(t, err)
+}
+
+func TestCreateUserError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.Nil(t, err)
+	defer db.Close()
+
+	// log
+	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
+	conf := config.DefaultMysqlConfig()
+	mysql := NewMysql(conf, 10000, log)
+	mysql.db = db
+
+	querys := []string{
+		"CREATE USER `xx`@`192.168.0.%` IDENTIFIED BY 'xxx'",
+		"CREATE USER `xx`@`192.168.0.%` IDENTIFIED BY 'xxx' REQUIRE X509",
+	}
+
+	mock.ExpectExec(querys[0]).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(querys[1]).WillReturnResult(sqlmock.NewResult(1, 1))
+
+	// not match, ssl is YES
+	err = mysql.CreateUser("xx", "192.168.0.%", "xxx", "YES")
+	assert.NotNil(t, err)
+
+	// not match, ssl is YEs
+	err = mysql.CreateUser("xx", "192.168.0.%", "xxx", "YEs")
+	assert.NotNil(t, err)
+
+	// not match, ssl is Yes
+	err = mysql.CreateUser("xx", "192.168.0.%", "xxx", "Yes")
+	assert.NotNil(t, err)
+
+	// not match, ssl is yes
+	err = mysql.CreateUser("xx", "192.168.0.%", "xxx", "yes")
+	assert.NotNil(t, err)
+
+	// case success,ssl is no, let regex turn to next.
+	err = mysql.CreateUser("xx", "192.168.0.%", "xxx", "no")
+	assert.Nil(t, err)
+
+	// ssl is YES
+	// expectations were all fulfilled now
 	err = mysql.CreateUser("xx", "192.168.0.%", "xxx", "YES")
 	assert.Nil(t, err)
 }
@@ -594,6 +674,39 @@ func TestGrantAllPrivileges(t *testing.T) {
 	// ssl is NO
 	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec(queryList[2]).WillReturnResult(sqlmock.NewResult(1, 1))
+	err = mysql.GrantAllPrivileges("xx", "192.168.0.%", "pwd", "NO")
+	assert.Nil(t, err)
+
+	// ssl is YES
+	mock.ExpectExec(queryList[1]).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(queryList[2]).WillReturnResult(sqlmock.NewResult(1, 1))
+	err = mysql.GrantAllPrivileges("xx", "192.168.0.%", "pwd", "YES")
+	assert.Nil(t, err)
+}
+
+func TestGrantAllPrivilegesError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.Nil(t, err)
+	defer db.Close()
+
+	// log
+	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
+	conf := config.DefaultMysqlConfig()
+	mysql := NewMysql(conf, 10000, log)
+	mysql.db = db
+
+	queryList := []string{
+		"CREATE USER `xx`@`192.168.0.%` IDENTIFIED BY 'pwd'",
+		"CREATE USER `xx`@`192.168.0.%` IDENTIFIED BY 'pwd' REQUIRE X509",
+		"GRANT ALL ON *.* TO `xx`@`192.168.0.%` WITH GRANT OPTION",
+	}
+
+	mock.ExpectExec(queryList[0]).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(queryList[2]).WillReturnResult(sqlmock.NewResult(1, 1))
+	// ssl error case
+	err = mysql.GrantAllPrivileges("xx", "192.168.0.%", "pwd", "error")
+	assert.NotNil(t, err)
+	// ssl is NO
 	err = mysql.GrantAllPrivileges("xx", "192.168.0.%", "pwd", "NO")
 	assert.Nil(t, err)
 
