@@ -9,6 +9,7 @@
 package common
 
 import (
+	"runtime"
 	"testing"
 	"xbase/xlog"
 
@@ -56,7 +57,14 @@ func TestCommand(t *testing.T) {
 	cmd := NewLinuxCommand(log)
 	err := cmd.Run(cmds, args)
 	assert.Nil(t, err)
-	err = cmd.Scan("sleep: missing operand", 1)
+
+	// For different systems, cmd "sleep" will return different result.
+	sysType := runtime.GOOS
+	if sysType == "linux" {
+		err = cmd.Scan("sleep: missing operand", 1)
+	} else if sysType == "darwin" {
+		err = cmd.Scan("usage: sleep seconds", 1)
+	}
 	assert.Nil(t, err)
 
 	args = []string{"-c", "sleep 30"}
