@@ -79,7 +79,7 @@ func TestNormalTicker(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(101 * time.Millisecond)
+	time.Sleep(110 * time.Millisecond)
 	want = 1
 	got := atomic.LoadInt32(&fired)
 	assert.Equal(t, want, got)
