@@ -22,18 +22,21 @@ import (
 
 var (
 	flag_conf string
+	flag_log  string
 	flag_role string
 )
 
 func init() {
 	flag.StringVar(&flag_conf, "c", "", "xenon config file")
 	flag.StringVar(&flag_conf, "config", "", "xenon config file")
+	flag.StringVar(&flag_log, "l", "", "log type:[STD|SYS]")
+	flag.StringVar(&flag_log, "log", "", "log type:[STD|SYS]")
 	flag.StringVar(&flag_role, "r", "", "role type:[LEADER|FOLLOWER|IDLE]")
 	flag.StringVar(&flag_role, "role", "", "role type:[LEADER|FOLLOWER|IDLE]")
 }
 
 func main() {
-	log := xlog.NewStdLog(xlog.Level(xlog.DEBUG))
+	var log *xlog.Log
 	var state raft.State
 	flag.Parse()
 
@@ -51,8 +54,17 @@ func main() {
 		log.Panic("xenon.loadconfig.error[%v]", err)
 	}
 
-	// set log level
+	// log
+	switch flag_log {
+	case "STD":
+		log = xlog.NewStdLog(xlog.Level(xlog.DEBUG))
+	case "SYS":
+		log = xlog.NewSysLog(xlog.Level(xlog.DEBUG))
+	default:
+		log = xlog.NewStdLog(xlog.Level(xlog.DEBUG))
+	}
 	log.SetLevel(conf.Log.Level)
+	defer log.Close()
 
 	// set the initialization state
 	switch flag_role {
