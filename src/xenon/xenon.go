@@ -11,6 +11,7 @@ package main
 import (
 	"build"
 	"config"
+	"ctl"
 	"flag"
 	"fmt"
 	_ "net/http/pprof"
@@ -79,7 +80,13 @@ func main() {
 	server.Start()
 	log.Info("xenon.start.success...")
 
+	// Admin portal.
+	admin := ctl.NewAdmin(log, server)
+	admin.Start()
+
 	server.Wait()
+
+	admin.Stop()
 
 	log.Info("xenon.shutdown.complete...")
 }
