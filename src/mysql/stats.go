@@ -9,8 +9,9 @@
 package mysql
 
 import (
-	"model"
 	"sync/atomic"
+
+	"model"
 )
 
 // IncMysqlDowns used to increase the mysql down counter.

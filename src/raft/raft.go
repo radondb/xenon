@@ -9,13 +9,14 @@
 package raft
 
 import (
-	"config"
-	"model"
-	"mysql"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"config"
+	"model"
+	"mysql"
 	"xbase/common"
 	"xbase/xlog"
 )

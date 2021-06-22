@@ -12,13 +12,15 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"os/exec"
 	"strings"
 	"sync/atomic"
 	"time"
+
 	"xbase/xlog"
+
+	"github.com/pkg/errors"
 )
 
 func RunCommand(cmds string, args ...string) (string, error) {

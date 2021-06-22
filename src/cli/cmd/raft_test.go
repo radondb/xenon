@@ -11,10 +11,11 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"raft"
-	"server"
 	"testing"
 	"time"
+
+	"raft"
+	"server"
 	"xbase/common"
 	"xbase/xlog"
 

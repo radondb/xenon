@@ -9,8 +9,9 @@
 package raft
 
 import (
-	"model"
 	"sync/atomic"
+
+	"model"
 
 	"github.com/pkg/errors"
 )

@@ -10,14 +10,15 @@ package cmd
 
 import (
 	"bytes"
-	"config"
 	"fmt"
 	"io/ioutil"
-	"model"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"config"
+	"model"
 	"xbase/xlog"
 
 	"github.com/spf13/cobra"

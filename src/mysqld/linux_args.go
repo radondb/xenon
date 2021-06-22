@@ -9,9 +9,10 @@
 package mysqld
 
 import (
-	"config"
 	"fmt"
 	"path/filepath"
+
+	"config"
 )
 
 var (

@@ -9,15 +9,16 @@
 package server
 
 import (
-	"config"
-	"mysql"
-	"mysqld"
 	"os"
 	"os/signal"
-	"raft"
 	"runtime"
 	"syscall"
 	"time"
+
+	"config"
+	"mysql"
+	"mysqld"
+	"raft"
 	"xbase/xlog"
 	"xbase/xrpc"
 )

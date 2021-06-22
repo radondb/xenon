@@ -9,9 +9,10 @@
 package raft
 
 import (
+	"testing"
+
 	"model"
 	"mysql"
-	"testing"
 	"xbase/common"
 	"xbase/xlog"
 

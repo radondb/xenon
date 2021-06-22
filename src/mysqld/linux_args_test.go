@@ -9,9 +9,10 @@
 package mysqld
 
 import (
-	"config"
 	"strings"
 	"testing"
+
+	"config"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -9,13 +9,14 @@
 package server
 
 import (
-	"config"
 	"fmt"
+	"os"
+	"testing"
+
+	"config"
 	"mysql"
 	"mysqld"
-	"os"
 	"raft"
-	"testing"
 	"xbase/common"
 	"xbase/xlog"
 	"xbase/xrpc"

@@ -9,8 +9,9 @@
 package server
 
 import (
-	"model"
 	"time"
+
+	"model"
 )
 
 func (s *Server) getStats() *model.ServerStats {

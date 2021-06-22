@@ -10,9 +10,10 @@ package cmd
 
 import (
 	"fmt"
+	"testing"
+
 	"raft"
 	"server"
-	"testing"
 	"xbase/common"
 	"xbase/xlog"
 

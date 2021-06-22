@@ -10,10 +10,10 @@ package mysql
 
 import (
 	"fmt"
-	"model"
 	"testing"
 
 	"config"
+	"model"
 	"xbase/xlog"
 
 	_ "github.com/go-sql-driver/mysql"

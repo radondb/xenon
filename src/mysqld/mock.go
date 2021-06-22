@@ -9,9 +9,10 @@
 package mysqld
 
 import (
-	"config"
 	"fmt"
 	"testing"
+
+	"config"
 	"xbase/common"
 	"xbase/xlog"
 	"xbase/xrpc"

@@ -9,8 +9,9 @@
 package cmd
 
 import (
-	"server"
 	"testing"
+
+	"server"
 	"xbase/common"
 	"xbase/xlog"
 

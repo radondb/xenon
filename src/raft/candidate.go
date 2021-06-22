@@ -9,9 +9,10 @@
 package raft
 
 import (
-	"model"
 	"sync"
 	"time"
+
+	"model"
 )
 
 // Candidate tuple.

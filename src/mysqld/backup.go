@@ -9,11 +9,12 @@
 package mysqld
 
 import (
-	"config"
 	"fmt"
-	"model"
 	"strings"
 	"time"
+
+	"config"
+	"model"
 	"xbase/common"
 	"xbase/xlog"
 

@@ -10,16 +10,17 @@ package callx
 
 import (
 	"bytes"
-	"config"
 	"fmt"
 	"io/ioutil"
-	"model"
 	"os"
-	"raft"
 	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
+
+	"config"
+	"model"
+	"raft"
 	"xbase/xlog"
 	"xbase/xrpc"
 

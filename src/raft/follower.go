@@ -9,9 +9,10 @@
 package raft
 
 import (
-	"model"
 	"strings"
 	"sync"
+
+	"model"
 )
 
 // Follower tuple.
