@@ -79,8 +79,8 @@ func TestMysqlGTIDGreatThan(t *testing.T) {
 	// Set mock functions
 	mysql.SetMysqlHandler(new(MockGTIDB))
 
-	// start ping
-	mysql.PingStart()
+	// health check start
+	mysql.HealthCheckStart()
 
 	// wait for ping
 	time.Sleep(time.Duration(conf.PingTimeout*2) * time.Millisecond)

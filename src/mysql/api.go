@@ -19,14 +19,29 @@ import (
 	"github.com/pkg/errors"
 )
 
-// PingStart used to start the ping.
-func (m *Mysql) PingStart() {
+// HealthCheckStart used to check mysql status.
+// 1. Check if mysql alived or not
+// 2. Check the repl accout exists or not, it may be deleted unexpectly.
+func (m *Mysql) HealthCheckStart() {
 	go func() {
 		for range m.pingTicker.C {
 			m.Ping()
+
+			exists, err := m.CheckUserExists(m.conf.ReplUser, "%")
+			if err != nil {
+				m.log.Error("server.mysql.check.repl.user.accout.error[%+v]", err)
+			}
+			if !exists {
+				m.log.Info("server.mysql.prepare.to.create.replication.user[%v]", m.conf.ReplUser)
+				if err = m.CreateReplUserWithoutBinlog(
+					m.conf.ReplUser,
+					m.conf.ReplPasswd); err != nil {
+					m.log.Error("server.mysql.create.replication.user[%v].error[%+v]", m.conf.ReplUser, err)
+				}
+			}
 		}
 	}()
-	m.log.Info("mysql[%v].startping...", m.getConnStr())
+	m.log.Info("mysql[%v].health.check.start...", m.getConnStr())
 }
 
 // PingStop used to stop the ping.

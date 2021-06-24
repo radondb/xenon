@@ -793,7 +793,7 @@ func TestWaitMysqlWorks(t *testing.T) {
 	conf := config.DefaultMysqlConfig()
 	mysql := NewMysql(conf, 10000, log)
 	mysql.db = db
-	mysql.PingStart()
+	mysql.HealthCheckStart()
 	defer mysql.PingStop()
 
 	// works
@@ -825,7 +825,7 @@ func TestWaitMysqlWorks(t *testing.T) {
 		conf := config.DefaultMysqlConfig()
 		mysql := NewMysql(conf, 10000, log)
 		mysql.db = db
-		mysql.PingStart()
+		mysql.HealthCheckStart()
 		defer mysql.PingStop()
 
 		query := "SHOW SLAVE STATUS"
