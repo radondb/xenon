@@ -103,12 +103,12 @@ func (s *Server) setupMysql() {
 	}
 
 	log.Info("server.mysql.check.replication.user...")
-	ret, err := s.mysql.CheckUserExists(s.conf.Mysql.ReplUser, "%")
+	exists, err := s.mysql.CheckUserExists(s.conf.Mysql.ReplUser, "%")
 	if err != nil {
 		log.Error("server.mysql.CheckUserExists.error[%+v]", err)
 		return
 	}
-	if !ret {
+	if !exists {
 		log.Info("setupMysql.server.mysql.prepare.to.create.replication.user[%v]", s.conf.Mysql.ReplUser)
 		user := s.conf.Mysql.ReplUser
 		pwd := s.conf.Mysql.ReplPasswd
@@ -171,7 +171,7 @@ func (s *Server) Start() {
 	}()
 
 	s.mysqld.MonitorStart()
-	s.mysql.PingStart()
+	s.mysql.HealthCheckStart()
 	if err := s.raft.Start(); err != nil {
 		log.Panic("server.raft.start.error[%+v]", err)
 	}

@@ -1096,8 +1096,8 @@ func MockMysql(log *xlog.Log, port int, h MysqlHandler) (string, *Mysql, func())
 	// Set mock functions
 	mysql.SetMysqlHandler(h)
 
-	// start ping
-	mysql.PingStart()
+	// Health check start
+	mysql.HealthCheckStart()
 	return id, mysql, func() {
 		mysql.PingStop()
 		rpc.Stop()
@@ -1122,8 +1122,8 @@ func MockMysqlReplUser(log *xlog.Log, port int, h MysqlHandler) (string, *Mysql,
 	// Set Repl functions
 	mysql.SetMysqlHandler(h)
 
-	// start ping
-	mysql.PingStart()
+	// Health check startping
+	mysql.HealthCheckStart()
 	return id, mysql, func() {
 		mysql.PingStop()
 		rpc.Stop()
