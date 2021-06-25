@@ -80,13 +80,14 @@ func main() {
 	server.Start()
 	log.Info("xenon.start.success...")
 
-	// Admin portal.
-	admin := ctl.NewAdmin(log, server)
-	admin.Start()
+	if conf.Server.EnableAPIs {
+		// Admin portal.
+		admin := ctl.NewAdmin(log, server)
+		admin.Start()
+		defer admin.Stop()
+	}
 
 	server.Wait()
-
-	admin.Stop()
 
 	log.Info("xenon.shutdown.complete...")
 }

@@ -49,6 +49,17 @@ func (admin *Admin) Start() {
 		panic(err)
 	}
 
+	authMiddleware := &rest.AuthBasicMiddleware{
+		Realm: "xenon zone",
+		Authenticator: func(userId string, password string) bool {
+			if userId == admin.xenon.MySQLAdmin() && password == admin.xenon.MySQLPasswd() {
+				return true
+			}
+			return false
+		},
+	}
+	api.Use(authMiddleware)
+
 	api.SetApp(router)
 	handlers := api.MakeHandler()
 	admin.server = &http.Server{Addr: admin.xenon.PeerAddress(), Handler: handlers}

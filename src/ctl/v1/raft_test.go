@@ -9,9 +9,11 @@
 package v1
 
 import (
-	"server"
+	"encoding/base64"
 	"strings"
 	"testing"
+
+	"server"
 	"xbase/common"
 	"xbase/xlog"
 
@@ -28,16 +30,38 @@ func TestCtlV1RaftStatus(t *testing.T) {
 
 	xenon := servers[0]
 	api := rest.NewApi()
+	authMiddleware := &rest.AuthBasicMiddleware{
+		Realm: "xenon zone",
+		Authenticator: func(userId string, password string) bool {
+			if userId == xenon.MySQLAdmin() && password == xenon.MySQLPasswd() {
+				return true
+			}
+			return false
+		},
+	}
+	api.Use(authMiddleware)
+
 	router, _ := rest.MakeRouter(
 		rest.Get("/v1/raft/status", RaftStatusHandler(log, xenon)),
 	)
 	api.SetApp(router)
 	handler := api.MakeHandler()
+	req := test.MakeSimpleRequest("GET", "http://localhost/v1/raft/status", nil)
 
-	recorded := test.RunRequest(t, handler, test.MakeSimpleRequest("GET", "http://localhost/v1/raft/status", nil))
-	recorded.CodeIs(200)
+	// 401.
+	{
+		recorded := test.RunRequest(t, handler, req)
+		recorded.CodeIs(401)
+	}
 
-	got := recorded.Recorder.Body.String()
-	log.Debug(got)
-	assert.True(t, strings.Contains(got, `{"state":"FOLLOWER","leader":"","nodes":["`))
+	// 200.
+	{
+		encoded := base64.StdEncoding.EncodeToString([]byte("root:"))
+		req.Header.Set("Authorization", "Basic "+encoded)
+		recorded := test.RunRequest(t, handler, req)
+		recorded.CodeIs(200)
+		got := recorded.Recorder.Body.String()
+		log.Debug(got)
+		assert.True(t, strings.Contains(got, `{"state":"FOLLOWER","leader":"","nodes":["`))
+	}
 }

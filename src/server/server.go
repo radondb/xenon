@@ -225,3 +225,13 @@ func (s *Server) Address() string {
 func (s *Server) PeerAddress() string {
 	return s.conf.Server.PeerAddress
 }
+
+// MySQLAdmin returns the mysql admin user.
+func (s *Server) MySQLAdmin() string {
+	return s.conf.Mysql.Admin
+}
+
+// MySQLPasswd returns the mysql admin password.
+func (s *Server) MySQLPasswd() string {
+	return s.conf.Mysql.Passwd
+}

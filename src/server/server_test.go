@@ -103,4 +103,13 @@ func TestServer(t *testing.T) {
 	assert.Nil(t, err)
 	idlePeers = server.raft.GetIdlePeers()
 	assert.Equal(t, len(idlePeers), 0)
+
+	peerAddr := server.PeerAddress()
+	assert.Equal(t, ":6060", peerAddr)
+
+	mysqlAdmin := server.MySQLAdmin()
+	assert.Equal(t, "root", mysqlAdmin)
+
+	mysqlPasswd := server.MySQLPasswd()
+	assert.Equal(t, "", mysqlPasswd)
 }
