@@ -220,3 +220,18 @@ func (s *Server) GetState() raft.State {
 func (s *Server) Address() string {
 	return s.conf.Server.Endpoint
 }
+
+// PeerAddress returns the peer address.
+func (s *Server) PeerAddress() string {
+	return s.conf.Server.PeerAddress
+}
+
+// MySQLAdmin returns the mysql admin user.
+func (s *Server) MySQLAdmin() string {
+	return s.conf.Mysql.Admin
+}
+
+// MySQLPasswd returns the mysql admin password.
+func (s *Server) MySQLPasswd() string {
+	return s.conf.Mysql.Passwd
+}

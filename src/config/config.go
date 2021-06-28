@@ -22,11 +22,17 @@ type ServerConfig struct {
 	// MUST: set in init
 	// connection string(format ip:port)
 	Endpoint string `json:"endpoint"`
+	// if true, enable the HTTP APIs; else, disabled.
+	EnableAPIs bool `json:"enable-apis"`
+	// HTTP APIs address.
+	PeerAddress string `json:"peer-address,omitempty"`
 }
 
 func DefaultServerConfig() *ServerConfig {
 	return &ServerConfig{
-		Endpoint: "127.0.0.1:8080",
+		Endpoint:    "127.0.0.1:8080",
+		EnableAPIs:  false,
+		PeerAddress: ":6060",
 	}
 }
 
