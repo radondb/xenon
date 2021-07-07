@@ -16,6 +16,7 @@ import (
 
 	"server"
 	"xbase/xlog"
+	"xbase/xrpc"
 
 	"github.com/ant0ine/go-json-rest/rest"
 )
@@ -67,7 +68,13 @@ func (admin *Admin) Start() {
 	go func() {
 		log := admin.log
 		log.Info("http.server.start[%v]...", admin.xenon.PeerAddress())
-		if err := admin.server.ListenAndServe(); err != http.ErrServerClosed {
+
+		ln, err := xrpc.SetListener(admin.server.Addr)
+		if err != nil {
+			log.Panic("%v", err)
+		}
+
+		if err := admin.server.Serve(ln); err != http.ErrServerClosed {
 			log.Panic("%v", err)
 		}
 	}()
