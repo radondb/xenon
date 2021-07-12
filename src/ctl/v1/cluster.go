@@ -38,6 +38,10 @@ func clusterAddHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWrite
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	if p.Address == "" {
+		rest.Error(w, "api.v1.cluster.add.request.address.is.null", http.StatusInternalServerError)
+		return
+	}
 
 	self := xenon.Address()
 	nodes := strings.Split(strings.Trim(p.Address, ","), ",")
@@ -77,6 +81,10 @@ func clusterRemoveHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWr
 	if err != nil {
 		log.Error("api.v1.cluster.remove.error:%+v", err)
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if p.Address == "" {
+		rest.Error(w, "api.v1.cluster.remove.request.address.is.null", http.StatusInternalServerError)
 		return
 	}
 

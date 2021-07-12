@@ -59,6 +59,16 @@ func TestCtlV1ClusterAddRemove(t *testing.T) {
 		recorded.CodeIs(500)
 	}
 
+	// 500.
+	{
+
+		req := test.MakeSimpleRequest("POST", "http://localhost/v1/cluster/add", &peerParams{})
+		encoded := base64.StdEncoding.EncodeToString([]byte("root:"))
+		req.Header.Set("Authorization", "Basic "+encoded)
+		recorded := test.RunRequest(t, handler, req)
+		recorded.CodeIs(500)
+	}
+
 	// 200.
 	{
 		req := test.MakeSimpleRequest("POST", "http://localhost/v1/cluster/add", p)
@@ -71,6 +81,16 @@ func TestCtlV1ClusterAddRemove(t *testing.T) {
 	// 500.
 	{
 		req := test.MakeSimpleRequest("POST", "http://localhost/v1/cluster/remove", nil)
+		encoded := base64.StdEncoding.EncodeToString([]byte("root:"))
+		req.Header.Set("Authorization", "Basic "+encoded)
+		recorded := test.RunRequest(t, handler, req)
+		recorded.CodeIs(500)
+	}
+
+	// 500.
+	{
+
+		req := test.MakeSimpleRequest("POST", "http://localhost/v1/cluster/remove", &peerParams{})
 		encoded := base64.StdEncoding.EncodeToString([]byte("root:"))
 		req.Header.Set("Authorization", "Basic "+encoded)
 		recorded := test.RunRequest(t, handler, req)
