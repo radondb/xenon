@@ -12,6 +12,7 @@ import (
 	"net/http"
 
 	"cli/callx"
+	"model"
 	"server"
 	"xbase/xlog"
 
@@ -52,4 +53,27 @@ func raftStatusHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWrite
 	status.Leader = rsp.GetLeader()
 
 	w.WriteJson(status)
+}
+
+// RaftTryToLeaderHandler impl.
+func RaftTryToLeaderHandler(log *xlog.Log, xenon *server.Server) rest.HandlerFunc {
+	f := func(w rest.ResponseWriter, r *rest.Request) {
+		raftTryToLeaderHandler(log, xenon, w, r)
+	}
+	return f
+}
+
+func raftTryToLeaderHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWriter, r *rest.Request) {
+	address := xenon.Address()
+	log.Warning("api.v1.raft.trytoleader.[%v].prepare.to.propose.this.raft.to.leader", address)
+	rsp, err := callx.TryToLeaderRPC(address)
+	if err != nil {
+		log.Error("api.v1.raft.trytoleader.error:%+v", err)
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	if rsp.RetCode != model.OK {
+		log.Error("api.v1.raft.trytoleader.error:rsp[%v] != [OK]", rsp.RetCode)
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	log.Warning("api.v1.raft.trytoleader.[%v].propose.done", address)
 }

@@ -46,7 +46,7 @@ func clusterAddHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWrite
 		log.Warning("%v", err)
 	}
 
-	log.Warning("cluster.prepare.to.add.nodes[%v].to.leader[%v]", p.Address, leader)
+	log.Warning("api.v1.cluster.prepare.to.add.nodes[%v].to.leader[%v]", p.Address, leader)
 	if leader != "" {
 		if err := callx.AddNodeRPC(leader, nodes); err != nil {
 			log.Error("api.v1.cluster.add[%+v].error:%+v", p, err)
@@ -54,14 +54,14 @@ func clusterAddHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWrite
 			return
 		}
 	} else {
-		log.Warning("cluster.canot.found.leader.forward.to[%v]", self)
+		log.Warning("api.v1.cluster.add.canot.found.leader.forward.to[%v]", self)
 		if err := callx.AddNodeRPC(self, nodes); err != nil {
 			log.Error("api.v1.cluster.add[%+v].error:%+v", p, err)
 			rest.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
-	log.Warning("cluster.add.nodes.to.leader[%v].done", leader)
+	log.Warning("api.v1.cluster.add.nodes.to.leader[%v].done", leader)
 }
 
 func ClusterRemoveHandler(log *xlog.Log, xenon *server.Server) rest.HandlerFunc {
@@ -87,7 +87,7 @@ func clusterRemoveHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWr
 		log.Warning("%v", err)
 	}
 
-	log.Warning("cluster.prepare.to.remove.nodes[%v].from.leader[%v]", p.Address, leader)
+	log.Warning("api.v1.cluster.prepare.to.remove.nodes[%v].from.leader[%v]", p.Address, leader)
 	if leader != "" {
 		if err := callx.RemoveNodeRPC(leader, nodes); err != nil {
 			log.Error("api.v1.cluster.remove[%+v].error:%+v", p, err)
@@ -95,12 +95,12 @@ func clusterRemoveHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWr
 			return
 		}
 	} else {
-		log.Warning("cluster.remove.canot.found.leader.forward.to[%v]", self)
+		log.Warning("api.v1.cluster.remove.canot.found.leader.forward.to[%v]", self)
 		if err := callx.RemoveNodeRPC(self, nodes); err != nil {
 			log.Error("api.v1.cluster.remove[%+v].error:%+v", p, err)
 			rest.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
-	log.Warning("cluster.remove.nodes.from.leader[%v].done", leader)
+	log.Warning("api.v1.cluster.remove.nodes.from.leader[%v].done", leader)
 }

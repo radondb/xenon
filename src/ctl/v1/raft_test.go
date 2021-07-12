@@ -43,25 +43,48 @@ func TestCtlV1RaftStatus(t *testing.T) {
 
 	router, _ := rest.MakeRouter(
 		rest.Get("/v1/raft/status", RaftStatusHandler(log, xenon)),
+		rest.Post("/v1/raft/trytoleader", RaftTryToLeaderHandler(log, xenon)),
 	)
 	api.SetApp(router)
 	handler := api.MakeHandler()
-	req := test.MakeSimpleRequest("GET", "http://localhost/v1/raft/status", nil)
 
 	// 401.
 	{
+		req := test.MakeSimpleRequest("GET", "http://localhost/v1/raft/status", nil)
 		recorded := test.RunRequest(t, handler, req)
 		recorded.CodeIs(401)
 	}
 
 	// 200.
 	{
+		req := test.MakeSimpleRequest("GET", "http://localhost/v1/raft/status", nil)
 		encoded := base64.StdEncoding.EncodeToString([]byte("root:"))
 		req.Header.Set("Authorization", "Basic "+encoded)
 		recorded := test.RunRequest(t, handler, req)
 		recorded.CodeIs(200)
 		got := recorded.Recorder.Body.String()
 		log.Debug(got)
-		assert.True(t, strings.Contains(got, `{"state":"FOLLOWER","leader":"","nodes":["`))
+		assert.True(t, strings.Contains(got, `"state":"FOLLOWER"`))
+	}
+
+	// trytoleader.
+	{
+		req := test.MakeSimpleRequest("POST", "http://localhost/v1/raft/trytoleader", nil)
+		encoded := base64.StdEncoding.EncodeToString([]byte("root:"))
+		req.Header.Set("Authorization", "Basic "+encoded)
+		recorded := test.RunRequest(t, handler, req)
+		recorded.CodeIs(200)
+	}
+
+	// 200.
+	{
+		req := test.MakeSimpleRequest("GET", "http://localhost/v1/raft/status", nil)
+		encoded := base64.StdEncoding.EncodeToString([]byte("root:"))
+		req.Header.Set("Authorization", "Basic "+encoded)
+		recorded := test.RunRequest(t, handler, req)
+		recorded.CodeIs(200)
+		got := recorded.Recorder.Body.String()
+		log.Debug(got)
+		assert.True(t, strings.Contains(got, `"state":"CANDIDATE"`))
 	}
 }

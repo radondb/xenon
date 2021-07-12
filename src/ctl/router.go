@@ -26,5 +26,6 @@ func (admin *Admin) NewRouter() (rest.App, error) {
 
 		// raft.
 		rest.Get("/v1/raft/status", v1.RaftStatusHandler(log, xenon)),
+		rest.Post("/v1/raft/trytoleader", v1.RaftTryToLeaderHandler(log, xenon)),
 	)
 }
