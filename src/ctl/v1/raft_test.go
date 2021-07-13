@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCtlV1RaftStatus(t *testing.T) {
+func TestCtlV1Raft(t *testing.T) {
 	log := xlog.NewStdLog(xlog.Level(xlog.PANIC))
 	port := common.RandomPort(8000, 9000)
 	servers, cleanup := server.MockServers(log, port, 1)
@@ -44,18 +44,19 @@ func TestCtlV1RaftStatus(t *testing.T) {
 	router, _ := rest.MakeRouter(
 		rest.Get("/v1/raft/status", RaftStatusHandler(log, xenon)),
 		rest.Post("/v1/raft/trytoleader", RaftTryToLeaderHandler(log, xenon)),
+		rest.Put("/v1/raft/disablechecksemisync", RaftDisableCheckSemiSyncHandler(log, xenon)),
 	)
 	api.SetApp(router)
 	handler := api.MakeHandler()
 
-	// 401.
+	// status 401.
 	{
 		req := test.MakeSimpleRequest("GET", "http://localhost/v1/raft/status", nil)
 		recorded := test.RunRequest(t, handler, req)
 		recorded.CodeIs(401)
 	}
 
-	// 200.
+	// status 200.
 	{
 		req := test.MakeSimpleRequest("GET", "http://localhost/v1/raft/status", nil)
 		encoded := base64.StdEncoding.EncodeToString([]byte("root:"))
@@ -76,7 +77,7 @@ func TestCtlV1RaftStatus(t *testing.T) {
 		recorded.CodeIs(200)
 	}
 
-	// 200.
+	// status 200.
 	{
 		req := test.MakeSimpleRequest("GET", "http://localhost/v1/raft/status", nil)
 		encoded := base64.StdEncoding.EncodeToString([]byte("root:"))
@@ -86,5 +87,14 @@ func TestCtlV1RaftStatus(t *testing.T) {
 		got := recorded.Recorder.Body.String()
 		log.Debug(got)
 		assert.True(t, strings.Contains(got, `"state":"CANDIDATE"`))
+	}
+
+	// disablechecksemisync 200.
+	{
+		req := test.MakeSimpleRequest("PUT", "http://localhost/v1/raft/disablechecksemisync", nil)
+		encoded := base64.StdEncoding.EncodeToString([]byte("root:"))
+		req.Header.Set("Authorization", "Basic "+encoded)
+		recorded := test.RunRequest(t, handler, req)
+		recorded.CodeIs(200)
 	}
 }

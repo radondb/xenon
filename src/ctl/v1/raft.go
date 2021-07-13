@@ -77,3 +77,21 @@ func raftTryToLeaderHandler(log *xlog.Log, xenon *server.Server, w rest.Response
 	}
 	log.Warning("api.v1.raft.trytoleader.[%v].propose.done", address)
 }
+
+// RaftTryToLeaderHandler impl.
+func RaftDisableCheckSemiSyncHandler(log *xlog.Log, xenon *server.Server) rest.HandlerFunc {
+	f := func(w rest.ResponseWriter, r *rest.Request) {
+		raftDisableCheckSemiSyncHandler(log, xenon, w, r)
+	}
+	return f
+}
+
+func raftDisableCheckSemiSyncHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWriter, r *rest.Request) {
+	address := xenon.Address()
+	log.Warning("api.v1.disablechecksemisync.[%v].prepare.to.disable.check.semi-sync", address)
+	if err := callx.RaftDisableCheckSemiSyncRPC(address); err != nil {
+		log.Error("api.v1.disablechecksemisync.error:%+v", err)
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	log.Warning("api.v1.disablechecksemisync.[%v].disable.check.semi-sync.done", address)
+}
