@@ -45,6 +45,7 @@ func TestCtlV1Raft(t *testing.T) {
 		rest.Get("/v1/raft/status", RaftStatusHandler(log, xenon)),
 		rest.Post("/v1/raft/trytoleader", RaftTryToLeaderHandler(log, xenon)),
 		rest.Put("/v1/raft/disablechecksemisync", RaftDisableCheckSemiSyncHandler(log, xenon)),
+		rest.Put("/v1/raft/disable", RaftDisableHandler(log, xenon)),
 	)
 	api.SetApp(router)
 	handler := api.MakeHandler()
@@ -92,6 +93,15 @@ func TestCtlV1Raft(t *testing.T) {
 	// disablechecksemisync 200.
 	{
 		req := test.MakeSimpleRequest("PUT", "http://localhost/v1/raft/disablechecksemisync", nil)
+		encoded := base64.StdEncoding.EncodeToString([]byte("root:"))
+		req.Header.Set("Authorization", "Basic "+encoded)
+		recorded := test.RunRequest(t, handler, req)
+		recorded.CodeIs(200)
+	}
+
+	// disable 200.
+	{
+		req := test.MakeSimpleRequest("PUT", "http://localhost/v1/raft/disable", nil)
 		encoded := base64.StdEncoding.EncodeToString([]byte("root:"))
 		req.Header.Set("Authorization", "Basic "+encoded)
 		recorded := test.RunRequest(t, handler, req)

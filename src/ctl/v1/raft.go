@@ -78,7 +78,7 @@ func raftTryToLeaderHandler(log *xlog.Log, xenon *server.Server, w rest.Response
 	log.Warning("api.v1.raft.trytoleader.[%v].propose.done", address)
 }
 
-// RaftTryToLeaderHandler impl.
+// RaftDisableCheckSemiSyncHandler impl.
 func RaftDisableCheckSemiSyncHandler(log *xlog.Log, xenon *server.Server) rest.HandlerFunc {
 	f := func(w rest.ResponseWriter, r *rest.Request) {
 		raftDisableCheckSemiSyncHandler(log, xenon, w, r)
@@ -88,10 +88,33 @@ func RaftDisableCheckSemiSyncHandler(log *xlog.Log, xenon *server.Server) rest.H
 
 func raftDisableCheckSemiSyncHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWriter, r *rest.Request) {
 	address := xenon.Address()
-	log.Warning("api.v1.disablechecksemisync.[%v].prepare.to.disable.check.semi-sync", address)
+	log.Warning("api.v1.raft.disablechecksemisync.[%v].prepare.to.disable.check.semi-sync", address)
 	if err := callx.RaftDisableCheckSemiSyncRPC(address); err != nil {
-		log.Error("api.v1.disablechecksemisync.error:%+v", err)
+		log.Error("api.v1.raft.disablechecksemisync.error:%+v", err)
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	log.Warning("api.v1.disablechecksemisync.[%v].disable.check.semi-sync.done", address)
+	log.Warning("api.v1.raft.disablechecksemisync.[%v].disable.check.semi-sync.done", address)
+}
+
+// RaftDisableHandler impl.
+func RaftDisableHandler(log *xlog.Log, xenon *server.Server) rest.HandlerFunc {
+	f := func(w rest.ResponseWriter, r *rest.Request) {
+		raftDisableHandler(log, xenon, w, r)
+	}
+	return f
+}
+
+func raftDisableHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWriter, r *rest.Request) {
+	address := xenon.Address()
+	log.Warning("api.v1.raft.disable.[%v].prepare.to.disable.raft", address)
+	rsp, err := callx.DisableRaftRPC(address)
+	if err != nil {
+		log.Error("api.v1.raft.disable.error:%+v", err)
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	if rsp.RetCode != model.OK {
+		log.Error("api.v1.raft.disable.error:rsp[%v] != [OK]", rsp.RetCode)
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	log.Warning("api.v1.raft.disable.[%v].done", address)
 }

@@ -28,6 +28,7 @@ func (admin *Admin) NewRouter() (rest.App, error) {
 		rest.Get("/v1/raft/status", v1.RaftStatusHandler(log, xenon)),
 		rest.Post("/v1/raft/trytoleader", v1.RaftTryToLeaderHandler(log, xenon)),
 		rest.Put("/v1/raft/disablechecksemisync", v1.RaftDisableCheckSemiSyncHandler(log, xenon)),
+		rest.Put("/v1/raft/disable", v1.RaftDisableHandler(log, xenon)),
 
 		// xenon.
 		rest.Get("/v1/xenon/ping", v1.XenonPingHandler(log, xenon)),
