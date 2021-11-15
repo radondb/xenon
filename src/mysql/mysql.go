@@ -188,3 +188,8 @@ func (m *Mysql) getDB() (*sql.DB, error) {
 	}
 	return m.db, nil
 }
+
+// Get ReplGtidPurged
+func (m *Mysql) GetReplGtidPurged() string {
+	return m.conf.ReplGtidPurged
+}

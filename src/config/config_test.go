@@ -48,7 +48,9 @@ func TestParseConfig(t *testing.T) {
 	"replication":
 	{
 		"user":"repl",
-		"passwd":"repl"
+		"passwd":"repl",
+		"master-log" :"mysql-bin.000001",
+		"master-log-pos":590
 	},
 
 	"backup":

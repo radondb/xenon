@@ -157,6 +157,9 @@ type MysqlConfig struct {
 
 	// mysql replication user pwd
 	ReplPasswd string
+
+	// replication Gtid Purged
+	ReplGtidPurged string
 }
 
 func DefaultMysqlConfig() *MysqlConfig {
@@ -174,6 +177,7 @@ func DefaultMysqlConfig() *MysqlConfig {
 		ReplHost:                   "127.0.0.1",
 		ReplUser:                   "repl",
 		ReplPasswd:                 "repl",
+		ReplGtidPurged:             "",
 	}
 }
 
@@ -191,12 +195,16 @@ func (c *MysqlConfig) UnmarshalJSON(b []byte) error {
 type ReplicationConfig struct {
 	User   string `json:"user"`
 	Passwd string `json:"passwd"`
+
+	GtidPurged string `json:"gtid-purged"`
 }
 
 func DefaultReplicationConfig() *ReplicationConfig {
 	return &ReplicationConfig{
 		User:   "repl",
 		Passwd: "repl",
+
+		GtidPurged: "",
 	}
 }
 
@@ -358,6 +366,8 @@ func parseConfig(data []byte) (*Config, error) {
 	// mysql
 	conf.Mysql.ReplUser = conf.Replication.User
 	conf.Mysql.ReplPasswd = conf.Replication.Passwd
+	conf.Mysql.ReplGtidPurged = conf.Replication.GtidPurged
+
 	conf.Mysql.ReplHost = strings.Split(conf.Server.Endpoint, ":")[0]
 	return conf, nil
 }
