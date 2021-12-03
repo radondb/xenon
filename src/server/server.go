@@ -70,6 +70,10 @@ func (s *Server) Init() {
 
 // setupMysqld used to start mysqld and wait for it works
 func (s *Server) setupMysqld() {
+	if s.conf.Mysql.MonitorDisabled {
+		return
+	}
+
 	log := s.log
 	log.Info("server.prepare.setup.mysqlserver")
 	if err := s.mysqld.StartMysqld(); err != nil {
@@ -170,7 +174,10 @@ func (s *Server) Start() {
 		}
 	}()
 
-	s.mysqld.MonitorStart()
+	if !s.conf.Mysql.MonitorDisabled {
+		s.mysqld.MonitorStart()
+	}
+
 	s.mysql.PingStart()
 	if err := s.raft.Start(); err != nil {
 		log.Panic("server.raft.start.error[%+v]", err)
@@ -212,4 +219,19 @@ func (s *Server) GetState() raft.State {
 
 func (s *Server) Address() string {
 	return s.conf.Server.Endpoint
+}
+
+// PeerAddress returns the peer address.
+func (s *Server) PeerAddress() string {
+	return s.conf.Server.PeerAddress
+}
+
+// MySQLAdmin returns the mysql admin user.
+func (s *Server) MySQLAdmin() string {
+	return s.conf.Mysql.Admin
+}
+
+// MySQLPasswd returns the mysql admin password.
+func (s *Server) MySQLPasswd() string {
+	return s.conf.Mysql.Passwd
 }

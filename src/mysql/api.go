@@ -305,6 +305,7 @@ func (m *Mysql) GetRepl() model.Repl {
 		Master_Port:   m.conf.Port,
 		Repl_User:     m.conf.ReplUser,
 		Repl_Password: m.conf.ReplPasswd,
+		// Note: Repl_GTID_Purged cannot send to follower
 	}
 }
 

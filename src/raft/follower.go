@@ -164,7 +164,7 @@ func (r *Follower) processHeartbeatRequest(req *model.RaftRPCRequest) *model.Raf
 			}
 
 			r.WARNING("get.heartbeat.from[N:%v, V:%v, E:%v].change.mysql.master", req.GetFrom(), req.GetViewID(), req.GetEpochID())
-
+			req.Repl.Repl_GTID_Purged = r.Raft.mysql.GetReplGtidPurged()
 			if err := r.mysql.ChangeMasterTo(&req.Repl); err != nil {
 				r.ERROR("change.master.to[FROM:%v, GTID:%v].error[%v]", req.GetFrom(), req.GetRepl(), err)
 				// ChangeToMasterError is true, means we can't promotable to CANDIDATE.

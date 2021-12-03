@@ -198,6 +198,11 @@ func (my *MysqlBase) changeMasterToCommands(master *model.Repl) []string {
 func (my *MysqlBase) ChangeMasterTo(db *sql.DB, master *model.Repl) error {
 	cmds := []string{}
 	cmds = append(cmds, "STOP SLAVE")
+	if master.Repl_GTID_Purged != "" {
+		cmds = append(cmds, "RESET MASTER")
+		cmds = append(cmds, "RESET SLAVE ALL")
+		cmds = append(cmds, fmt.Sprintf("SET GLOBAL gtid_purged='%s'", master.Repl_GTID_Purged))
+	}
 	cmds = append(cmds, my.changeMasterToCommands(master)...)
 	cmds = append(cmds, "START SLAVE")
 	return ExecuteSuperQueryListWithTimeout(db, my.queryTimeout, cmds)

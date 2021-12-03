@@ -59,6 +59,9 @@ type Repl struct {
 
 	// Mysql replication password
 	Repl_Password string
+
+	// Mysql replication GTID purged
+	Repl_GTID_Purged string
 }
 
 type RaftRPCRequest struct {

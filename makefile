@@ -35,6 +35,7 @@ test:
 	@$(MAKE) testserver
 	@$(MAKE) testraft
 	@$(MAKE) testcli
+	@$(MAKE) testctl
 
 testcommon:
 	go test -v xbase/common
@@ -54,6 +55,8 @@ testraft:
 	go test -v raft
 testcli:
 	go test -v cli/cmd
+testctl:
+	go test -v ctl/v1
 
 COVPKGS = xbase/common\
 		  xbase/xlog\
@@ -62,7 +65,8 @@ COVPKGS = xbase/common\
 		  mysql\
 		  mysqld\
 		  raft\
-		  server
+		  server\
+		  ctl/v1/
 vet:
 	go vet $(COVPKGS)
 
