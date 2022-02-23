@@ -23,6 +23,7 @@ func (admin *Admin) NewRouter() (rest.App, error) {
 		// cluster.
 		rest.Post("/v1/cluster/add", v1.ClusterAddHandler(log, xenon)),
 		rest.Post("/v1/cluster/remove", v1.ClusterRemoveHandler(log, xenon)),
+		rest.Get("/v1/cluster/gtid", v1.ClusterGtidHandler(log, xenon)),
 
 		// raft.
 		rest.Get("/v1/raft/status", v1.RaftStatusHandler(log, xenon)),

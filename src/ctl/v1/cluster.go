@@ -112,3 +112,30 @@ func clusterRemoveHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWr
 	}
 	log.Warning("api.v1.cluster.remove.nodes.from.leader[%v].done", leader)
 }
+
+// ClusterGtidHandler impl.
+func ClusterGtidHandler(log *xlog.Log, xenon *server.Server) rest.HandlerFunc {
+	f := func(w rest.ResponseWriter, r *rest.Request) {
+		clusterGtidHandler(log, xenon, w, r)
+	}
+	return f
+}
+
+func clusterGtidHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWriter, r *rest.Request) {
+	type GtidSet struct {
+		Executed_GTID_Set  string   `json:"executed_gtid_set"`
+		Retrieved_GTID_Set string   `json:"retrieved_gtid_set"`
+	}
+	gtidSet := &GtidSet{}
+	address := xenon.Address()
+
+	rsp, err := callx.GetGTIDRPC(address)
+	if err != nil {
+		log.Error("api.v1.cluster.gtid.error:%+v", err)
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	gtidSet.Executed_GTID_Set = rsp.GTID.Executed_GTID_Set
+	gtidSet.Retrieved_GTID_Set = rsp.GTID.Retrieved_GTID_Set
+
+	w.WriteJson(gtidSet)
+}
