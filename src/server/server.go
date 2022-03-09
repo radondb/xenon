@@ -166,13 +166,6 @@ func (s *Server) setupRPC() {
 // start rpc-raft and event&&state-loop
 func (s *Server) Start() {
 	log := s.log
-	defer func() {
-		if r := recover(); r != nil {
-			buf := make([]byte, 4096)
-			buf = buf[:runtime.Stack(buf, false)]
-			log.Error("server.got.panic[%v:%s]", r, buf)
-		}
-	}()
 
 	if !s.conf.Mysql.MonitorDisabled {
 		s.mysqld.MonitorStart()
