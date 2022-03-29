@@ -50,6 +50,10 @@ func raftStatusHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWrite
 		log.Error("api.v1.raft.status.error:%+v", err)
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	if rsp == nil {
+		log.Error("api.v1.raft.status.error:rsp[nil] != [OK]")
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 	status.Leader = rsp.GetLeader()
 
 	w.WriteJson(status)
@@ -70,6 +74,11 @@ func raftTryToLeaderHandler(log *xlog.Log, xenon *server.Server, w rest.Response
 	if err != nil {
 		log.Error("api.v1.raft.trytoleader.error:%+v", err)
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	if rsp == nil {
+		log.Error("api.v1.raft.trytoleader.error:rsp[nil] != [OK]")
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	if rsp.RetCode != model.OK {
 		log.Error("api.v1.raft.trytoleader.error:rsp[%v] != [OK]", rsp.RetCode)
@@ -111,6 +120,11 @@ func raftDisableHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWrit
 	if err != nil {
 		log.Error("api.v1.raft.disable.error:%+v", err)
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	if rsp == nil {
+		log.Error("api.v1.raft.disable.error:rsp[nil] != [OK]")
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	if rsp.RetCode != model.OK {
 		log.Error("api.v1.raft.disable.error:rsp[%v] != [OK]", rsp.RetCode)
