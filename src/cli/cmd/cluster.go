@@ -383,14 +383,14 @@ func NewClusterGTIDCommand() *cobra.Command {
 		Short: "show cluster gtid status",
 		Run:   clusterGTIDCommandFn,
 	}
-
+	cmd.AddCommand(NewClusterGTIDJsonCommand())
 	return cmd
 }
 
 func clusterGTIDCommandFn(cmd *cobra.Command, args []string) {
-	if len(args) != 0 {
-		ErrorOK(fmt.Errorf("too.many.args"))
-	}
+	// if len(args) != 0 {
+	// 	ErrorOK(fmt.Errorf("too.many.args"))
+	// }
 
 	var rows [][]string
 	conf, err := GetConfig()
@@ -429,6 +429,77 @@ func clusterGTIDCommandFn(cmd *cobra.Command, args []string) {
 	}
 
 	callx.PrintQueryOutput(columns, rows)
+}
+
+func NewClusterGTIDJsonCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "json",
+		Short: "show cluster status with json format",
+		Run:   clusterGTIDJsonCommandFn,
+	}
+
+	return cmd
+}
+
+func clusterGTIDJsonCommandFn(cmd *cobra.Command, args []string) {
+	type GTID struct {
+		ID               string `json:"id"`
+		Raft             string `json:"raft"`
+		Mysql            string `json:"mysql"`
+		ExecutedGTIDSet  string `json:"executed-gtid-set"`
+		RetrievedGTIDSet string `json:"retrieved-gtid-set"`
+	}
+
+	type GTIDList struct {
+		GTID []*GTID `json:"gtid"`
+	}
+
+	if len(args) != 0 {
+		ErrorOK(fmt.Errorf("too.many.args"))
+	}
+
+	conf, err := GetConfig()
+	ErrorOK(err)
+
+	nodes, err := callx.GetNodes(conf.Server.Endpoint)
+	ErrorOK(err)
+
+	list := make([]*GTID, 0, len(nodes))
+	leader := ""
+	getGtidRow := func(GTID *GTID, node string) {
+		// mysql
+		if rsp, err := callx.GetMysqlStatusRPC(node); err == nil {
+			GTID.Mysql = rsp.Status
+			GTID.ExecutedGTIDSet = strings.ReplaceAll(rsp.GTID.Executed_GTID_Set, "\n", "")
+			GTID.RetrievedGTIDSet = strings.ReplaceAll(rsp.GTID.Retrieved_GTID_Set, "\n", "")
+		}
+	}
+	for _, node := range nodes {
+		GTID := &GTID{}
+		GTID.ID = node
+		// raft
+		if rsp, err := callx.GetNodesRPC(node); err == nil {
+			if rsp.State == raft.LEADER.String() {
+				leader = node
+				continue
+			}
+			GTID.Raft = rsp.State
+		}
+		getGtidRow(GTID, node)
+		list = append(list, GTID)
+	}
+
+	if leader != "" {
+		GTID := &GTID{}
+		GTID.ID = leader
+		GTID.Raft = raft.LEADER.String()
+		getGtidRow(GTID, leader)
+		list = append(list, GTID)
+	}
+
+	res := &GTIDList{GTID: list}
+	resJson, _ := json.Marshal(res)
+	fmt.Printf("%s", string(resJson))
 }
 
 func clusterGTIDCommandGetRow(node string, raftState string) []string {
