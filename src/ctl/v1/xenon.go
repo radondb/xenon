@@ -34,6 +34,11 @@ func xenonPingHandler(log *xlog.Log, xenon *server.Server, w rest.ResponseWriter
 		log.Error("api.v1.xenon.ping.error:%+v", err)
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	if rsp == nil {
+		log.Error("api.v1.xenon.ping.error:rsp[nil] != [OK]")
+		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	if rsp.RetCode != model.OK {
 		log.Error("api.v1.xenon.ping.error:rsp[%v] != [OK]", rsp.RetCode)
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
