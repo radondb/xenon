@@ -8,15 +8,19 @@
 
 ## Overview
 
-`Xenon` is a MySQL HA and Replication Management tool using Raft protocol.
+`Xenon` is an HA MySQL and replication management tool adopting the Raft protocol.
 
-Xenon has many cool features, such as:
+`Xenon` has many cool features, such as:
 
-* Fast Failover with no lost transactions
-* Streaming & Speed-Unmatched backup/restore
-* MySQL Operation and Maintenance
-* No central control and easy-to-deploy
-* As a Cloud App
+🎂 Fast failover without loss of transactions
+
+🎈 Streaming and speed-unmatched backup/restore
+
+🎨 MySQL O&M
+
+🎯 No central control and easy to deploy
+
+☁ As a cloud App
 
 ## Architecture
 
@@ -24,21 +28,22 @@ Xenon has many cool features, such as:
 
 ## Documentation
 
-- [build and run xenon](docs/how_to_build_and_run_xenon.md) : How to build and run xenon.
-- [xenon cli commands](docs/xenoncli_commands.md) : Xenon client commands.
-- [how xenon works](docs/how_xenon_works.md) : How xenon works.
-- [how xenon upgrades](docs/how_xenon_upgrades.md): How xenon upgrades.
+- [Build and run xenon](docs/how_to_build_and_run_xenon.md)
+- [Xenon CLI commands](docs/xenoncli_commands.md)
+- [How Xenon works](docs/how_xenon_works.md)
+- [how Xenon upgrades](docs/how_xenon_upgrades.md)
 
-## Use case
+## Use cases
 
-Xenon is production ready, it has been used in production like:
-- [MySQL Plus](https://www.qingcloud.com/products/mysql-plus/) -  A Highly Available MySQL Clusters
--  [RadonDB](https://www.qingcloud.com/products/radondb) -  A  cloud-native MySQL database for building global, scalable cloud services
+`Xenon` is production-ready, and it has been used in production:
 
-## Issues
+🍉 [MySQL Plus](https://www.qingcloud.com/products/mysql-plus/) - a high-availability MySQL cluster
 
-The [integrated github issue tracker](https://github.com/radondb/xenon/issues)
-is used for this project.
+🍊 [RadonDB](https://www.qingcloud.com/products/radondb) - a cloud-native MySQL database for building global and scalable cloud services
+
+## Issue
+
+The [integrated github issue tracker](https://github.com/radondb/xenon/issues) is used for this project.
 
 ## License
 
